@@ -24,6 +24,7 @@ website/node_modules
 *.test
 *.iml
 
+archive/*.zip
 website/vendor
 
 # Test exclusions
