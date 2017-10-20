@@ -72,7 +72,12 @@ func (a *ZipArchiver) ArchiveDir(indirname string) error {
 		if err != nil {
 			return fmt.Errorf("error relativizing file for archival: %s", err)
 		}
-		f, err := a.writer.Create(relname)
+		fh, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return fmt.Errorf("error creating file header: %s", err)
+		}
+		fh.Name = relname
+		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
 		}
