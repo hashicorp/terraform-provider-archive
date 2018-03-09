@@ -77,6 +77,15 @@ func dataSourceFile() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
 			},
+			"excludes": &schema.Schema{
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"output_path": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -145,6 +154,14 @@ func dataSourceFileRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func expandStringList(configured []interface{}) []string {
+	vs := make([]string, len(configured))
+	for i, v := range configured {
+		vs[i] = v.(string)
+	}
+	return vs
+}
+
 func archive(d *schema.ResourceData) error {
 	archiveType := d.Get("type").(string)
 	outputPath := d.Get("output_path").(string)
@@ -155,8 +172,16 @@ func archive(d *schema.ResourceData) error {
 	}
 
 	if dir, ok := d.GetOk("source_dir"); ok {
-		if err := archiver.ArchiveDir(dir.(string)); err != nil {
-			return fmt.Errorf("error archiving directory: %s", err)
+		if excludes, ok := d.GetOk("excludes"); ok {
+			excludeList := expandStringList(excludes.([]interface{}))
+
+			if err := archiver.ArchiveDir(dir.(string), excludeList); err != nil {
+				return fmt.Errorf("error archiving directory: %s", err)
+			}
+		} else {
+			if err := archiver.ArchiveDir(dir.(string), []string{""}); err != nil {
+				return fmt.Errorf("error archiving directory: %s", err)
+			}
 		}
 	} else if file, ok := d.GetOk("source_file"); ok {
 		if err := archiver.ArchiveFile(file.(string)); err != nil {
