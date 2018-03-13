@@ -1,8 +1,8 @@
-## 1.0.1 (Unreleased)
+## 1.0.1 (March 13, 2018)
 
 BUG FIXES:
 
-* Fix issue with flags not being copied in to archive [GH-9]
+* Fix issue with flags not being copied in to archive ([#9](https://github.com/terraform-providers/terraform-provider-archive/issues/9))
 
 ## 1.0.0 (September 15, 2017)
 
