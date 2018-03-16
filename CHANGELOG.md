@@ -1,8 +1,8 @@
-## 1.0.2 (Unreleased)
+## 1.0.2 (March 16, 2018)
 
 BUG FIXES:
 
-* Fix issue with flags not being copied on a single file and regression introduced in 1.0.1 [GH-13]
+* Fix issue with flags not being copied on a single file and regression introduced in 1.0.1 ([#13](https://github.com/terraform-providers/terraform-provider-archive/issues/13))
 
 ## 1.0.1 (March 13, 2018)
 
