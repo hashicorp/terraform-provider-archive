@@ -47,7 +47,25 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 		return err
 	}
 
-	return a.ArchiveContent(content, fi.Name())
+	if err := a.open(); err != nil {
+		return err
+	}
+	defer a.close()
+
+	fh, err := zip.FileInfoHeader(fi)
+	if err != nil {
+		return fmt.Errorf("error creating file header: %s", err)
+	}
+	fh.Name = fi.Name()
+	fh.Method = zip.Deflate
+
+	f, err := a.writer.CreateHeader(fh)
+	if err != nil {
+		return fmt.Errorf("error creating file inside archive: %s", err)
+	}
+
+	_, err = f.Write(content)
+	return err
 }
 
 func (a *ZipArchiver) ArchiveDir(indirname string) error {
@@ -77,6 +95,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string) error {
 			return fmt.Errorf("error creating file header: %s", err)
 		}
 		fh.Name = relname
+		fh.Method = zip.Deflate
 		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
