@@ -1,4 +1,9 @@
 ## 1.0.2 (Unreleased)
+
+BUG FIXES:
+
+* Fix issue with flags not being copied on a single file and regression introduced in 1.0.1 [GH-13]
+
 ## 1.0.1 (March 13, 2018)
 
 BUG FIXES:
