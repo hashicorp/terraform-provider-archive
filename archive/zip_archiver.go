@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 )
 
 type ZipArchiver struct {
@@ -58,6 +59,8 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	}
 	fh.Name = fi.Name()
 	fh.Method = zip.Deflate
+	var mtime time.Time
+	fh.SetModTime(mtime)
 
 	f, err := a.writer.CreateHeader(fh)
 	if err != nil {
@@ -96,6 +99,9 @@ func (a *ZipArchiver) ArchiveDir(indirname string) error {
 		}
 		fh.Name = relname
 		fh.Method = zip.Deflate
+		var mtime time.Time
+		fh.SetModTime(mtime)
+
 		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
