@@ -1,8 +1,8 @@
-## 1.0.3 (Unreleased)
+## 1.0.3 (March 23, 2018)
 
 BUG FIXES:
 
-* Fix modified time affecting zip contents and causing spurious diffs [GH-16]
+* Fix modified time affecting zip contents and causing spurious diffs ([#16](https://github.com/terraform-providers/terraform-provider-archive/issues/16))
 
 ## 1.0.2 (March 16, 2018)
 
