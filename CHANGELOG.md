@@ -1,4 +1,9 @@
 ## 1.0.3 (Unreleased)
+
+BUG FIXES:
+
+* Fix modified time affecting zip contents and causing spurious diffs [GH-16]
+
 ## 1.0.2 (March 16, 2018)
 
 BUG FIXES:
