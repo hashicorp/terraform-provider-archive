@@ -2,8 +2,12 @@ package archive
 
 import (
 	"archive/zip"
+	"bytes"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestZipArchiver_Content(t *testing.T) {
@@ -28,6 +32,43 @@ func TestZipArchiver_File(t *testing.T) {
 	ensureContents(t, zipfilepath, map[string][]byte{
 		"test-file.txt": []byte("This is test content"),
 	})
+}
+func TestZipArchiver_FileModified(t *testing.T) {
+	var (
+		zipFilePath = filepath.FromSlash("archive-file.zip")
+		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
+	)
+
+	var zip = func() {
+		archiver := NewZipArchiver(zipFilePath)
+		if err := archiver.ArchiveFile(toZipPath); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}
+
+	zip()
+
+	expectedContents, err := ioutil.ReadFile(zipFilePath)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	//touch file modified, in the future just in case of weird race issues
+	newTime := time.Now().Add(1 * time.Hour)
+	if err := os.Chtimes(toZipPath, newTime, newTime); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	zip()
+
+	actualContents, err := ioutil.ReadFile(zipFilePath)
+	if err != nil {
+		t.Fatalf("unexpecte error: %s", err)
+	}
+
+	if !bytes.Equal(expectedContents, actualContents) {
+		t.Fatalf("zip contents do not match, potentially a modified time issue")
+	}
 }
 
 func TestZipArchiver_Dir(t *testing.T) {

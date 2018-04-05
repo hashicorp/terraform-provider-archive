@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 type ZipArchiver struct {
@@ -49,7 +50,27 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 		return err
 	}
 
-	return a.ArchiveContent(content, fi.Name())
+	if err := a.open(); err != nil {
+		return err
+	}
+	defer a.close()
+
+	fh, err := zip.FileInfoHeader(fi)
+	if err != nil {
+		return fmt.Errorf("error creating file header: %s", err)
+	}
+	fh.Name = fi.Name()
+	fh.Method = zip.Deflate
+	// fh.Modified alone isn't enough when using a zero value
+	fh.SetModTime(time.Time{})
+
+	f, err := a.writer.CreateHeader(fh)
+	if err != nil {
+		return fmt.Errorf("error creating file inside archive: %s", err)
+	}
+
+	_, err = f.Write(content)
+	return err
 }
 
 func checkMatch(fileName string, excludes []string) (value bool) {
@@ -100,7 +121,16 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		if err != nil {
 			return fmt.Errorf("error relativizing file for archival: %s", err)
 		}
-		f, err := a.writer.Create(relname)
+		fh, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return fmt.Errorf("error creating file header: %s", err)
+		}
+		fh.Name = relname
+		fh.Method = zip.Deflate
+		// fh.Modified alone isn't enough when using a zero value
+		fh.SetModTime(time.Time{})
+
+		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
 		}
