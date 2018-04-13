@@ -28,7 +28,7 @@ func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
 	}
 	defer a.close()
 
-	f, err := a.writer.Create(infilename)
+	f, err := a.writer.Create(filepath.ToSlash(infilename))
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	if err != nil {
 		return fmt.Errorf("error creating file header: %s", err)
 	}
-	fh.Name = fi.Name()
+	fh.Name = filepath.ToSlash(fi.Name())
 	fh.Method = zip.Deflate
 	// fh.Modified alone isn't enough when using a zero value
 	fh.SetModTime(time.Time{})
@@ -123,7 +123,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		if err != nil {
 			return fmt.Errorf("error creating file header: %s", err)
 		}
-		fh.Name = relname
+		fh.Name = filepath.ToSlash(relname)
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
 		fh.SetModTime(time.Time{})
@@ -139,7 +139,6 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		_, err = f.Write(content)
 		return err
 	})
-
 }
 
 func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
@@ -158,7 +157,7 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	sort.Strings(keys)
 
 	for _, filename := range keys {
-		f, err := a.writer.Create(filename)
+		f, err := a.writer.Create(filepath.ToSlash(filename))
 		if err != nil {
 			return err
 		}
