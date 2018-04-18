@@ -6,9 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -78,8 +76,8 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 		if exclude == "" {
 			continue
 		}
-		matchCheck, _ := regexp.MatchString("^[/\\\\]?"+exclude+"([/\\\\].*)?$", fileName)
-		if matchCheck {
+
+		if exclude == fileName {
 			return true
 		}
 	}
@@ -98,10 +96,14 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	defer a.close()
 
 	return filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
-		tmpFilePath, _ := filepath.Abs(path)
-		tmpLongFileName, _ := filepath.Abs(indirname)
-		shortFileName := strings.TrimPrefix(tmpFilePath, tmpLongFileName)
-		isMatch := checkMatch(shortFileName, excludes)
+
+		relname, err := filepath.Rel(indirname, path)
+		if err != nil {
+			return fmt.Errorf("error relativizing file for archival: %s", err)
+		}
+
+		isMatch := checkMatch(relname, excludes)
+
 		if info.IsDir() {
 			if isMatch {
 				return filepath.SkipDir
@@ -117,10 +119,6 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 			return err
 		}
 
-		relname, err := filepath.Rel(indirname, path)
-		if err != nil {
-			return fmt.Errorf("error relativizing file for archival: %s", err)
-		}
 		fh, err := zip.FileInfoHeader(info)
 		if err != nil {
 			return fmt.Errorf("error creating file header: %s", err)
