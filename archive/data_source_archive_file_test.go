@@ -124,10 +124,10 @@ data "archive_file" "foo" {
 
 var testAccArchiveFileDirExcludesConfig = `
 data "archive_file" "foo" {
-  type        = "zip"
-  source_dir  = "../archive/test-fixtures/../test-fixtures/test-dir"
+	type        = "zip"
+	source_dir  = "../archive/test-fixtures/../test-fixtures/test-dir"
 	excludes    = ["test-fixtures/test-dir/file2.txt"]
-  output_path = "zip_file_acc_test.zip"
+	output_path = "zip_file_acc_test.zip"
 }
 `
 
