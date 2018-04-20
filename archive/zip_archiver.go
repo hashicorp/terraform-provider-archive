@@ -60,7 +60,7 @@ func (a *zipArchiver) ArchiveFile(infilename string) error {
 	fh.Name = fi.Name()
 	fh.Method = zip.Deflate
 	// fh.Modified alone isn't enough when using a zero value
-	fh.SetModTime(time.Time{})
+	fh.SetModTime(time.Time{}) //nolint
 
 	f, err := a.writer.CreateHeader(fh)
 	if err != nil {
@@ -100,7 +100,7 @@ func (a *zipArchiver) ArchiveDir(indirname string) error {
 		fh.Name = relname
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
-		fh.SetModTime(time.Time{})
+		fh.SetModTime(time.Time{}) //nolint
 
 		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
@@ -156,11 +156,11 @@ func (a *zipArchiver) open() error {
 
 func (a *zipArchiver) close() {
 	if a.writer != nil {
-		a.writer.Close()
+		_ = a.writer.Close()
 		a.writer = nil
 	}
 	if a.filewriter != nil {
-		a.filewriter.Close()
+		_ = a.filewriter.Close()
 		a.filewriter = nil
 	}
 }

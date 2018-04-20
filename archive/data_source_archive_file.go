@@ -189,16 +189,19 @@ func genFileShas(filename string) (string, string, string, error) {
 		return "", "", "", fmt.Errorf("could not compute file '%s' checksum: %s", filename, err)
 	}
 	h := sha1.New()
-	h.Write([]byte(data))
+	// this does not error
+	_, _ = h.Write(data)
 	sha1 := hex.EncodeToString(h.Sum(nil))
 
 	h256 := sha256.New()
-	h256.Write([]byte(data))
+	// this does not error
+	_, _ = h256.Write(data)
 	shaSum := h256.Sum(nil)
 	sha256base64 := base64.StdEncoding.EncodeToString(shaSum[:])
 
 	md5 := md5.New()
-	md5.Write([]byte(data))
+	// this does not error
+	_, _ = md5.Write(data)
 	md5Sum := hex.EncodeToString(md5.Sum(nil))
 
 	return sha1, sha256base64, md5Sum, nil
