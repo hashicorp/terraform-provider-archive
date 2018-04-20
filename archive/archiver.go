@@ -5,20 +5,20 @@ import (
 	"os"
 )
 
-type Archiver interface {
+type archiver interface {
 	ArchiveContent(content []byte, infilename string) error
 	ArchiveFile(infilename string) error
 	ArchiveDir(indirname string) error
 	ArchiveMultiple(content map[string][]byte) error
 }
 
-type ArchiverBuilder func(filepath string) Archiver
+type archiverBuilder func(filepath string) archiver
 
-var archiverBuilders = map[string]ArchiverBuilder{
-	"zip": NewZipArchiver,
+var archiverBuilders = map[string]archiverBuilder{
+	"zip": newZipArchiver,
 }
 
-func getArchiver(archiveType string, filepath string) Archiver {
+func getArchiver(archiveType string, filepath string) archiver {
 	if builder, ok := archiverBuilders[archiveType]; ok {
 		return builder(filepath)
 	}

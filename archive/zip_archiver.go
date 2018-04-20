@@ -10,19 +10,19 @@ import (
 	"time"
 )
 
-type ZipArchiver struct {
+type zipArchiver struct {
 	filepath   string
 	filewriter *os.File
 	writer     *zip.Writer
 }
 
-func NewZipArchiver(filepath string) Archiver {
-	return &ZipArchiver{
+func newZipArchiver(filepath string) archiver {
+	return &zipArchiver{
 		filepath: filepath,
 	}
 }
 
-func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
+func (a *zipArchiver) ArchiveContent(content []byte, infilename string) error {
 	if err := a.open(); err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
 	return err
 }
 
-func (a *ZipArchiver) ArchiveFile(infilename string) error {
+func (a *zipArchiver) ArchiveFile(infilename string) error {
 	fi, err := assertValidFile(infilename)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	return err
 }
 
-func (a *ZipArchiver) ArchiveDir(indirname string) error {
+func (a *zipArchiver) ArchiveDir(indirname string) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string) error {
 
 }
 
-func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
+func (a *zipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	if err := a.open(); err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	return nil
 }
 
-func (a *ZipArchiver) open() error {
+func (a *zipArchiver) open() error {
 	f, err := os.Create(a.filepath)
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (a *ZipArchiver) open() error {
 	return nil
 }
 
-func (a *ZipArchiver) close() {
+func (a *zipArchiver) close() {
 	if a.writer != nil {
 		a.writer.Close()
 		a.writer = nil

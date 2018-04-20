@@ -149,22 +149,22 @@ func archive(d *schema.ResourceData) error {
 	archiveType := d.Get("type").(string)
 	outputPath := d.Get("output_path").(string)
 
-	archiver := getArchiver(archiveType, outputPath)
-	if archiver == nil {
+	a := getArchiver(archiveType, outputPath)
+	if a == nil {
 		return fmt.Errorf("archive type not supported: %s", archiveType)
 	}
 
 	if dir, ok := d.GetOk("source_dir"); ok {
-		if err := archiver.ArchiveDir(dir.(string)); err != nil {
+		if err := a.ArchiveDir(dir.(string)); err != nil {
 			return fmt.Errorf("error archiving directory: %s", err)
 		}
 	} else if file, ok := d.GetOk("source_file"); ok {
-		if err := archiver.ArchiveFile(file.(string)); err != nil {
+		if err := a.ArchiveFile(file.(string)); err != nil {
 			return fmt.Errorf("error archiving file: %s", err)
 		}
 	} else if filename, ok := d.GetOk("source_content_filename"); ok {
 		content := d.Get("source_content").(string)
-		if err := archiver.ArchiveContent([]byte(content), filename.(string)); err != nil {
+		if err := a.ArchiveContent([]byte(content), filename.(string)); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
 	} else if v, ok := d.GetOk("source"); ok {
@@ -174,7 +174,7 @@ func archive(d *schema.ResourceData) error {
 			src := v.(map[string]interface{})
 			content[src["filename"].(string)] = []byte(src["content"].(string))
 		}
-		if err := archiver.ArchiveMultiple(content); err != nil {
+		if err := a.ArchiveMultiple(content); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
 	} else {
