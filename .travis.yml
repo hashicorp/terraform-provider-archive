@@ -1,21 +1,24 @@
-dist: trusty
 sudo: false
 language: go
+
 go:
-- 1.8.1
+- "1.10.x"
+- tip
+
+os:
+  - linux
+  - osx
 
 install:
-# This script is used by the Travis build to install a cookie for
-# go.googlesource.com so rate limits are higher when using `go get` to fetch
-# packages that live there.
-# See: https://github.com/golang/go/issues/12933
-- bash scripts/gogetcookie.sh
 - go get github.com/kardianos/govendor
+- go get github.com/alecthomas/gometalinter
+- gometalinter --install
 
 script:
 - make test
 - make vendor-status
-- make vet
+# this provider is local only, so it can run it's acc tests in travis
+- make testacc
 
 branches:
   only:
