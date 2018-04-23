@@ -78,7 +78,7 @@ func dataSourceFile() *schema.Resource {
 				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
 			},
 			"excludes": &schema.Schema{
-				Type:          schema.TypeList,
+				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
