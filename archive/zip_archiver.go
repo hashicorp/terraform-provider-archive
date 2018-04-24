@@ -71,7 +71,20 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	return err
 }
 
-func (a *ZipArchiver) ArchiveDir(indirname string) error {
+func checkMatch(fileName string, excludes []string) (value bool) {
+	for _, exclude := range excludes {
+		if exclude == "" {
+			continue
+		}
+
+		if exclude == fileName {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
 		return err
@@ -83,16 +96,29 @@ func (a *ZipArchiver) ArchiveDir(indirname string) error {
 	defer a.close()
 
 	return filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
+
 		relname, err := filepath.Rel(indirname, path)
 		if err != nil {
 			return fmt.Errorf("error relativizing file for archival: %s", err)
 		}
+
+		isMatch := checkMatch(relname, excludes)
+
+		if info.IsDir() {
+			if isMatch {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		if isMatch {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
 		fh, err := zip.FileInfoHeader(info)
 		if err != nil {
 			return fmt.Errorf("error creating file header: %s", err)

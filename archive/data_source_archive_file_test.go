@@ -52,6 +52,13 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			r.TestStep{
+				Config: testAccArchiveFileDirExcludesConfig,
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+				),
+			},
+			r.TestStep{
 				Config: testAccArchiveFileMultiConfig,
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
@@ -112,6 +119,15 @@ data "archive_file" "foo" {
   type        = "zip"
   source_dir  = "test-fixtures/test-dir"
   output_path = "zip_file_acc_test.zip"
+}
+`
+
+var testAccArchiveFileDirExcludesConfig = `
+data "archive_file" "foo" {
+	type        = "zip"
+	source_dir  = "../archive/test-fixtures/../test-fixtures/test-dir"
+	excludes    = ["test-fixtures/test-dir/file2.txt"]
+	output_path = "zip_file_acc_test.zip"
 }
 `
 
