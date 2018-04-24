@@ -1,4 +1,9 @@
-## 1.0.4 (Unreleased)
+## 1.1.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* Add `excludes` to the `archive_file` data source to exclude files when using `source_dir` [GH-18]
+
 ## 1.0.3 (March 23, 2018)
 
 BUG FIXES:
