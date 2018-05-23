@@ -173,7 +173,7 @@ func archive(d *schema.ResourceData) error {
 
 	if dir, ok := d.GetOk("source_dir"); ok {
 		if excludes, ok := d.GetOk("excludes"); ok {
-			excludeList := expandStringList(excludes.([]interface{}))
+			excludeList := expandStringList(excludes.(*schema.Set).List())
 
 			if err := archiver.ArchiveDir(dir.(string), excludeList); err != nil {
 				return fmt.Errorf("error archiving directory: %s", err)
