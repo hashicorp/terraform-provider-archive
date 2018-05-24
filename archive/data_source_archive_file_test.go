@@ -15,7 +15,7 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 	r.Test(t, r.TestCase{
 		Providers: testProviders,
 		Steps: []r.TestStep{
-			r.TestStep{
+			{
 				Config: testAccArchiveFileContentConfig,
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
@@ -37,35 +37,35 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 					),
 				),
 			},
-			r.TestStep{
+			{
 				Config: testAccArchiveFileFileConfig,
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
-			r.TestStep{
+			{
 				Config: testAccArchiveFileDirConfig,
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
-			r.TestStep{
+			{
 				Config: testAccArchiveFileDirExcludesConfig,
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
-			r.TestStep{
+			{
 				Config: testAccArchiveFileMultiConfig,
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
-			r.TestStep{
+			{
 				Config: testAccArchiveFileOutputPath,
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists(fmt.Sprintf("%s/test.zip", tmpDir), &fileSize),
