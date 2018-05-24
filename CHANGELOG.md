@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * Add `excludes` to the `archive_file` data source to exclude files when using `source_dir` [GH-18]
 
+BUG FIXES:
+
+* Fix zip file path names to use forward slash on Windows [GH-25]
+
 ## 1.0.3 (March 23, 2018)
 
 BUG FIXES:
