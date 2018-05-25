@@ -7,6 +7,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix zip file path names to use forward slash on Windows [GH-25]
+* Fix panic in `filepath.Walk` call [GH-26]
 
 ## 1.0.3 (March 23, 2018)
 
