@@ -97,6 +97,10 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 
 	return filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
 
+		if err != nil {
+			return fmt.Errorf("error encountered during file walk: %s", err)
+		}
+
 		relname, err := filepath.Rel(indirname, path)
 		if err != nil {
 			return fmt.Errorf("error relativizing file for archival: %s", err)
