@@ -33,7 +33,6 @@ func dataSourceFile() *schema.Resource {
 			"source": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"content": {
@@ -93,6 +92,7 @@ func dataSourceFile() *schema.Resource {
 			"output_path": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"output_size": {
 				Type:     schema.TypeInt,
