@@ -1,13 +1,13 @@
-## 1.1.0 (Unreleased)
+## 1.1.0 (July 30, 2018)
 
 ENHANCEMENTS:
 
-* Add `excludes` to the `archive_file` data source to exclude files when using `source_dir` [GH-18]
+* Add `excludes` to the `archive_file` data source to exclude files when using `source_dir` ([#18](https://github.com/terraform-providers/terraform-provider-archive/issues/18))
 
 BUG FIXES:
 
-* Fix zip file path names to use forward slash on Windows [GH-25]
-* Fix panic in `filepath.Walk` call [GH-26]
+* Fix zip file path names to use forward slash on Windows ([#25](https://github.com/terraform-providers/terraform-provider-archive/issues/25))
+* Fix panic in `filepath.Walk` call ([#26](https://github.com/terraform-providers/terraform-provider-archive/issues/26))
 
 ## 1.0.3 (March 23, 2018)
 
