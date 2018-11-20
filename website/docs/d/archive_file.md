@@ -39,6 +39,13 @@ data "archive_file" "dotfiles" {
 }
 ```
 
+~> **Note regarding symbolic links**: Due to a bug, the `archive_file` data
+  source does not currently create proper zip archives when the source includes
+  symbolic links (also known as "symlinks"). Please see [GitHub Issue
+  #6](https://github.com/terraform-providers/terraform-provider-archive/issues/6)
+  for more details and workaround options. This message will be removed when the
+  bug is fixed.
+
 ## Argument Reference
 
 The following arguments are supported:
