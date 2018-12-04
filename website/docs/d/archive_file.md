@@ -67,6 +67,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 
 * `source` - (Optional) Specifies attributes of a single source file to include into the archive.
 
+* `excludes` - (Optional) Specifies a list of file to exclude.
+
 The `source` block supports the following:
 
 * `content` - (Required) Add this content to the archive with `filename` as the filename.
