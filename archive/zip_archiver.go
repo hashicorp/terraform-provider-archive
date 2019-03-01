@@ -61,6 +61,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	fh.Method = zip.Deflate
 	// fh.Modified alone isn't enough when using a zero value
 	fh.SetModTime(time.Time{})
+	fh.SetMode(0444)
 
 	f, err := a.writer.CreateHeader(fh)
 	if err != nil {

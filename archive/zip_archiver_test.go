@@ -33,7 +33,50 @@ func TestZipArchiver_File(t *testing.T) {
 		"test-file.txt": []byte("This is test content"),
 	})
 }
-func TestZipArchiver_FileModified(t *testing.T) {
+
+func TestZipArchiver_FilePermissionsModified(t *testing.T) {
+	var (
+		zipFilePath = filepath.FromSlash("archive-file.zip")
+		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
+	)
+
+	var zip = func() {
+		archiver := NewZipArchiver(zipFilePath)
+		if err := archiver.ArchiveFile(toZipPath); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}
+
+	//set initial file permissions
+	if err := os.Chmod(toZipPath, 0600); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	zip()
+
+	expectedContents, err := ioutil.ReadFile(zipFilePath)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	//change file permissions
+	if err := os.Chmod(toZipPath, 0666); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	zip()
+
+	actualContents, err := ioutil.ReadFile(zipFilePath)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	if !bytes.Equal(expectedContents, actualContents) {
+		t.Fatalf("zip contents do not match, potentially a permission issue")
+	}
+}
+
+func TestZipArchiver_FileTimeModified(t *testing.T) {
 	var (
 		zipFilePath = filepath.FromSlash("archive-file.zip")
 		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
@@ -63,7 +106,7 @@ func TestZipArchiver_FileModified(t *testing.T) {
 
 	actualContents, err := ioutil.ReadFile(zipFilePath)
 	if err != nil {
-		t.Fatalf("unexpecte error: %s", err)
+		t.Fatalf("unexpected error: %s", err)
 	}
 
 	if !bytes.Equal(expectedContents, actualContents) {
