@@ -4,6 +4,10 @@ IMPROVEMENTS:
 
 * The provider is now compatible with Terraform v0.12, while retaining compatibility with prior versions.
 
+BUG FIXES:
+
+* Fix file permissions affecting zip contents and causing spurious diffs ([#34](https://github.com/terraform-providers/terraform-provider-archive/issues/34))
+
 ## 1.1.0 (July 30, 2018)
 
 ENHANCEMENTS:
