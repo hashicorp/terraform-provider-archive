@@ -3,11 +3,16 @@ package archive
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"time"
+)
+
+const (
+	uint32max = (1 << 32) - 1
 )
 
 type ZipArchiver struct {
@@ -22,22 +27,35 @@ func NewZipArchiver(filepath string) Archiver {
 	}
 }
 
-func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
+func (a *ZipArchiver) ArchiveContent(content []byte, infilename string, normalizeFilesMetadata bool) error {
 	if err := a.open(); err != nil {
 		return err
 	}
 	defer a.close()
 
-	f, err := a.writer.Create(filepath.ToSlash(infilename))
-	if err != nil {
-		return err
+	var f io.Writer
+	var err error
+
+	if normalizeFilesMetadata {
+		fh := prepareEmptyHeader(content, infilename)
+		normalizeCompressingFile(fh)
+
+		f, err = a.writer.CreateHeader(fh)
+		if err != nil {
+			return fmt.Errorf("error creating file inside archive: %s", err)
+		}
+	} else {
+		f, err = a.writer.Create(filepath.ToSlash(infilename))
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = f.Write(content)
 	return err
 }
 
-func (a *ZipArchiver) ArchiveFile(infilename string) error {
+func (a *ZipArchiver) ArchiveFile(infilename string, normalizeFilesMetadata bool) error {
 	fi, err := assertValidFile(infilename)
 	if err != nil {
 		return err
@@ -58,9 +76,14 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 		return fmt.Errorf("error creating file header: %s", err)
 	}
 	fh.Name = filepath.ToSlash(fi.Name())
-	fh.Method = zip.Deflate
-	// fh.Modified alone isn't enough when using a zero value
-	fh.SetModTime(time.Time{})
+
+	if normalizeFilesMetadata {
+		normalizeCompressingFile(fh)
+	} else {
+		fh.Method = zip.Deflate
+		// fh.Modified alone isn't enough when using a zero value
+		fh.SetModTime(time.Time{})
+	}
 
 	f, err := a.writer.CreateHeader(fh)
 	if err != nil {
@@ -84,7 +107,38 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 	return false
 }
 
-func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
+// The basic file header is very simple. The UncompressedSize logic is not a real-world use case
+// in this context, but "640K ought to be enough for anybody".
+//
+// For reference, see golang/src/archive/zip/struct.go.
+func prepareEmptyHeader(content []byte, infilename string) *zip.FileHeader {
+	fh := &zip.FileHeader{
+		Name:               filepath.ToSlash(infilename),
+		UncompressedSize64: uint64(len(content)),
+	}
+
+	if fh.UncompressedSize64 > uint32max {
+		fh.UncompressedSize = uint32max
+	} else {
+		fh.UncompressedSize = uint32(fh.UncompressedSize64)
+	}
+
+	return fh
+}
+
+// Normalize the fields:
+//
+// - no compression, so the compressed stream is essentially a copy;
+// - fixed date;
+// - fixed file permissions.
+//
+func normalizeCompressingFile(fh *zip.FileHeader) {
+	fh.Method = zip.Store
+	fh.SetModTime(time.Date(1981, 4, 10, 0, 0, 0, 0, time.UTC))
+	fh.SetMode(0644)
+}
+
+func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string, normalizeFilesMetadata bool) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
 		return err
@@ -128,9 +182,14 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 			return fmt.Errorf("error creating file header: %s", err)
 		}
 		fh.Name = filepath.ToSlash(relname)
-		fh.Method = zip.Deflate
-		// fh.Modified alone isn't enough when using a zero value
-		fh.SetModTime(time.Time{})
+
+		if normalizeFilesMetadata {
+			normalizeCompressingFile(fh)
+		} else {
+			fh.Method = zip.Deflate
+			// fh.Modified alone isn't enough when using a zero value
+			fh.SetModTime(time.Time{})
+		}
 
 		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
@@ -145,7 +204,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	})
 }
 
-func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
+func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte, normalizeFilesMetadata bool) error {
 	if err := a.open(); err != nil {
 		return err
 	}
@@ -161,10 +220,24 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	sort.Strings(keys)
 
 	for _, filename := range keys {
-		f, err := a.writer.Create(filepath.ToSlash(filename))
-		if err != nil {
-			return err
+		var f io.Writer
+		var err error
+
+		if normalizeFilesMetadata {
+			fh := prepareEmptyHeader(content[filename], filename)
+			normalizeCompressingFile(fh)
+
+			f, err = a.writer.CreateHeader(fh)
+			if err != nil {
+				return fmt.Errorf("error creating file inside archive: %s", err)
+			}
+		} else {
+			f, err = a.writer.Create(filepath.ToSlash(filename))
+			if err != nil {
+				return err
+			}
 		}
+
 		_, err = f.Write(content[filename])
 		if err != nil {
 			return err
