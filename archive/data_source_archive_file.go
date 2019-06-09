@@ -11,9 +11,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
+	"reflect"
 
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/karrick/godirwalk"
+	"github.com/mholt/archiver"
 )
 
 func dataSourceFile() *schema.Resource {
@@ -22,14 +26,13 @@ func dataSourceFile() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Archive type is now determined from the output_path's file extenstion.",
 			},
 			"source": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"content": {
@@ -89,6 +92,7 @@ func dataSourceFile() *schema.Resource {
 			"output_path": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"output_size": {
 				Type:     schema.TypeInt,
@@ -162,36 +166,77 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
-func archive(d *schema.ResourceData) error {
-	archiveType := d.Get("type").(string)
-	outputPath := d.Get("output_path").(string)
+func checkMatch(fileName string, excludes []string) (value bool) {
+	for _, exclude := range excludes {
+		if exclude == "" {
+			continue
+		}
 
-	archiver := getArchiver(archiveType, outputPath)
-	if archiver == nil {
-		return fmt.Errorf("archive type not supported: %s", archiveType)
+		if exclude == fileName {
+			return true
+		}
+	}
+	return false
+}
+
+func getFileList(dirName string, excludes []string) ([]string, error) {
+	var files []string
+
+	err := godirwalk.Walk(dirName, &godirwalk.Options{
+		Callback: func(osPathname string, de *godirwalk.Dirent) error {
+			relname, err := filepath.Rel(dirName, osPathname)
+			if err != nil {
+				return nil
+			}
+
+			if checkMatch(relname, []string{".", ".."}) {
+				return nil
+			}
+
+			shouldExclude := checkMatch(relname, excludes)
+			fullName := filepath.FromSlash(fmt.Sprintf("%s/%s", dirName, relname))
+
+			if de.IsDir() {
+				if shouldExclude {
+					return filepath.SkipDir
+				}
+			} else if shouldExclude {
+				return nil
+			}
+
+			files = append(files, fullName)
+			return nil
+		},
+	})
+
+	return files, err
+}
+
+func archive(d *schema.ResourceData) error {
+	outputPath := d.Get("output_path").(string)
+	var filesToArchive []string
+
+	compressor := archiver.MatchingFormat(outputPath)
+	if compressor == nil {
+		return fmt.Errorf("cannot compress unsupported file type: %s", outputPath)
 	}
 
-	if dir, ok := d.GetOk("source_dir"); ok {
-		if excludes, ok := d.GetOk("excludes"); ok {
-			excludeList := expandStringList(excludes.(*schema.Set).List())
+	var err error
 
-			if err := archiver.ArchiveDir(dir.(string), excludeList); err != nil {
-				return fmt.Errorf("error archiving directory: %s", err)
-			}
-		} else {
-			if err := archiver.ArchiveDir(dir.(string), []string{""}); err != nil {
-				return fmt.Errorf("error archiving directory: %s", err)
-			}
+	if dir, ok := d.GetOk("source_dir"); ok {
+		var excludeList []string
+		if excludes, ok := d.GetOk("excludes"); ok {
+			excludeList = expandStringList(excludes.(*schema.Set).List())
+		}
+
+		filesToArchive, err = getFileList(dir.(string), excludeList)
+		if err != nil {
+			return fmt.Errorf("could not walk dir: %s", dir.(string))
 		}
 	} else if file, ok := d.GetOk("source_file"); ok {
-		if err := archiver.ArchiveFile(file.(string)); err != nil {
-			return fmt.Errorf("error archiving file: %s", err)
-		}
-	} else if filename, ok := d.GetOk("source_content_filename"); ok {
-		content := d.Get("source_content").(string)
-		if err := archiver.ArchiveContent([]byte(content), filename.(string)); err != nil {
-			return fmt.Errorf("error archiving content: %s", err)
-		}
+		filesToArchive = append(filesToArchive, file.(string))
+	} else if fileName, ok := d.GetOk("source_content_filename"); ok {
+		return fmt.Errorf("source_content not supported for %s", fileName)
 	} else if v, ok := d.GetOk("source"); ok {
 		vL := v.(*schema.Set).List()
 		content := make(map[string][]byte)
@@ -199,12 +244,18 @@ func archive(d *schema.ResourceData) error {
 			src := v.(map[string]interface{})
 			content[src["filename"].(string)] = []byte(src["content"].(string))
 		}
-		if err := archiver.ArchiveMultiple(content); err != nil {
-			return fmt.Errorf("error archiving content: %s", err)
-		}
+
+		keys := reflect.ValueOf(content).MapKeys()
+		return fmt.Errorf("cannot compress %d source blocks", len(keys))
 	} else {
 		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename' must be specified")
 	}
+
+	check := compressor.Make(outputPath, filesToArchive)
+	if check != nil {
+		return fmt.Errorf("could not archive to %s: %s", outputPath, check)
+	}
+
 	return nil
 }
 
