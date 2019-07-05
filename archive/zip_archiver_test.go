@@ -3,6 +3,9 @@ package archive
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -166,5 +169,29 @@ func ensureContent(t *testing.T, wants map[string][]byte, got *zip.File) {
 	gotContent := string(gotContentBytes)
 	if gotContent != wantContent {
 		t.Errorf("mismatched content\ngot\n%s\nwant\n%s", gotContent, wantContent)
+	}
+}
+
+// There are different approaches to testing the functionality. Testing the checksum is a simple yet
+// functional one, since, as long as we're assured that a normalized file has a fixed content (which
+// a checksum guarantees), we don't need to know/test the normalization inner details.
+func ensureFileChecksum(t *testing.T, zipfilepath string, expectedChecksum string) {
+	file, err := os.Open(zipfilepath)
+	if err != nil {
+		t.Errorf("could not open file: %s", err)
+	}
+
+	defer file.Close()
+
+	hashWriter := md5.New()
+
+	if _, err := io.Copy(hashWriter, file); err != nil {
+		t.Errorf("could not open file: %s", err)
+	}
+
+	fileHash := hex.EncodeToString(hashWriter.Sum(nil)[:16])
+
+	if expectedChecksum != fileHash {
+		t.Errorf("the file actual checksum (%s) didn't match the expected one (%s)", fileHash, expectedChecksum)
 	}
 }
