@@ -33,6 +33,7 @@ func TestZipArchiver_File(t *testing.T) {
 		"test-file.txt": []byte("This is test content"),
 	})
 }
+
 func TestZipArchiver_FileModified(t *testing.T) {
 	var (
 		zipFilePath = filepath.FromSlash("archive-file.zip")
