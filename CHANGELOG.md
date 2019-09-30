@@ -1,4 +1,9 @@
 ## 1.3.0 (Unreleased)
+
+NOTES:
+
+* The provider has switched to the standalone TF SDK, there should be no noticeable impact on compatibility. [GH-50]
+
 ## 1.2.2 (April 30, 2019)
 
 * This release includes another Terraform SDK upgrade intended to align with that being used for other providers as we prepare for the Core v0.12.0 release. It should have no significant changes in behavior for this provider.
