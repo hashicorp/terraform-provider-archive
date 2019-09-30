@@ -1,8 +1,8 @@
-## 1.3.0 (Unreleased)
+## 1.3.0 (September 30, 2019)
 
 NOTES:
 
-* The provider has switched to the standalone TF SDK, there should be no noticeable impact on compatibility. [GH-50]
+* The provider has switched to the standalone TF SDK, there should be no noticeable impact on compatibility. ([#50](https://github.com/terraform-providers/terraform-provider-archive/issues/50))
 
 ## 1.2.2 (April 30, 2019)
 
