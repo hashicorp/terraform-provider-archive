@@ -57,6 +57,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 
 * `output_path` - (Required) The output of the archive file.
 
+* `excludes` - (Optional) The files and directories to exclude from the archive content when using `source_dir`.
+
 * `source_content` - (Optional) Add only this content to the archive with `source_content_filename` as the filename.
 
 * `source_content_filename` - (Optional) Set this as the filename when using `source_content`.
