@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -79,6 +81,10 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 
 		if exclude == fileName {
 			return true
+		} else if strings.Contains(exclude, "*") {
+			if matches, _ := regexp.MatchString("^" + strings.Replace(exclude, "*", ".*", -1), fileName); matches {
+				return true
+			}
 		}
 	}
 	return false
