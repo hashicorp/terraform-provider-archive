@@ -135,7 +135,7 @@ func TestZipArchiver_Dir_Exclude_Prefix_Regex_With_Directory(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"test-file.txt":       []byte("This is test content"),
+		"test-file.txt": []byte("This is test content"),
 	})
 }
 
