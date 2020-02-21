@@ -21,11 +21,12 @@ data "archive_file" "init" {
   output_path = "${path.module}/files/init.zip"
 }
 
-# Archive multiple files.
+# Archive multiple files and exclude file.
 
 data "archive_file" "dotfiles" {
   type        = "zip"
   output_path = "${path.module}/files/dotfiles.zip"
+  excludes    = [ "${path.module}/unwanted.zip" ]
 
   source {
     content  = "${data.template_file.vimrc.rendered}"
@@ -66,6 +67,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 * `source_dir` - (Optional) Package entire contents of this directory into the archive.
 
 * `source` - (Optional) Specifies attributes of a single source file to include into the archive.
+
+* `excludes` - (Optional) Specify files to ignore when reading the `source_dir`.
 
 The `source` block supports the following:
 
