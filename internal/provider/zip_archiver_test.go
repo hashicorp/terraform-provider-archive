@@ -137,6 +137,21 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	})
 }
 
+func TestZipArchiver_Dir_Exclude_With_Glob(t *testing.T) {
+	zipfilepath := "archive-dir.zip"
+	archiver := NewZipArchiver(zipfilepath)
+	if err := archiver.ArchiveDir("./test-fixtures/", []string{"**/file2.txt", "test-dir2/*1.txt"}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipfilepath, map[string][]byte{
+		"test-dir/file1.txt":  []byte("This is file 1"),
+		"test-dir/file3.txt":  []byte("This is file 3"),
+		"test-dir2/file3.txt": []byte("This is file 3"),
+		"test-file.txt":       []byte("This is test content"),
+	})
+}
+
 func TestZipArchiver_Multiple(t *testing.T) {
 	zipfilepath := "archive-content.zip"
 	content := map[string][]byte{
