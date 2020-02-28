@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+
+	"github.com/bmatcuk/doublestar"
 )
 
 type ZipArchiver struct {
@@ -71,17 +73,33 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	return err
 }
 
-func checkMatch(fileName string, excludes []string) (value bool) {
+func checkMatch(fileName, indirname string, excludes []string) (value bool, err error) {
 	for _, exclude := range excludes {
-		if exclude == "" {
-			continue
+		globExcludes, err := doublestar.Glob(filepath.Join(indirname, exclude))
+		if err != nil {
+			return false, fmt.Errorf("error computing glob paths: %s", err)
 		}
 
-		if exclude == fileName {
-			return true
+		for _, globExclude := range globExcludes {
+			relExclude, err := filepath.Rel(indirname, globExclude)
+			if err != nil {
+				return false, fmt.Errorf("error relativizing exclude for archival: %s", err)
+			}
+
+			if err != nil {
+				return false, err
+			}
+
+			if exclude == "" {
+				continue
+			}
+
+			if relExclude == fileName {
+				return true, nil
+			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
@@ -106,7 +124,10 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 			return fmt.Errorf("error relativizing file for archival: %s", err)
 		}
 
-		isMatch := checkMatch(relname, excludes)
+		isMatch, err := checkMatch(relname, indirname, excludes)
+		if err != nil {
+			return fmt.Errorf("error parsing glob: %s", err)
+		}
 
 		if info.IsDir() {
 			if isMatch {
