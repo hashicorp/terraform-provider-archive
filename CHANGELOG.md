@@ -3,7 +3,7 @@
 
 NOTES:
 
-* The provider has switched to the standalone TF SDK, there should be no noticeable impact on compatibility. ([#50](https://github.com/terraform-providers/terraform-provider-archive/issues/50))
+* The provider has switched to the standalone TF SDK, there should be no noticeable impact on compatibility. ([#50](https://github.com/hashicorp/terraform-provider-archive/issues/50))
 
 ## 1.2.2 (April 30, 2019)
 
@@ -23,30 +23,30 @@ IMPROVEMENTS:
 
 ENHANCEMENTS:
 
-* Add `excludes` to the `archive_file` data source to exclude files when using `source_dir` ([#18](https://github.com/terraform-providers/terraform-provider-archive/issues/18))
+* Add `excludes` to the `archive_file` data source to exclude files when using `source_dir` ([#18](https://github.com/hashicorp/terraform-provider-archive/issues/18))
 
 BUG FIXES:
 
-* Fix zip file path names to use forward slash on Windows ([#25](https://github.com/terraform-providers/terraform-provider-archive/issues/25))
-* Fix panic in `filepath.Walk` call ([#26](https://github.com/terraform-providers/terraform-provider-archive/issues/26))
+* Fix zip file path names to use forward slash on Windows ([#25](https://github.com/hashicorp/terraform-provider-archive/issues/25))
+* Fix panic in `filepath.Walk` call ([#26](https://github.com/hashicorp/terraform-provider-archive/issues/26))
 
 ## 1.0.3 (March 23, 2018)
 
 BUG FIXES:
 
-* Fix modified time affecting zip contents and causing spurious diffs ([#16](https://github.com/terraform-providers/terraform-provider-archive/issues/16))
+* Fix modified time affecting zip contents and causing spurious diffs ([#16](https://github.com/hashicorp/terraform-provider-archive/issues/16))
 
 ## 1.0.2 (March 16, 2018)
 
 BUG FIXES:
 
-* Fix issue with flags not being copied on a single file and regression introduced in 1.0.1 ([#13](https://github.com/terraform-providers/terraform-provider-archive/issues/13))
+* Fix issue with flags not being copied on a single file and regression introduced in 1.0.1 ([#13](https://github.com/hashicorp/terraform-provider-archive/issues/13))
 
 ## 1.0.1 (March 13, 2018)
 
 BUG FIXES:
 
-* Fix issue with flags not being copied in to archive ([#9](https://github.com/terraform-providers/terraform-provider-archive/issues/9))
+* Fix issue with flags not being copied in to archive ([#9](https://github.com/hashicorp/terraform-provider-archive/issues/9))
 
 ## 1.0.0 (September 15, 2017)
 
