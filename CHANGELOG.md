@@ -1,4 +1,9 @@
-## 1.3.1 (Unreleased)
+## 1.4.0 (Unreleased)
+
+NOTES:
+
+* Updated to v1.12 of the TF plugin SDK [GH-70]
+
 ## 1.3.0 (September 30, 2019)
 
 NOTES:
