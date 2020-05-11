@@ -1,14 +1,25 @@
-dist: trusty
-sudo: required
-services:
-- docker
 language: go
 go:
   - "1.11.x"
-os:
-  - linux
-  - osx
-  - windows
+jobs:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - make test
+        - make testacc
+        - make vet
+        - make website-test
+    - os: osx
+      script:
+        - make test
+        - make testacc
+    - os: windows
+      script:
+        - TF_ACC=1 go test -v ./...
 env:
   - GO111MODULE=on GOFLAGS=-mod=vendor
 
@@ -19,16 +30,6 @@ install:
 # See: https://github.com/golang/go/issues/12933
 - bash scripts/gogetcookie.sh
 
-script:
-- make test
-- make testacc
-- make vet
-- make website-test
-
 branches:
   only:
   - master
-matrix:
-  fast_finish: true
-  allow_failures:
-  - go: tip
