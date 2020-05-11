@@ -3,6 +3,7 @@ package archive
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 
@@ -58,6 +59,7 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
+
 			{
 				Config: testAccArchiveFileMultiConfig,
 				Check: r.ComposeTestCheckFunc(
@@ -96,7 +98,7 @@ data "archive_file" "foo" {
 }
 `
 
-var tmpDir = os.TempDir() + "/test"
+var tmpDir = filepath.ToSlash(os.TempDir()) + "/test"
 var testAccArchiveFileOutputPath = fmt.Sprintf(`
 data "archive_file" "foo" {
   type                    = "zip"
@@ -133,10 +135,10 @@ data "archive_file" "foo" {
 
 var testAccArchiveFileMultiConfig = `
 data "archive_file" "foo" {
-  type        = "zip"
-  source {
-			filename = "content.txt"
-			content = "This is some content"
+	type = "zip"
+	source {
+		filename = "content.txt"
+		content = "This is some content"
 	}
 	output_path = "zip_file_acc_test.zip"
 }

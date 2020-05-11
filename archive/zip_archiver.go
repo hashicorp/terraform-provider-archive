@@ -90,6 +90,11 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		return err
 	}
 
+	// ensure exclusions are OS compatible paths
+	for i := range excludes {
+		excludes[i] = filepath.FromSlash(excludes[i])
+	}
+
 	if err := a.open(); err != nil {
 		return err
 	}
