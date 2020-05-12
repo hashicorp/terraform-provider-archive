@@ -4,6 +4,10 @@ NOTES:
 
 * Updated to v1.12 of the TF plugin SDK [GH-70]
 
+BUG FIXES:
+
+* Fixed path bug with exclusions on Windows [GH-71]
+
 ## 1.3.0 (September 30, 2019)
 
 NOTES:
