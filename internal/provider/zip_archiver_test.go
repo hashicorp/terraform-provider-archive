@@ -156,10 +156,10 @@ func TestZipArchiver_Dir_With_Symlink_Dir_Exclude_With_Directory(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"file1.txt": []byte("This is file 1"),
-		"symlink-dir1/file2.txt":       []byte("This is file 2"),
-		"symlink-dir1/file3.txt":       []byte("This is file 3"),
-		"nested-symlink-dir/file1.txt": []byte("This is file 1"),
+		"file1.txt":                            []byte("This is file 1"),
+		"symlink-dir1/file2.txt":               []byte("This is file 2"),
+		"symlink-dir1/file3.txt":               []byte("This is file 3"),
+		"nested-symlink-dir/file1.txt":         []byte("This is file 1"),
 		"nested-symlink-dir/test-symlink1.txt": []byte("This is test content"),
 	})
 }
