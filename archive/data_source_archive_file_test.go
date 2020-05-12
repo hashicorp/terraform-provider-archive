@@ -2,6 +2,7 @@ package archive
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,14 +13,19 @@ import (
 )
 
 func TestAccArchiveFile_Basic(t *testing.T) {
+	td := testTempDir(t)
+	defer os.RemoveAll(td)
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
 	var fileSize string
 	r.Test(t, r.TestCase{
 		Providers: testProviders,
 		Steps: []r.TestStep{
 			{
-				Config: testAccArchiveFileContentConfig,
+				Config: testAccArchiveFileContentConfig(f),
 				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
+					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 
 					// We just check the hashes for syntax rather than exact
@@ -39,38 +45,32 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccArchiveFileFileConfig,
+				Config: testAccArchiveFileFileConfig(f),
 				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
+					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
 			{
-				Config: testAccArchiveFileDirConfig,
+				Config: testAccArchiveFileDirConfig(f),
 				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
+					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
 			{
-				Config: testAccArchiveFileDirExcludesConfig,
+				Config: testAccArchiveFileDirExcludesConfig(f),
 				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
+					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
 
 			{
-				Config: testAccArchiveFileMultiConfig,
+				Config: testAccArchiveFileMultiConfig(f),
 				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileExists("zip_file_acc_test.zip", &fileSize),
+					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-				),
-			},
-			{
-				Config: testAccArchiveFileOutputPath,
-				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileExists(fmt.Sprintf("%s/test.zip", tmpDir), &fileSize),
 				),
 			},
 		},
@@ -89,57 +89,65 @@ func testAccArchiveFileExists(filename string, fileSize *string) r.TestCheckFunc
 	}
 }
 
-var testAccArchiveFileContentConfig = `
+func testAccArchiveFileContentConfig(outputPath string) string {
+	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type                    = "zip"
   source_content          = "This is some content"
   source_content_filename = "content.txt"
-  output_path             = "zip_file_acc_test.zip"
+  output_path             = "%s"
 }
-`
-
-var tmpDir = filepath.ToSlash(os.TempDir()) + "/test"
-var testAccArchiveFileOutputPath = fmt.Sprintf(`
-data "archive_file" "foo" {
-  type                    = "zip"
-  source_content          = "This is some content"
-  source_content_filename = "content.txt"
-  output_path             = "%s/test.zip"
+`, outputPath)
 }
-`, tmpDir)
 
-var testAccArchiveFileFileConfig = `
+func testAccArchiveFileFileConfig(outputPath string) string {
+	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type        = "zip"
-  source_file = "test-fixtures/test-file.txt"
-  output_path = "zip_file_acc_test.zip"
+  source_file = "%s"
+  output_path = "%s"
 }
-`
+`, filepath.Join("test-fixtures", "test-file.txt"), outputPath)
+}
 
-var testAccArchiveFileDirConfig = `
+func testAccArchiveFileDirConfig(outputPath string) string {
+	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type        = "zip"
-  source_dir  = "test-fixtures/test-dir"
-  output_path = "zip_file_acc_test.zip"
+  source_dir  = "%s"
+  output_path = "%s"
 }
-`
+`, filepath.Join("test-fixtures", "test-dir"), outputPath)
+}
 
-var testAccArchiveFileDirExcludesConfig = `
+func testAccArchiveFileDirExcludesConfig(outputPath string) string {
+	return fmt.Sprintf(`
 data "archive_file" "foo" {
 	type        = "zip"
-	source_dir  = "../archive/test-fixtures/../test-fixtures/test-dir"
-	excludes    = ["test-fixtures/test-dir/file2.txt"]
-	output_path = "zip_file_acc_test.zip"
+	source_dir  = "%s"
+	excludes    = ["%s"]
+	output_path = "%s"
 }
-`
+`, filepath.Join("test-fixtures", "test-dir"), filepath.Join("test-fixtures", "test-dir", "file2.txt"), outputPath)
+}
 
-var testAccArchiveFileMultiConfig = `
+func testAccArchiveFileMultiConfig(outputPath string) string {
+	return fmt.Sprintf(`
 data "archive_file" "foo" {
 	type = "zip"
 	source {
 		filename = "content.txt"
 		content = "This is some content"
 	}
-	output_path = "zip_file_acc_test.zip"
+	output_path = "%s"
 }
-`
+`, outputPath)
+}
+
+func testTempDir(t *testing.T) string {
+	tmp, err := ioutil.TempDir("", "tf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return tmp
+}
