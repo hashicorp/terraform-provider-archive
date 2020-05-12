@@ -84,6 +84,29 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 	return false
 }
 
+func readSymlinkRecursive(fileName string, recursionlimit int) (realPath string, err error) {
+	currentFile := fileName
+	recursionCount := 0
+	for recursionCount < recursionlimit {
+		dir := filepath.Dir(currentFile)
+		realFileName, err := os.Readlink(fileName)
+		if err != nil {
+			return "", err
+		}
+		realPath := filepath.Join(dir, realFileName)
+		f, err := os.Open(realPath)
+		if err != nil {
+			return "", err
+		}
+		realInfo, err := f.Stat()
+		if realInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
+			return realPath, nil
+		}
+		recursionCount++
+	}
+	return "", fmt.Errorf("Symlink recursion limit exceeded: %s", fileName)
+}
+
 func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
@@ -126,6 +149,19 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 
 		if err != nil {
 			return err
+		}
+
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			realPath, err := readSymlinkRecursive(path, 1024)
+			if err != nil {
+				return err
+			}
+			f, err := os.Open(realPath)
+			if err != nil {
+				return err
+			}
+			realInfo, err := f.Stat()
+			info = realInfo
 		}
 
 		fh, err := zip.FileInfoHeader(info)
