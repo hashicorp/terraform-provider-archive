@@ -8,6 +8,11 @@ jobs:
       sudo: required
       services:
         - docker
+      before_script:
+        - curl -fSL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip" -o terraform.zip
+        - sudo unzip terraform.zip -d /opt/terraform
+        - sudo ln -s /opt/terraform/terraform /usr/bin/terraform
+        - rm -f terraform.zip
       script:
         - make test
         - make testacc
@@ -17,12 +22,21 @@ jobs:
       script:
         - make test
         - make testacc
+      before_script:
+        - curl -fSL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_darwin_amd64.zip" -o terraform.zip
+        - sudo unzip terraform.zip -d /opt/terraform
+        - sudo ln -s /opt/terraform/terraform /usr/local/bin/terraform
+        - rm -f terraform.zip
     - os: windows
       script:
         # TODO: ensure windows setup can support binary testing
-        - TF_ACC=1 go test -v ./...
+        - TF_ACC=1 TF_ACC_TERRAFORM_PATH=/c/Users/travis/bin/terraform go test -v ./...
+      before_script:
+        - curl -fSL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_windows_amd64.zip" -o terraform.zip
+        - unzip terraform.zip -d /c/Users/travis/bin
+
 env:
-  - GO111MODULE=on GOFLAGS=-mod=vendor
+  - GO111MODULE=on GOFLAGS=-mod=vendor TF_VERSION=0.12.26
 
 install:
 # This script is used by the Travis build to install a cookie for
