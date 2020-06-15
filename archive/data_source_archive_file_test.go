@@ -97,38 +97,38 @@ data "archive_file" "foo" {
   source_content_filename = "content.txt"
   output_path             = "%s"
 }
-`, outputPath)
+`, filepath.ToSlash(outputPath))
 }
 
 func testAccArchiveFileFileConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type        = "zip"
-  source_file = "%s"
+  source_file = "test-fixtures/test-file.txt"
   output_path = "%s"
 }
-`, filepath.Join("test-fixtures", "test-file.txt"), outputPath)
+`, filepath.ToSlash(outputPath))
 }
 
 func testAccArchiveFileDirConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type        = "zip"
-  source_dir  = "%s"
+  source_dir  = "test-fixtures/test-dir"
   output_path = "%s"
 }
-`, filepath.Join("test-fixtures", "test-dir"), outputPath)
+`, filepath.ToSlash(outputPath))
 }
 
 func testAccArchiveFileDirExcludesConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
 	type        = "zip"
-	source_dir  = "%s"
-	excludes    = ["%s"]
+	source_dir  = "test-fixtures/test-dir"
+	excludes    = ["test-fixtures/test-dir/file2.txt"]
 	output_path = "%s"
 }
-`, filepath.Join("test-fixtures", "test-dir"), filepath.Join("test-fixtures", "test-dir", "file2.txt"), outputPath)
+`, filepath.ToSlash(outputPath))
 }
 
 func testAccArchiveFileMultiConfig(outputPath string) string {
@@ -141,7 +141,7 @@ data "archive_file" "foo" {
 	}
 	output_path = "%s"
 }
-`, outputPath)
+`, filepath.ToSlash(outputPath))
 }
 
 func testTempDir(t *testing.T) string {
