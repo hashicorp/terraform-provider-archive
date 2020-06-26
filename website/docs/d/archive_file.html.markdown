@@ -84,6 +84,8 @@ The following attributes are exported:
 
 * `output_sha` - The SHA1 checksum of output archive file.
 
+* `output_sha256` - The hex-encoded SHA256 checksum of output archive file.
+
 * `output_base64sha256` - The base64-encoded SHA256 checksum of output archive file.
 
 * `output_md5` - The MD5 checksum of output archive file.

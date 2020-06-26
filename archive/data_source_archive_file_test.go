@@ -31,6 +31,9 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 						regexp.MustCompile(`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`),
 					),
 					r.TestMatchResourceAttr(
+						"data.archive_file.foo", "output_sha256", regexp.MustCompile(`^[0-9a-f]{64}$`),
+					),
+					r.TestMatchResourceAttr(
 						"data.archive_file.foo", "output_md5", regexp.MustCompile(`^[0-9a-f]{32}$`),
 					),
 					r.TestMatchResourceAttr(
