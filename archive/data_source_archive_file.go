@@ -203,7 +203,7 @@ func archive(d *schema.ResourceData) error {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
 	} else {
-		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename' must be specified")
+		return fmt.Errorf("one of 'source', 'source_dir', 'source_file', 'source_content_filename' must be specified")
 	}
 	return nil
 }
