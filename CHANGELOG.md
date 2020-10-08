@@ -1,8 +1,10 @@
-## 1.4.0 (Unreleased)
+## 2.0.0 (Unreleased)
 
-NOTES:
+Binary releases of this provider will now include the linux-arm64 platform.
 
-* Updated to v1.12 of the TF plugin SDK [GH-70]
+BREAKING CHANGES:
+
+* Upgrade to version 2 of the Terraform Plugin SDK, which drops support for Terraform 0.11. This provider will continue to work as expected for users of Terraform 0.11, which will not download the new version. [GH-72]
 
 BUG FIXES:
 
