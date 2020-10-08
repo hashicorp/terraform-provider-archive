@@ -1,6 +1,7 @@
 language: go
 go:
-  - "1.11.x"
+  - stable
+  - tip
 jobs:
   include:
     - os: linux
@@ -12,17 +13,19 @@ jobs:
         - make test
         - make testacc
         - make vet
-        - make website-test
     - os: osx
       script:
         - make test
         - make testacc
     - os: windows
       script:
-        # TODO: ensure windows setup can support binary testing
         - TF_ACC=1 go test -v ./...
+      before_script:
+        - curl -fSL "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_windows_amd64.zip" -o terraform.zip
+        - unzip terraform.zip -d /c/Users/travis/bin
+
 env:
-  - GO111MODULE=on GOFLAGS=-mod=vendor
+  - GO111MODULE=on GOFLAGS=-mod=vendor TF_VERSION=0.13.3
 
 install:
 # This script is used by the Travis build to install a cookie for
