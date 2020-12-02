@@ -7,8 +7,8 @@ import (
 
 type Archiver interface {
 	ArchiveContent(content []byte, infilename string) error
-	ArchiveFile(infilename string) error
-	ArchiveDir(indirname string, excludes []string) error
+	ArchiveFile(prepath string, infilename string) error
+	ArchiveDir(prepath string, indirname string, excludes []string) error
 	ArchiveMultiple(content map[string][]byte) error
 }
 

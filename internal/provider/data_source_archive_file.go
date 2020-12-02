@@ -86,6 +86,12 @@ func dataSourceFile() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"prepended_path": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+			},
 			"output_path": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -171,20 +177,25 @@ func archive(d *schema.ResourceData) error {
 		return fmt.Errorf("archive type not supported: %s", archiveType)
 	}
 
+	var prepath string
+	if prepended_path, ok := d.GetOk("prepended_path"); ok {
+		prepath = prepended_path.(string)
+	}
+
 	if dir, ok := d.GetOk("source_dir"); ok {
 		if excludes, ok := d.GetOk("excludes"); ok {
 			excludeList := expandStringList(excludes.(*schema.Set).List())
 
-			if err := archiver.ArchiveDir(dir.(string), excludeList); err != nil {
+			if err := archiver.ArchiveDir(prepath, dir.(string), excludeList); err != nil {
 				return fmt.Errorf("error archiving directory: %s", err)
 			}
 		} else {
-			if err := archiver.ArchiveDir(dir.(string), []string{""}); err != nil {
+			if err := archiver.ArchiveDir(prepath, dir.(string), []string{""}); err != nil {
 				return fmt.Errorf("error archiving directory: %s", err)
 			}
 		}
 	} else if file, ok := d.GetOk("source_file"); ok {
-		if err := archiver.ArchiveFile(file.(string)); err != nil {
+		if err := archiver.ArchiveFile(prepath, file.(string)); err != nil {
 			return fmt.Errorf("error archiving file: %s", err)
 		}
 	} else if filename, ok := d.GetOk("source_content_filename"); ok {
