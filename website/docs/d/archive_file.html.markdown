@@ -70,6 +70,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 
 * `excludes` - (Optional) Specify files to ignore when reading the `source_dir`.
 
+* `prepended_path` - (Optional) Specifies the path prefix to prepend to `source_file` or `source_dir` in the archive path. 
+
 The `source` block supports the following:
 
 * `content` - (Required) Add this content to the archive with `filename` as the filename.
