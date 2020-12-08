@@ -2,6 +2,10 @@ language: go
 go:
   - stable
   - tip
+
+git:
+  symlinks: true
+
 jobs:
   include:
     - os: linux
