@@ -94,11 +94,7 @@ func readSymlinkRecursive(fileName string, recursionlimit int) (realPath string,
 			return "", err
 		}
 		realPath := filepath.Join(dir, realFileName)
-		f, err := os.Open(realPath)
-		if err != nil {
-			return "", err
-		}
-		realInfo, err := f.Stat()
+		realInfo, err := os.Stat(realPath)
 		if realInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
 			return realPath, nil
 		}
@@ -156,11 +152,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 			if err != nil {
 				return err
 			}
-			f, err := os.Open(realPath)
-			if err != nil {
-				return err
-			}
-			realInfo, err := f.Stat()
+			realInfo, err := os.Stat(realPath)
 			info = realInfo
 		}
 

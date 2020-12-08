@@ -113,6 +113,20 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	})
 }
 
+func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
+	zipfilepath := "archive-dir-with-symlink-file.zip"
+	archiver := NewZipArchiver(zipfilepath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file", []string{""}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipfilepath, map[string][]byte{
+		"file1.txt":               []byte("This is file 1"),
+		"test-symlink1.txt":       []byte("This is test content"),
+		"test-nested-symlink.txt": []byte("This is test content"),
+	})
+}
+
 func TestZipArchiver_Multiple(t *testing.T) {
 	zipfilepath := "archive-content.zip"
 	content := map[string][]byte{
