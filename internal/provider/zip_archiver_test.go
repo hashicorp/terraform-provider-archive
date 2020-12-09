@@ -116,7 +116,7 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
 	zipfilepath := "archive-dir-with-symlink-file.zip"
 	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file", []string{""}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file/target", []string{""}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -130,37 +130,35 @@ func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
 func TestZipArchiver_Dir_With_Symlink_Dir(t *testing.T) {
 	zipfilepath := "archive-dir-with-symlink-dir.zip"
 	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-symlink-dir1", []string{""}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-symlink-dir1/target", []string{""}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"file1.txt":                                  []byte("This is file 1"),
-		"symlink-dir1/file1.txt":                     []byte("This is file 1"),
-		"symlink-dir1/file2.txt":                     []byte("This is file 2"),
-		"symlink-dir1/file3.txt":                     []byte("This is file 3"),
-		"nested-symlink-dir/file1.txt":               []byte("This is file 1"),
-		"nested-symlink-dir/test-nested-symlink.txt": []byte("This is test content"),
-		"nested-symlink-dir/test-symlink1.txt":       []byte("This is test content"),
+		"file1.txt":                                                 []byte("This is file 1"),
+		"symlink-to-sample/file1.txt":                               []byte("This is file 1"),
+		"symlink-to-sample/file2.txt":                               []byte("This is file 2"),
+		"symlink-to-sample/file3.txt":                               []byte("This is file 3"),
+		"symlink-to-symlink-to-sample2/file1.txt":                   []byte("This is file 1"),
+		"symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt": []byte("This is file 1"),
 	})
 }
 
 func TestZipArchiver_Dir_With_Symlink_Dir_Exclude_With_Directory(t *testing.T) {
 	zipfilepath := "archive-dir-with-symlink-dir.zip"
 	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-symlink-dir1", []string{
-		"symlink-dir1/file1.txt",
-		"nested-symlink-dir/test-nested-symlink.txt",
+	if err := archiver.ArchiveDir("./test-fixtures/test-symlink-dir1/target", []string{
+		"symlink-to-sample/file1.txt",
+		"symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt",
 	}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"file1.txt":                            []byte("This is file 1"),
-		"symlink-dir1/file2.txt":               []byte("This is file 2"),
-		"symlink-dir1/file3.txt":               []byte("This is file 3"),
-		"nested-symlink-dir/file1.txt":         []byte("This is file 1"),
-		"nested-symlink-dir/test-symlink1.txt": []byte("This is test content"),
+		"file1.txt":                               []byte("This is file 1"),
+		"symlink-to-sample/file2.txt":             []byte("This is file 2"),
+		"symlink-to-sample/file3.txt":             []byte("This is file 3"),
+		"symlink-to-symlink-to-sample2/file1.txt": []byte("This is file 1"),
 	})
 }
 
