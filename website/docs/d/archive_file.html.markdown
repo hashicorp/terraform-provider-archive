@@ -66,6 +66,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 
 * `source_dir` - (Optional) Package entire contents of this directory into the archive.
 
+* `mode` - (Optional) Recursively set `source_file` or `source_dir` permissions to this before packaging.
+
 * `source` - (Optional) Specifies attributes of a single source file to include into the archive.
 
 * `excludes` - (Optional) Specify files to ignore when reading the `source_dir`.

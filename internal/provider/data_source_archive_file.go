@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-archive/internal/hashcode"
@@ -76,6 +78,12 @@ func dataSourceFile() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+			},
+			"mode": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"source_content", "source_content_filename"},
 			},
 			"excludes": {
 				Type:          schema.TypeSet,
@@ -172,6 +180,9 @@ func archive(d *schema.ResourceData) error {
 	}
 
 	if dir, ok := d.GetOk("source_dir"); ok {
+		if mode, ok := d.GetOk("mode"); ok {
+			chmod(dir.(string), mode.(int))
+		}
 		if excludes, ok := d.GetOk("excludes"); ok {
 			excludeList := expandStringList(excludes.(*schema.Set).List())
 
@@ -184,6 +195,9 @@ func archive(d *schema.ResourceData) error {
 			}
 		}
 	} else if file, ok := d.GetOk("source_file"); ok {
+		if mode, ok := d.GetOk("mode"); ok {
+			chmod(file.(string), mode.(int))
+		}
 		if err := archiver.ArchiveFile(file.(string)); err != nil {
 			return fmt.Errorf("error archiving file: %s", err)
 		}
@@ -227,4 +241,24 @@ func genFileShas(filename string) (string, string, string, error) {
 	md5Sum := hex.EncodeToString(md5.Sum(nil))
 
 	return sha1, sha256base64, md5Sum, nil
+}
+
+func chmod(path string, mode int) error {
+	modeDecimal, err := strconv.ParseInt(strconv.Itoa(mode), 8, 64)
+	if err != nil {
+		return err
+	}
+
+	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		err = os.Chmod(path, os.FileMode(modeDecimal))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
