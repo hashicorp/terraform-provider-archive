@@ -73,6 +73,14 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
+
+			{
+				Config: testAccArchiveFileSensitiveConfig(f),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileExists(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+				),
+			},
 		},
 	})
 }
@@ -136,6 +144,19 @@ func testAccArchiveFileMultiConfig(outputPath string) string {
 data "archive_file" "foo" {
 	type = "zip"
 	source {
+		filename = "content.txt"
+		content = "This is some content"
+	}
+	output_path = "%s"
+}
+`, filepath.ToSlash(outputPath))
+}
+
+func testAccArchiveFileSensitiveConfig(outputPath string) string {
+	return fmt.Sprintf(`
+data "archive_file" "foo" {
+	type = "zip"
+	sensitive_source {
 		filename = "content.txt"
 		content = "This is some content"
 	}
