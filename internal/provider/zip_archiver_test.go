@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -33,6 +34,30 @@ func TestZipArchiver_File(t *testing.T) {
 		"test-file.txt": []byte("This is test content"),
 	})
 }
+
+func TestZipArchiver_FileMode(t *testing.T) {
+	file, err := ioutil.TempFile("", "archive-file-mode-test.zip")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		zipFilePath = file.Name()
+		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
+	)
+
+	stringArray := [5]string{"0444", "0644", "0666", "0744", "0777"}
+	for _, element := range stringArray {
+		archiver := NewZipArchiver(zipFilePath)
+		archiver.SetOutputFileMode(element)
+		if err := archiver.ArchiveFile(toZipPath); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		ensureFileMode(t, zipFilePath, element)
+	}
+}
+
 func TestZipArchiver_FileModified(t *testing.T) {
 	var (
 		zipFilePath = filepath.FromSlash("archive-file.zip")
@@ -63,7 +88,7 @@ func TestZipArchiver_FileModified(t *testing.T) {
 
 	actualContents, err := ioutil.ReadFile(zipFilePath)
 	if err != nil {
-		t.Fatalf("unexpecte error: %s", err)
+		t.Fatalf("unexpected error: %s", err)
 	}
 
 	if !bytes.Equal(expectedContents, actualContents) {
@@ -126,10 +151,10 @@ func TestZipArchiver_Multiple(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, content)
-
 }
 
 func ensureContents(t *testing.T, zipfilepath string, wants map[string][]byte) {
+	t.Helper()
 	r, err := zip.OpenReader(zipfilepath)
 	if err != nil {
 		t.Fatalf("could not open zip file: %s", err)
@@ -145,6 +170,7 @@ func ensureContents(t *testing.T, zipfilepath string, wants map[string][]byte) {
 }
 
 func ensureContent(t *testing.T, wants map[string][]byte, got *zip.File) {
+	t.Helper()
 	want, ok := wants[got.Name]
 	if !ok {
 		t.Errorf("additional file in zip: %s", got.Name)
@@ -165,5 +191,30 @@ func ensureContent(t *testing.T, wants map[string][]byte, got *zip.File) {
 	gotContent := string(gotContentBytes)
 	if gotContent != wantContent {
 		t.Errorf("mismatched content\ngot\n%s\nwant\n%s", gotContent, wantContent)
+	}
+}
+
+func ensureFileMode(t *testing.T, zipfilepath string, outputFileMode string) {
+	t.Helper()
+	r, err := zip.OpenReader(zipfilepath)
+	if err != nil {
+		t.Fatalf("could not open zip file: %s", err)
+	}
+	defer r.Close()
+
+	filemode, err := strconv.ParseUint(outputFileMode, 0, 32)
+	if err != nil {
+		t.Fatalf("error parsing outputFileMode value: %s", outputFileMode)
+	}
+	var osfilemode = os.FileMode(filemode)
+
+	for _, cf := range r.File {
+		if cf.FileInfo().IsDir() {
+			continue
+		}
+
+		if cf.Mode() != osfilemode {
+			t.Fatalf("Expected filemode \"%s\" but was \"%s\"", osfilemode, cf.Mode())
+		}
 	}
 }

@@ -10,17 +10,18 @@ type Archiver interface {
 	ArchiveFile(infilename string) error
 	ArchiveDir(indirname string, excludes []string) error
 	ArchiveMultiple(content map[string][]byte) error
+	SetOutputFileMode(outputFileMode string)
 }
 
-type ArchiverBuilder func(filepath string) Archiver
+type ArchiverBuilder func(outputPath string) Archiver
 
 var archiverBuilders = map[string]ArchiverBuilder{
 	"zip": NewZipArchiver,
 }
 
-func getArchiver(archiveType string, filepath string) Archiver {
+func getArchiver(archiveType string, outputPath string) Archiver {
 	if builder, ok := archiverBuilders[archiveType]; ok {
-		return builder(filepath)
+		return builder(outputPath)
 	}
 	return nil
 }
