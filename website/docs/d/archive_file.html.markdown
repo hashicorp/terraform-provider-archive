@@ -38,6 +38,16 @@ data "archive_file" "dotfiles" {
     filename = ".ssh/config"
   }
 }
+
+# Archive a file to be used with Lambda using consistent file mode
+
+data "archive_file" "lambda_my_function" {
+  type             = "zip"
+  source_file      = "${path.module}/../lambda/my-function/index.js"
+  output_file_mode = "0666"
+  output_path      = "${path.module}/files/lambda-my-function.js.zip"
+}
+
 ```
 
 ~> **Note regarding symbolic links**: Due to a bug, the `archive_file` data
@@ -57,6 +67,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
   NOTE: `zip` is supported.
 
 * `output_path` - (Required) The output of the archive file.
+
+* `output_file_mode` (Optional) String that specifies the octal file mode for all archived files. For example: `"0666"`. Setting this will ensure that cross platform usage of this module will not vary the modes of archived files (and ultimately checksums) resulting in more deterministic behavior.
 
 * `source_content` - (Optional) Add only this content to the archive with `source_content_filename` as the filename.
 

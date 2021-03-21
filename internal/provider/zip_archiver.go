@@ -7,13 +7,15 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"time"
 )
 
 type ZipArchiver struct {
-	filepath   string
-	filewriter *os.File
-	writer     *zip.Writer
+	filepath       string
+	outputFileMode string // Default value "" means unset
+	filewriter     *os.File
+	writer         *zip.Writer
 }
 
 func NewZipArchiver(filepath string) Archiver {
@@ -61,6 +63,14 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	fh.Method = zip.Deflate
 	// fh.Modified alone isn't enough when using a zero value
 	fh.SetModTime(time.Time{})
+
+	if a.outputFileMode != "" {
+		filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
+		if err != nil {
+			return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
+		}
+		fh.SetMode(os.FileMode(filemode))
+	}
 
 	f, err := a.writer.CreateHeader(fh)
 	if err != nil {
@@ -137,6 +147,14 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		// fh.Modified alone isn't enough when using a zero value
 		fh.SetModTime(time.Time{})
 
+		if a.outputFileMode != "" {
+			filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
+			if err != nil {
+				return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
+			}
+			fh.SetMode(os.FileMode(filemode))
+		}
+
 		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
@@ -176,6 +194,10 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 		}
 	}
 	return nil
+}
+
+func (a *ZipArchiver) SetOutputFileMode(outputFileMode string) {
+	a.outputFileMode = outputFileMode
 }
 
 func (a *ZipArchiver) open() error {
