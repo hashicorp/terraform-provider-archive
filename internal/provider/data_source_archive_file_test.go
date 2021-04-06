@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
 
 	r "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -28,19 +27,14 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 
-					// We just check the hashes for syntax rather than exact
-					// content since we don't want to break if the archive
-					// library starts generating different bytes that are
-					// functionally equivalent.
-					r.TestMatchResourceAttr(
-						"data.archive_file.foo", "output_base64sha256",
-						regexp.MustCompile(`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_base64sha256", "P7VckxoEiUO411WN3nwuS/yOBL4zsbVWkQU9E1I5H6c=",
 					),
-					r.TestMatchResourceAttr(
-						"data.archive_file.foo", "output_md5", regexp.MustCompile(`^[0-9a-f]{32}$`),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_md5", "ea35f0444ea9a3d5641d8760bc2815cc",
 					),
-					r.TestMatchResourceAttr(
-						"data.archive_file.foo", "output_sha", regexp.MustCompile(`^[0-9a-f]{40}$`),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_sha", "019c79c4dc14dbe1edb3e467b2de6a6aad148717",
 					),
 				),
 			},
@@ -49,6 +43,15 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_base64sha256", "0pc5VnHEiYEymXLjbKzuGXOxiztmeQEohwrIsqKmyCc=",
+					),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_md5", "2e7e38508e1a38efde0f6f794c185d32",
+					),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_sha", "d3bc49809357cf0c092211d16b0fa01d2b18684a",
+					),
 				),
 			},
 			{
@@ -56,6 +59,15 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_base64sha256", "dUpFaNIDnZC0Pp/v7iPOARsGFlEoI42v94vYHB3lggw=",
+					),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_md5", "fe4b7c8000a518c5b9e8c1769f1aacc1",
+					),
+					r.TestCheckResourceAttr(
+						"data.archive_file.foo", "output_sha", "1236a4cf5e93ee0cf78c8406d05ec52a9ccb9540",
+					),
 				),
 			},
 			{
