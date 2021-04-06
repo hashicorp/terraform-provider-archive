@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"time"
 )
 
 type ZipArchiver struct {
+	prepath    string
 	filepath   string
 	filewriter *os.File
 	writer     *zip.Writer
@@ -37,7 +39,7 @@ func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
 	return err
 }
 
-func (a *ZipArchiver) ArchiveFile(infilename string) error {
+func (a *ZipArchiver) ArchiveFile(prepath string, infilename string) error {
 	fi, err := assertValidFile(infilename)
 	if err != nil {
 		return err
@@ -84,7 +86,7 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 	return false
 }
 
-func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
+func (a *ZipArchiver) ArchiveDir(prepath string, indirname string, excludes []string) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
 		return err
@@ -100,13 +102,13 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	}
 	defer a.close()
 
-	return filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(indirname, func(file_path string, info os.FileInfo, err error) error {
 
 		if err != nil {
 			return fmt.Errorf("error encountered during file walk: %s", err)
 		}
 
-		relname, err := filepath.Rel(indirname, path)
+		relname, err := filepath.Rel(indirname, file_path)
 		if err != nil {
 			return fmt.Errorf("error relativizing file for archival: %s", err)
 		}
@@ -132,7 +134,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		if err != nil {
 			return fmt.Errorf("error creating file header: %s", err)
 		}
-		fh.Name = filepath.ToSlash(relname)
+		fh.Name = path.Join(prepath, filepath.ToSlash(relname))
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
 		fh.SetModTime(time.Time{})
@@ -141,7 +143,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
 		}
-		content, err := ioutil.ReadFile(path)
+		content, err := ioutil.ReadFile(file_path)
 		if err != nil {
 			return fmt.Errorf("error reading file for archival: %s", err)
 		}
