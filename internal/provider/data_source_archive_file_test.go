@@ -44,13 +44,13 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_base64sha256", "0pc5VnHEiYEymXLjbKzuGXOxiztmeQEohwrIsqKmyCc=",
+						"data.archive_file.foo", "output_base64sha256", "UTE4f5cWfaR6p0HfOrLILxgvF8UUwiJTjTRwjQTgdWs=",
 					),
 					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_md5", "2e7e38508e1a38efde0f6f794c185d32",
+						"data.archive_file.foo", "output_md5", "59fbc9e62af3cbc2f588f97498240dae",
 					),
 					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_sha", "d3bc49809357cf0c092211d16b0fa01d2b18684a",
+						"data.archive_file.foo", "output_sha", "ce4ee1450ab93ac86e11446649e44cea907b6568",
 					),
 				),
 			},
@@ -60,13 +60,13 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_base64sha256", "dUpFaNIDnZC0Pp/v7iPOARsGFlEoI42v94vYHB3lggw=",
+						"data.archive_file.foo", "output_base64sha256", "ydB8wtq8nK9vQ77VH6YTwoHmyljK46jW+uIJSwCzNpo=",
 					),
 					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_md5", "fe4b7c8000a518c5b9e8c1769f1aacc1",
+						"data.archive_file.foo", "output_md5", "b73f64a383716070aa4a29563b8b14d4",
 					),
 					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_sha", "1236a4cf5e93ee0cf78c8406d05ec52a9ccb9540",
+						"data.archive_file.foo", "output_sha", "76d20a402eefd1cfbdc47886abd4e0909616c191",
 					),
 				),
 			},
@@ -118,6 +118,7 @@ data "archive_file" "foo" {
   type        = "zip"
   source_file = "test-fixtures/test-file.txt"
   output_path = "%s"
+  output_file_mode = "0666"
 }
 `, filepath.ToSlash(outputPath))
 }
@@ -128,6 +129,7 @@ data "archive_file" "foo" {
   type        = "zip"
   source_dir  = "test-fixtures/test-dir"
   output_path = "%s"
+  output_file_mode = "0666"
 }
 `, filepath.ToSlash(outputPath))
 }
