@@ -58,6 +58,28 @@ func TestZipArchiver_FileMode(t *testing.T) {
 	}
 }
 
+func TestZipArchiver_FileMode_ShouldFail(t *testing.T) {
+	file, err := ioutil.TempFile("", "archive-file-mode-test.zip")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		zipFilePath = file.Name()
+		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
+	)
+
+	stringArray := [5]string{"0444", "0644", "0666", "0744", "0777"}
+	for _, element := range stringArray {
+		archiver := NewZipArchiver(zipFilePath)
+		if err := archiver.ArchiveFile(toZipPath); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		ensureFileMode(t, zipFilePath, element)
+	}
+}
+
 func TestZipArchiver_FileModified(t *testing.T) {
 	var (
 		zipFilePath = filepath.FromSlash("archive-file.zip")
@@ -193,6 +215,7 @@ func ensureContent(t *testing.T, wants map[string][]byte, got *zip.File) {
 }
 
 func ensureFileMode(t *testing.T, zipfilepath string, outputFileMode string) {
+	t.Helper()
 	r, err := zip.OpenReader(zipfilepath)
 	if err != nil {
 		t.Fatalf("could not open zip file: %s", err)
