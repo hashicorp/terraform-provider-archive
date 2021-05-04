@@ -1,3 +1,9 @@
+## 2.2.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* New opt-in flag to specify the `output_file_mode` to produce more deterministic behavior across operating systems. ([#90](https://github.com/hashicorp/terraform-provider-archive/pull/90))
+
 ## 2.1.0 (February 19, 2021)
 
 Binary releases of this provider now include the darwin-arm64 platform. This version contains no further changes.
