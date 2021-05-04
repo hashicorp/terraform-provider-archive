@@ -2,7 +2,15 @@
 
 ENHANCEMENTS:
 
-* New opt-in flag to specify the `output_file_mode` to produce more deterministic behavior across operating systems. ([#90](https://github.com/hashicorp/terraform-provider-archive/pull/90))
+* New opt-in flag to specify the `output_file_mode` to produce more deterministic behavior across operating systems. [GH-90]
+
+DEPENDENCIES:
+
+* Update `github.com/hashicorp/terraform-plugin-sdk/v2` to `v2.6.1` [GH-95]
+
+NOTES:
+
+Changelogs now list all dependency updates in a separate section. These are understood to have no user-facing changes except those detailed in earlier sections.
 
 ## 2.1.0 (February 19, 2021)
 
