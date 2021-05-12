@@ -104,9 +104,9 @@ func TestZipArchiver_Dir(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"file1.txt": []byte("This is file 11"),
-		"file2.txt": []byte("This is file 12"),
-		"file3.txt": []byte("This is file 13"),
+		"file1.txt": []byte("This is file 1"),
+		"file2.txt": []byte("This is file 2"),
+		"file3.txt": []byte("This is file 3"),
 	})
 }
 
@@ -118,8 +118,8 @@ func TestZipArchiver_Dir_Exclude(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"file1.txt": []byte("This is file 11"),
-		"file3.txt": []byte("This is file 13"),
+		"file1.txt": []byte("This is file 1"),
+		"file3.txt": []byte("This is file 3"),
 	})
 }
 
@@ -131,8 +131,8 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"test-dir2/file1.txt": []byte("This is file 21"),
-		"test-dir2/file3.txt": []byte("This is file 23"),
+		"test-dir2/file1.txt": []byte("This is file 1"),
+		"test-dir2/file3.txt": []byte("This is file 3"),
 		"test-file.txt":       []byte("This is test content"),
 	})
 }
@@ -145,10 +145,10 @@ func TestZipArchiver_Dir_Exclude_Suffix_Regex_With_Directory(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"test-dir/file1.txt":  []byte("This is file 11"),
-		"test-dir/file2.txt":  []byte("This is file 12"),
-		"test-dir2/file1.txt": []byte("This is file 21"),
-		"test-dir2/file2.txt": []byte("This is file 22"),
+		"test-dir/file1.txt":  []byte("This is file 1"),
+		"test-dir/file2.txt":  []byte("This is file 2"),
+		"test-dir2/file1.txt": []byte("This is file 1"),
+		"test-dir2/file2.txt": []byte("This is file 2"),
 	})
 }
 
@@ -172,9 +172,9 @@ func TestZipArchiver_Dir_Exclude_File_Type_Regex_With_Directory(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"test-dir/file1.txt": []byte("This is file 11"),
-		"test-dir/file2.txt": []byte("This is file 12"),
-		"test-dir/file3.txt": []byte("This is file 13"),
+		"test-dir/file1.txt": []byte("This is file 1"),
+		"test-dir/file2.txt": []byte("This is file 2"),
+		"test-dir/file3.txt": []byte("This is file 3"),
 		"test-file.txt":      []byte("This is test content"),
 	})
 }
