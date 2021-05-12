@@ -113,6 +113,12 @@ func dataSourceFile() *schema.Resource {
 				ForceNew:    true,
 				Description: "MD5 of output file",
 			},
+			"output_file_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -141,13 +147,12 @@ func dataSourceFileRead(d *schema.ResourceData, meta interface{}) error {
 
 	sha1, base64sha256, md5, err := genFileShas(outputPath)
 	if err != nil {
-
 		return fmt.Errorf("could not generate file checksum sha256: %s", err)
 	}
+
 	d.Set("output_sha", sha1)
 	d.Set("output_base64sha256", base64sha256)
 	d.Set("output_md5", md5)
-
 	d.Set("output_size", fi.Size())
 	d.SetId(d.Get("output_sha").(string))
 
@@ -169,6 +174,11 @@ func archive(d *schema.ResourceData) error {
 	archiver := getArchiver(archiveType, outputPath)
 	if archiver == nil {
 		return fmt.Errorf("archive type not supported: %s", archiveType)
+	}
+
+	outputFileMode := d.Get("output_file_mode").(string)
+	if outputFileMode != "" {
+		archiver.SetOutputFileMode(outputFileMode)
 	}
 
 	if dir, ok := d.GetOk("source_dir"); ok {

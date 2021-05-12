@@ -1,6 +1,24 @@
+## 2.2.0 (May 04, 2021)
+
+ENHANCEMENTS:
+
+* New opt-in flag to specify the `output_file_mode` to produce more deterministic behavior across operating systems. ([#90](https://github.com/terraform-providers/terraform-provider-archive/issues/90))
+
+DEPENDENCIES:
+
+* Update `github.com/hashicorp/terraform-plugin-sdk/v2` to `v2.6.1` ([#95](https://github.com/terraform-providers/terraform-provider-archive/issues/95))
+
+NOTES:
+
+Changelogs now list all dependency updates in a separate section. These are understood to have no user-facing changes except those detailed in earlier sections.
+
+## 2.1.0 (February 19, 2021)
+
+Binary releases of this provider now include the darwin-arm64 platform. This version contains no further changes.
+
 ## 2.0.0 (October 14, 2020)
 
-Binary releases of this provider will now include the linux-arm64 platform.
+Binary releases of this provider now include the linux-arm64 platform.
 
 BREAKING CHANGES:
 
