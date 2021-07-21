@@ -62,8 +62,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	fh.Name = filepath.ToSlash(fi.Name())
 	fh.Method = zip.Deflate
 	oldestZipSupportedModTime, _ := time.Parse(time.RFC3339, "1980-01-01T00:00:00+00:00")
-	// fh.Modified alone isn't enough when using a zero value
-	fh.SetModTime(oldestZipSupportedModTime)
+	fh.Modified = oldestZipSupportedModTime
 
 	if a.outputFileMode != "" {
 		filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
@@ -146,8 +145,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		fh.Name = filepath.ToSlash(relname)
 		fh.Method = zip.Deflate
 		oldestZipSupportedModTime, _ := time.Parse(time.RFC3339, "1980-01-01T00:00:00+00:00")
-		// fh.Modified alone isn't enough when using a zero value
-		fh.SetModTime(oldestZipSupportedModTime)
+		fh.Modified = oldestZipSupportedModTime
 
 		if a.outputFileMode != "" {
 			filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
