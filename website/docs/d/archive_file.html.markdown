@@ -61,7 +61,7 @@ data "archive_file" "lambda_my_function" {
 
 The following arguments are supported:
 
-NOTE: One of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified.
+NOTE: One of `source`, `source_content_filename` (with `source_content`), `source_file`, `source_dir`, or `source_dirs` must be specified.
 
 * `type` - (Required) The type of archive to generate.
   NOTE: `zip` is supported.
@@ -77,6 +77,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 * `source_file` - (Optional) Package this file into the archive.
 
 * `source_dir` - (Optional) Package entire contents of this directory into the archive.
+
+* `source_dirs` - (Optional) Package multiple directory into the archive.
 
 * `source` - (Optional) Specifies attributes of a single source file to include into the archive.
 

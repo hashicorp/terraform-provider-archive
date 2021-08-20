@@ -26,6 +26,15 @@ func dataSourceFile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"source_dirs": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				ConflictsWith: []string{"source_file", "source", "source_dir", "source_content", "source_content_filename"},
+			},
 			"source": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -211,6 +220,17 @@ func archive(d *schema.ResourceData) error {
 		}
 		if err := archiver.ArchiveMultiple(content); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
+		}
+  } else if v, ok := d.GetOk("source_dirs"); ok {
+		vL := v.([]interface{})
+		if excludes, ok := d.GetOk("excludes"); ok {
+			excludeList := expandStringList(excludes.(*schema.Set).List())
+
+			archiver.ArchiveMultipleDirs(vL, excludeList)
+			return nil
+		} else {
+			archiver.ArchiveMultipleDirs(vL, []string{""})
+			return nil
 		}
 	} else {
 		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename' must be specified")
