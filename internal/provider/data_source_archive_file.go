@@ -221,7 +221,7 @@ func archive(d *schema.ResourceData) error {
 		if err := archiver.ArchiveMultiple(content); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
-  } else if v, ok := d.GetOk("source_dirs"); ok {
+	} else if v, ok := d.GetOk("source_dirs"); ok {
 		vL := v.([]interface{})
 		if excludes, ok := d.GetOk("excludes"); ok {
 			excludeList := expandStringList(excludes.(*schema.Set).List())

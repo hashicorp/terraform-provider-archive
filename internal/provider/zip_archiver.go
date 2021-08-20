@@ -113,7 +113,6 @@ func (a *ZipArchiver) ArchiveMultipleDirs(dirs []interface{}, excludes []string)
 			excludes[i] = filepath.FromSlash(excludes[i])
 		}
 
-
 		filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return fmt.Errorf("error encountered during file walk: %s", err)
@@ -171,7 +170,7 @@ func (a *ZipArchiver) ArchiveMultipleDirs(dirs []interface{}, excludes []string)
 			_, err = f.Write(content)
 			return err
 		})
-	};
+	}
 	return nil
 }
 
