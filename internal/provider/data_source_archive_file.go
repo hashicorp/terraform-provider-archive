@@ -71,7 +71,7 @@ func dataSourceFile() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"source_file", "source_dir", "source_content", "source_content_filename"},
+				ConflictsWith: []string{"source_file", "source_dir", "source_dirs", "source_content", "source_content_filename"},
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
@@ -84,31 +84,31 @@ func dataSourceFile() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_file", "source_dir"},
+				ConflictsWith: []string{"source_file", "source_dir", "source_dirs"},
 			},
 			"source_content_filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_file", "source_dir"},
+				ConflictsWith: []string{"source_file", "source_dir", "source_dirs"},
 			},
 			"source_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_dir"},
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_dir", "source_dirs"},
 			},
 			"source_dir": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_file", "source_dirs"},
 			},
 			"excludes": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_file", "source_dirs"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
