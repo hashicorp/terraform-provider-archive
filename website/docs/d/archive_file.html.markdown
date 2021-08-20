@@ -78,7 +78,7 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 
 * `source_dir` - (Optional) Package entire contents of this directory into the archive.
 
-* `source_dirs` - (Optional) Package multiple directory into the archive.
+* `source_dirs` - (Optional) Specifies attributes of multiple directory listing into the archive
 
 * `source` - (Optional) Specifies attributes of a single source file to include into the archive.
 
@@ -89,6 +89,12 @@ The `source` block supports the following:
 * `content` - (Required) Add this content to the archive with `filename` as the filename.
 
 * `filename` - (Required) Set this as the filename when declaring a `source`.
+
+The `source_dirs` block supports the following:
+
+* `dirs` - (Required) Add the list of directory as their own folder into the archive
+
+* `root_dirs` - (Required) Add the list of directory contents into the archive root level
 
 ## Attributes Reference
 

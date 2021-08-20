@@ -27,13 +27,31 @@ func dataSourceFile() *schema.Resource {
 				ForceNew: true,
 			},
 			"source_dirs": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dirs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"root_dirs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
 				},
-				ConflictsWith: []string{"source_file", "source", "source_dir", "source_content", "source_content_filename"},
+				ConflictsWith: []string{"source_file", "source_dir", "source_content", "source_content_filename"},
 			},
 			"source": {
 				Type:     schema.TypeSet,
@@ -222,15 +240,20 @@ func archive(d *schema.ResourceData) error {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
 	} else if v, ok := d.GetOk("source_dirs"); ok {
-		vL := v.([]interface{})
-		if excludes, ok := d.GetOk("excludes"); ok {
-			excludeList := expandStringList(excludes.(*schema.Set).List())
+		vL := v.(*schema.Set).List()
+		for _, v := range vL {
+			src := v.(map[string]interface{})
+			dirs := src["dirs"].([]interface{})
+			rootDirs := src["root_dirs"].([]interface{})
+			if excludes, ok := d.GetOk("excludes"); ok {
+				excludeList := expandStringList(excludes.(*schema.Set).List())
 
-			archiver.ArchiveMultipleDirs(vL, excludeList)
-			return nil
-		} else {
-			archiver.ArchiveMultipleDirs(vL, []string{""})
-			return nil
+				archiver.ArchiveMultipleDirs(dirs, rootDirs, excludeList)
+				return nil
+			} else {
+				archiver.ArchiveMultipleDirs(dirs, rootDirs, []string{""})
+				return nil
+			}
 		}
 	} else {
 		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename' must be specified")
