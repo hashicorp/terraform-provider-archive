@@ -13,6 +13,7 @@ import (
 
 type ZipArchiver struct {
 	filepath       string
+	archiveDirs    string
 	outputFileMode string // Default value "" means unset
 	filewriter     *os.File
 	writer         *zip.Writer
@@ -94,7 +95,7 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 	return false
 }
 
-func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
+func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string, archiveDirs string) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
 		return err
@@ -142,7 +143,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		if err != nil {
 			return fmt.Errorf("error creating file header: %s", err)
 		}
-		fh.Name = filepath.ToSlash(relname)
+		fh.Name = filepath.Join(archiveDirs, filepath.ToSlash(relname))
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
 		fh.SetModTime(time.Time{})

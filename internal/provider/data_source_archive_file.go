@@ -77,6 +77,11 @@ func dataSourceFile() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
 			},
+			"archive_dir": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"excludes": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -181,15 +186,18 @@ func archive(d *schema.ResourceData) error {
 		archiver.SetOutputFileMode(outputFileMode)
 	}
 
+	archiveDirs := d.Get("archive_dir").(string)
+
 	if dir, ok := d.GetOk("source_dir"); ok {
+
 		if excludes, ok := d.GetOk("excludes"); ok {
 			excludeList := expandStringList(excludes.(*schema.Set).List())
 
-			if err := archiver.ArchiveDir(dir.(string), excludeList); err != nil {
+			if err := archiver.ArchiveDir(dir.(string), excludeList, archiveDirs); err != nil {
 				return fmt.Errorf("error archiving directory: %s", err)
 			}
 		} else {
-			if err := archiver.ArchiveDir(dir.(string), []string{""}); err != nil {
+			if err := archiver.ArchiveDir(dir.(string), []string{""}, archiveDirs); err != nil {
 				return fmt.Errorf("error archiving directory: %s", err)
 			}
 		}

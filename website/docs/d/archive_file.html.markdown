@@ -78,6 +78,8 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 
 * `source_dir` - (Optional) Package entire contents of this directory into the archive.
 
+* `archive_dir` - (Optional) When used with source_dir, the top-level directories inside the archive that will contain all the contents
+
 * `source` - (Optional) Specifies attributes of a single source file to include into the archive.
 
 * `excludes` - (Optional) Specify files to ignore when reading the `source_dir`.
