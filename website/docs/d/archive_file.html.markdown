@@ -1,7 +1,6 @@
 ---
 layout: "archive"
 page_title: "Archive: archive_file"
-sidebar_current: "docs-archive-datasource-archive-file"
 description: |-
   Generates an archive from content, a file, or directory of files.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "archive"
 page_title: "Provider: Archive"
-sidebar_current: "docs-archive-index"
 description: |-
   The Archive provider is used to manage archive files.
 ---
