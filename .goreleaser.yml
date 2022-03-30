@@ -51,8 +51,8 @@ publishers:
       -header=x-terraform-protocol-version=5 \
       -header=x-terraform-protocol-versions=5.0
     env:
-      - HC_RELEASES_HOST={{ .Env.HC_RELEASES_HOST_STAGING }}
-      - HC_RELEASES_KEY={{ .Env.HC_RELEASES_KEY_STAGING }}
+      - HC_RELEASES_HOST={{ .Env.HC_RELEASES_HOST }}
+      - HC_RELEASES_KEY={{ .Env.HC_RELEASES_KEY }}
     dir: "{{ dir .ArtifactPath }}"
     extra_files:
       - glob: 'terraform-registry-manifest.json'
