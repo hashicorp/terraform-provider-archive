@@ -42,8 +42,8 @@ jobs:
       setup-signore-github-token: '${{ secrets.HASHI_SIGNORE_GITHUB_TOKEN }}'
       signore-client-id: '${{ secrets.SIGNORE_CLIENT_ID }}'
       signore-client-secret: '${{ secrets.SIGNORE_CLIENT_SECRET }}'
+      hc-releases-host-staging: '${{ secrets.HC_RELEASES_HOST_STAGING }}'
+      hc-releases-host-prod: '${{ secrets.HC_RELEASES_HOST_PROD }}'
     with:
       release-notes: true
       setup-go-version: '${{ needs.go-version.outputs.version }}'
-      hc-releases-host-staging: '${{ secrets.HC_RELEASES_HOST_STAGING }}'
-      hc-releases-host-prod: '${{ secrets.HC_RELEASES_HOST_PROD }}'
