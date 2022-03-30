@@ -46,6 +46,7 @@ publishers:
     # For providers which have existed since those CLI versions, exclude
     # discovery by setting the protocol version headers to 5.
     cmd: |
+      echo "Host: [$HC_RELEASES_HOST]"
       hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} \
       -file={{ .ArtifactName }} \
       -header=x-terraform-protocol-version=5 \
