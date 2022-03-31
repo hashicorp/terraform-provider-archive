@@ -47,7 +47,7 @@ publishers:
     # discovery by setting the protocol version headers to 5.
     cmd: |
       hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} \
-      -file={{ .ArtifactName }} \
+      -file={{ .ArtifactPath }} \
       -header=x-terraform-protocol-version=5 \
       -header=x-terraform-protocol-versions=5.0
     env:
