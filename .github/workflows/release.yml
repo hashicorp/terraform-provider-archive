@@ -48,3 +48,4 @@ jobs:
     with:
       release-notes: true
       setup-go-version: '${{ needs.go-version.outputs.version }}'
+      product-version: '${{ github.ref_name }}'
