@@ -1,9 +1,3 @@
-## 2.3.0 (unreleased)
-
-NOTES:
-
-* This Go module has been updated to Go 1.18 per the Go support policy. Any consumers building on earlier Go versions may experience errors. (#154)
-
 ## 2.2.0 (May 04, 2021)
 
 ENHANCEMENTS:
