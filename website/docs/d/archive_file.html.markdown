@@ -93,8 +93,14 @@ The following attributes are exported:
 
 * `output_size` - The size of the output archive file.
 
+* `output_md5` - The MD5 checksum of output archive file.
+
 * `output_sha` - The SHA1 checksum of output archive file.
 
-* `output_base64sha256` - The base64-encoded SHA256 checksum of output archive file.
+* `output_sha256` - SHA256 checksum of output file.
 
-* `output_md5` - The MD5 checksum of output archive file.
+* `output_base64sha256` - Base64 Encoded SHA256 checksum of output file.
+
+* `output_sha512` - SHA512 checksum of output file.
+
+* `output_base64sha512` - Base64 Encoded SHA512 checksum of output file.
