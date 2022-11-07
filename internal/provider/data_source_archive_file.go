@@ -21,27 +21,33 @@ func dataSourceFile() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceFileRead,
 
+		Description: "Generates an archive from content, a file, or directory of files.",
+
 		Schema: map[string]*schema.Schema{
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The type of archive to generate. NOTE: `zip` is supported.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"source": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Description: "Specifies attributes of a single source file to include into the archive.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"content": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Description: "Add this content to the archive with `filename` as the filename.",
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    true,
 						},
 						"filename": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Description: "Set this as the filename when declaring a `source`.",
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    true,
 						},
 					},
 				},
@@ -55,30 +61,35 @@ func dataSourceFile() *schema.Resource {
 				},
 			},
 			"source_content": {
+				Description:   "Add only this content to the archive with `source_content_filename` as the filename.",
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_file", "source_dir"},
 			},
 			"source_content_filename": {
+				Description:   "Set this as the filename when using `source_content`.",
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_file", "source_dir"},
 			},
 			"source_file": {
+				Description:   "Package this file into the archive.",
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_content", "source_content_filename", "source_dir"},
 			},
 			"source_dir": {
+				Description:   "Package entire contents of this directory into the archive.",
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
 			},
 			"excludes": {
+				Description:   "Specify files to ignore when reading the `source_dir`.",
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
@@ -88,33 +99,38 @@ func dataSourceFile() *schema.Resource {
 				},
 			},
 			"output_path": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The output of the archive file.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"output_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				ForceNew: true,
+				Description: "The size of the output archive file.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+				ForceNew:    true,
 			},
 			"output_sha": {
+				Description: "The SHA1 checksum of output archive file.",
 				Type:        schema.TypeString,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "SHA1 checksum of output file",
 			},
 			"output_base64sha256": {
+				Description: "The base64-encoded SHA256 checksum of output archive file.",
 				Type:        schema.TypeString,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Base64 Encoded SHA256 checksum of output file",
 			},
 			"output_md5": {
+				Description: "The MD5 checksum of output archive file.",
 				Type:        schema.TypeString,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "MD5 of output file",
 			},
 			"output_file_mode": {
+				Description: "String that specifies the octal file mode for all archived files. For example: `\"0666\"`. " +
+					"Setting this will ensure that cross platform usage of this module will not vary the modes of archived " +
+					"files (and ultimately checksums) resulting in more deterministic behavior.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
