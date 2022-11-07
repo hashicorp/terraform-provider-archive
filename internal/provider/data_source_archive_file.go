@@ -13,6 +13,7 @@ import (
 	"path"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/hashicorp/terraform-provider-archive/internal/hashcode"
 )
 
@@ -150,10 +151,22 @@ func dataSourceFileRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("could not generate file checksum sha256: %s", err)
 	}
 
-	d.Set("output_sha", sha1)
-	d.Set("output_base64sha256", base64sha256)
-	d.Set("output_md5", md5)
-	d.Set("output_size", fi.Size())
+	err = d.Set("output_sha", sha1)
+	if err != nil {
+		return fmt.Errorf("read file error output_sha: %s", err)
+	}
+	err = d.Set("output_base64sha256", base64sha256)
+	if err != nil {
+		return fmt.Errorf("read file error output_base64sha256: %s", err)
+	}
+	err = d.Set("output_md5", md5)
+	if err != nil {
+		return fmt.Errorf("read file error output_md5: %s", err)
+	}
+	err = d.Set("output_size", fi.Size())
+	if err != nil {
+		return fmt.Errorf("read file error output_size: %s", err)
+	}
 	d.SetId(d.Get("output_sha").(string))
 
 	return nil
@@ -224,16 +237,16 @@ func genFileShas(filename string) (string, string, string, error) {
 		return "", "", "", fmt.Errorf("could not compute file '%s' checksum: %s", filename, err)
 	}
 	h := sha1.New()
-	h.Write([]byte(data))
+	h.Write(data)
 	sha1 := hex.EncodeToString(h.Sum(nil))
 
 	h256 := sha256.New()
-	h256.Write([]byte(data))
+	h256.Write(data)
 	shaSum := h256.Sum(nil)
 	sha256base64 := base64.StdEncoding.EncodeToString(shaSum[:])
 
 	md5 := md5.New()
-	md5.Write([]byte(data))
+	md5.Write(data)
 	md5Sum := hex.EncodeToString(md5.Sum(nil))
 
 	return sha1, sha256base64, md5Sum, nil

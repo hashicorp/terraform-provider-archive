@@ -62,6 +62,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	fh.Name = filepath.ToSlash(fi.Name())
 	fh.Method = zip.Deflate
 	// fh.Modified alone isn't enough when using a zero value
+	//nolint:staticcheck
 	fh.SetModTime(time.Time{})
 
 	if a.outputFileMode != "" {
@@ -145,6 +146,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		fh.Name = filepath.ToSlash(relname)
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
+		//nolint:staticcheck
 		fh.SetModTime(time.Time{})
 
 		if a.outputFileMode != "" {
