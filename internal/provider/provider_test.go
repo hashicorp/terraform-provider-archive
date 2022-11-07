@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+//nolint:unparam
 var testProviders = map[string]func() (*schema.Provider, error){
 	"archive": func() (*schema.Provider, error) {
 		return Provider(), nil
