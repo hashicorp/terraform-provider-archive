@@ -18,7 +18,7 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 
 	var fileSize string
 	r.Test(t, r.TestCase{
-		Providers: testProviders,
+		ProviderFactories: testProviders,
 		Steps: []r.TestStep{
 			{
 				Config: testAccArchiveFileContentConfig(f),

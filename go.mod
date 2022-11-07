@@ -2,7 +2,7 @@ module github.com/hashicorp/terraform-provider-archive
 
 go 1.18
 
-require github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
+require github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
 
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect

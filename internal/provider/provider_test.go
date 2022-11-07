@@ -6,8 +6,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var testProviders = map[string]*schema.Provider{
-	"archive": Provider(),
+var testProviders = map[string]func() (*schema.Provider, error){
+	"archive": func() (*schema.Provider, error) {
+		return Provider(), nil
+	},
 }
 
 func TestProvider(t *testing.T) {

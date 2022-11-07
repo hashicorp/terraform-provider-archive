@@ -2,6 +2,7 @@ package archive
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-provider-archive/internal/hashcode"
@@ -18,7 +20,7 @@ import (
 
 func dataSourceFile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFileRead,
+		ReadContext: dataSourceFileRead,
 
 		Description: "Generates an archive from content, a file, or directory of files.",
 
@@ -139,49 +141,53 @@ func dataSourceFile() *schema.Resource {
 	}
 }
 
-func dataSourceFileRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	outputPath := d.Get("output_path").(string)
 
 	outputDirectory := path.Dir(outputPath)
 	if outputDirectory != "" {
 		if _, err := os.Stat(outputDirectory); err != nil {
 			if err := os.MkdirAll(outputDirectory, 0755); err != nil {
-				return err
+				return diag.FromErr(fmt.Errorf("error creating output path: %s", err))
 			}
 		}
 	}
 
 	if err := archive(d); err != nil {
-		return err
+		return diag.FromErr(fmt.Errorf("error creating archive: %s", err))
 	}
 
 	// Generate archived file stats
 	fi, err := os.Stat(outputPath)
 	if err != nil {
-		return err
+		return diag.FromErr(fmt.Errorf("error reading output: %s", err))
 	}
 
 	sha1, base64sha256, md5, err := genFileShas(outputPath)
 	if err != nil {
-		return fmt.Errorf("could not generate file checksum sha256: %s", err)
+		return diag.FromErr(fmt.Errorf("error generating hashed: %s", err))
 	}
 
 	err = d.Set("output_sha", sha1)
 	if err != nil {
-		return fmt.Errorf("read file error output_sha: %s", err)
+		return diag.FromErr(fmt.Errorf("error saving output_sha: %s", err))
 	}
+
 	err = d.Set("output_base64sha256", base64sha256)
 	if err != nil {
-		return fmt.Errorf("read file error output_base64sha256: %s", err)
+		return diag.FromErr(fmt.Errorf("error saving output_base64sha256: %s", err))
 	}
+
 	err = d.Set("output_md5", md5)
 	if err != nil {
-		return fmt.Errorf("read file error output_md5: %s", err)
+		return diag.FromErr(fmt.Errorf("error saving output_md5: %s", err))
 	}
+
 	err = d.Set("output_size", fi.Size())
 	if err != nil {
-		return fmt.Errorf("read file error output_size: %s", err)
+		return diag.FromErr(fmt.Errorf("error saving output_size: %s", err))
 	}
+
 	d.SetId(d.Get("output_sha").(string))
 
 	return nil
