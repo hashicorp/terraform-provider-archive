@@ -3,7 +3,7 @@ package archive
 import (
 	"archive/zip"
 	"bytes"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -36,7 +36,7 @@ func TestZipArchiver_File(t *testing.T) {
 }
 
 func TestZipArchiver_FileMode(t *testing.T) {
-	file, err := ioutil.TempFile("", "archive-file-mode-test.zip")
+	file, err := os.CreateTemp("", "archive-file-mode-test.zip")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestZipArchiver_FileModified(t *testing.T) {
 
 	zip()
 
-	expectedContents, err := ioutil.ReadFile(zipFilePath)
+	expectedContents, err := os.ReadFile(zipFilePath)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -86,7 +86,7 @@ func TestZipArchiver_FileModified(t *testing.T) {
 
 	zip()
 
-	actualContents, err := ioutil.ReadFile(zipFilePath)
+	actualContents, err := os.ReadFile(zipFilePath)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -182,7 +182,7 @@ func ensureContent(t *testing.T, wants map[string][]byte, got *zip.File) {
 		t.Errorf("could not open file: %s", err)
 	}
 	defer r.Close()
-	gotContentBytes, err := ioutil.ReadAll(r)
+	gotContentBytes, err := io.ReadAll(r)
 	if err != nil {
 		t.Errorf("could not read file: %s", err)
 	}

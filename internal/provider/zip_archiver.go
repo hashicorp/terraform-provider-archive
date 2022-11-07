@@ -3,7 +3,6 @@ package archive
 import (
 	"archive/zip"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -45,7 +44,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 		return err
 	}
 
-	content, err := ioutil.ReadFile(infilename)
+	content, err := os.ReadFile(infilename)
 	if err != nil {
 		return err
 	}
@@ -161,7 +160,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
 		}
-		content, err := ioutil.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("error reading file for archival: %s", err)
 		}

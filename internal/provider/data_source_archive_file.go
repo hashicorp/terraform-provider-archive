@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -248,7 +247,7 @@ func archive(d *schema.ResourceData) error {
 }
 
 func genFileShas(filename string) (string, string, string, error) {
-	data, err := ioutil.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return "", "", "", fmt.Errorf("could not compute file '%s' checksum: %s", filename, err)
 	}

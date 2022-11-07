@@ -2,7 +2,6 @@ package archive
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -159,7 +158,7 @@ data "archive_file" "foo" {
 }
 
 func testTempDir(t *testing.T) string {
-	tmp, err := ioutil.TempDir("", "tf")
+	tmp, err := os.MkdirTemp("", "tf")
 	if err != nil {
 		t.Fatal(err)
 	}
