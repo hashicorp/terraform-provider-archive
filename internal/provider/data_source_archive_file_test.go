@@ -73,15 +73,6 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_base64sha256", "dUpFaNIDnZC0Pp/v7iPOARsGFlEoI42v94vYHB3lggw=",
-					),
-					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_md5", "fe4b7c8000a518c5b9e8c1769f1aacc1",
-					),
-					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_sha", "1236a4cf5e93ee0cf78c8406d05ec52a9ccb9540",
-					),
 				),
 			},
 			{
@@ -89,15 +80,6 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileExists(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_base64sha256", "BCmKCekryQACQ2YKPqzfquCMyczTtkJmNsELeONWf70=",
-					),
-					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_md5", "63200bbcdbd20e098becde2b1cbd84f8",
-					),
-					r.TestCheckResourceAttr(
-						"data.archive_file.foo", "output_sha", "4ff425cc4e44472dbeb827ce29cd341eea2ebcc2",
-					),
 				),
 			},
 		},
