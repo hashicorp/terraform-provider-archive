@@ -1,7 +1,6 @@
 package archive
 
 import (
-	"bytes"
 	"context"
 	"crypto/md5"
 	"crypto/sha1"
@@ -12,244 +11,291 @@ import (
 	"os"
 	"path"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	"github.com/hashicorp/terraform-provider-archive/internal/hashcode"
+	"github.com/hashicorp/terraform-plugin-framework-validators/schemavalidator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	fwpath "github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func dataSourceFile() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: dataSourceFileRead,
+var _ datasource.DataSource = (*archiveFileDataSource)(nil)
 
-		Description: "Generates an archive from content, a file, or directory of files.",
+func NewArchiveFileDataSource() datasource.DataSource {
+	return &archiveFileDataSource{}
+}
 
-		Schema: map[string]*schema.Schema{
-			"type": {
-				Description: "The type of archive to generate. NOTE: `zip` is supported.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-			},
+type archiveFileDataSource struct{}
+
+func (d *archiveFileDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return tfsdk.Schema{
+		Blocks: map[string]tfsdk.Block{
 			"source": {
 				Description: "Specifies attributes of a single source file to include into the archive.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"content": {
-							Description: "Add this content to the archive with `filename` as the filename.",
-							Type:        schema.TypeString,
-							Required:    true,
-							ForceNew:    true,
-						},
-						"filename": {
-							Description: "Set this as the filename when declaring a `source`.",
-							Type:        schema.TypeString,
-							Required:    true,
-							ForceNew:    true,
+				Attributes: map[string]tfsdk.Attribute{
+					"content": {
+						Description: "Add this content to the archive with `filename` as the filename.",
+						Type:        types.StringType,
+						Required:    true,
+						Validators: []tfsdk.AttributeValidator{
+							schemavalidator.ConflictsWith(
+								fwpath.MatchRoot("source_file"),
+								fwpath.MatchRoot("source_dir"),
+								fwpath.MatchRoot("source_content"),
+								fwpath.MatchRoot("source_content_filename"),
+							),
 						},
 					},
+					"filename": {
+						Description: "Set this as the filename when declaring a `source`.",
+						Type:        types.StringType,
+						Required:    true,
+					},
 				},
-				ConflictsWith: []string{"source_file", "source_dir", "source_content", "source_content_filename"},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["filename"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["content"].(string)))
-					return hashcode.String(buf.String())
-				},
+				NestingMode: tfsdk.BlockNestingModeSet,
+			},
+		},
+		Attributes: map[string]tfsdk.Attribute{
+			"id": {
+				Description: "The sha1 checksum hash of the output.",
+				Type:        types.StringType,
+				Computed:    true,
+			},
+			"type": {
+				Description: "The type of archive to generate. NOTE: `zip` is supported.",
+				Type:        types.StringType,
+				Required:    true,
 			},
 			"source_content": {
-				Description:   "Add only this content to the archive with `source_content_filename` as the filename.",
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_file", "source_dir"},
+				Description: "Add only this content to the archive with `source_content_filename` as the filename.",
+				Type:        types.StringType,
+				Optional:    true,
+				Validators: []tfsdk.AttributeValidator{
+					schemavalidator.ConflictsWith(
+						fwpath.MatchRoot("source_file"),
+						fwpath.MatchRoot("source_dir"),
+					),
+				},
 			},
 			"source_content_filename": {
-				Description:   "Set this as the filename when using `source_content`.",
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_file", "source_dir"},
+				Description: "Set this as the filename when using `source_content`.",
+				Type:        types.StringType,
+				Optional:    true,
+				Validators: []tfsdk.AttributeValidator{
+					schemavalidator.ConflictsWith(
+						fwpath.MatchRoot("source_file"),
+						fwpath.MatchRoot("source_dir"),
+					),
+				},
 			},
 			"source_file": {
-				Description:   "Package this file into the archive.",
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_dir"},
+				Description: "Package this file into the archive.",
+				Type:        types.StringType,
+				Optional:    true,
+				Validators: []tfsdk.AttributeValidator{
+					schemavalidator.ConflictsWith(
+						fwpath.MatchRoot("source_dir"),
+						fwpath.MatchRoot("source_content"),
+						fwpath.MatchRoot("source_content_filename"),
+					),
+				},
 			},
 			"source_dir": {
-				Description:   "Package entire contents of this directory into the archive.",
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+				Description: "Package entire contents of this directory into the archive.",
+				Type:        types.StringType,
+				Optional:    true,
+				Validators: []tfsdk.AttributeValidator{
+					schemavalidator.ConflictsWith(
+						fwpath.MatchRoot("source_file"),
+						fwpath.MatchRoot("source_content"),
+						fwpath.MatchRoot("source_content_filename"),
+					),
+				},
 			},
 			"excludes": {
-				Description:   "Specify files to ignore when reading the `source_dir`.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Description: "Specify files to ignore when reading the `source_dir`.",
+				Type: types.SetType{
+					ElemType: types.StringType,
+				},
+				Optional: true,
+				Validators: []tfsdk.AttributeValidator{
+					schemavalidator.ConflictsWith(
+						fwpath.MatchRoot("source_file"),
+						fwpath.MatchRoot("source_content"),
+						fwpath.MatchRoot("source_content_filename"),
+					),
 				},
 			},
 			"output_path": {
 				Description: "The output of the archive file.",
-				Type:        schema.TypeString,
+				Type:        types.StringType,
 				Required:    true,
 			},
 			"output_size": {
-				Description: "The size of the output archive file.",
-				Type:        schema.TypeInt,
+				Description: "The byte size of the output archive file.",
+				Type:        types.Int64Type,
 				Computed:    true,
-				ForceNew:    true,
 			},
 			"output_sha": {
 				Description: "The SHA1 checksum of output archive file.",
-				Type:        schema.TypeString,
+				Type:        types.StringType,
 				Computed:    true,
-				ForceNew:    true,
 			},
 			"output_base64sha256": {
 				Description: "The base64-encoded SHA256 checksum of output archive file.",
-				Type:        schema.TypeString,
+				Type:        types.StringType,
 				Computed:    true,
-				ForceNew:    true,
 			},
 			"output_md5": {
 				Description: "The MD5 checksum of output archive file.",
-				Type:        schema.TypeString,
+				Type:        types.StringType,
 				Computed:    true,
-				ForceNew:    true,
 			},
 			"output_file_mode": {
 				Description: "String that specifies the octal file mode for all archived files. For example: `\"0666\"`. " +
 					"Setting this will ensure that cross platform usage of this module will not vary the modes of archived " +
 					"files (and ultimately checksums) resulting in more deterministic behavior.",
-				Type:     schema.TypeString,
+				Type:     types.StringType,
 				Optional: true,
-				Default:  "",
-				ForceNew: true,
 			},
 		},
-	}
+	}, nil
 }
 
-func dataSourceFileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	outputPath := d.Get("output_path").(string)
-
-	outputDirectory := path.Dir(outputPath)
-	if outputDirectory != "" {
-		if _, err := os.Stat(outputDirectory); err != nil {
-			if err := os.MkdirAll(outputDirectory, 0755); err != nil {
-				return diag.FromErr(fmt.Errorf("error creating output path: %s", err))
-			}
-		}
-	}
-
-	if err := archive(d); err != nil {
-		return diag.FromErr(fmt.Errorf("error creating archive: %s", err))
-	}
-
-	// Generate archived file stats
-	fi, err := os.Stat(outputPath)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading output: %s", err))
-	}
-
-	sha1, base64sha256, md5, err := genFileShas(outputPath)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error generating hashed: %s", err))
-	}
-
-	err = d.Set("output_sha", sha1)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error saving output_sha: %s", err))
-	}
-
-	err = d.Set("output_base64sha256", base64sha256)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error saving output_base64sha256: %s", err))
-	}
-
-	err = d.Set("output_md5", md5)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error saving output_md5: %s", err))
-	}
-
-	err = d.Set("output_size", fi.Size())
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error saving output_size: %s", err))
-	}
-
-	d.SetId(d.Get("output_sha").(string))
-
-	return nil
-}
-
-func expandStringList(configured []interface{}) []string {
-	vs := make([]string, len(configured))
-	for i, v := range configured {
-		vs[i] = v.(string)
-	}
-	return vs
-}
-
-func archive(d *schema.ResourceData) error {
-	archiveType := d.Get("type").(string)
-	outputPath := d.Get("output_path").(string)
+func archive(model modelV0) error {
+	archiveType := model.Type.ValueString()
+	outputPath := model.OutputPath.ValueString()
 
 	archiver := getArchiver(archiveType, outputPath)
 	if archiver == nil {
 		return fmt.Errorf("archive type not supported: %s", archiveType)
 	}
 
-	outputFileMode := d.Get("output_file_mode").(string)
+	outputFileMode := model.OutputFileMode.ValueString()
 	if outputFileMode != "" {
 		archiver.SetOutputFileMode(outputFileMode)
 	}
 
-	if dir, ok := d.GetOk("source_dir"); ok {
-		if excludes, ok := d.GetOk("excludes"); ok {
-			excludeList := expandStringList(excludes.(*schema.Set).List())
+	switch true {
+	case !model.SourceDir.IsNull():
+		excludeList := make([]string, len(model.Excludes.Elements()))
 
-			if err := archiver.ArchiveDir(dir.(string), excludeList); err != nil {
-				return fmt.Errorf("error archiving directory: %s", err)
-			}
-		} else {
-			if err := archiver.ArchiveDir(dir.(string), []string{""}); err != nil {
-				return fmt.Errorf("error archiving directory: %s", err)
+		if !model.Excludes.IsNull() {
+			for i, elem := range model.Excludes.Elements() {
+				e := elem.(types.String)
+				excludeList[i] = e.ValueString()
 			}
 		}
-	} else if file, ok := d.GetOk("source_file"); ok {
-		if err := archiver.ArchiveFile(file.(string)); err != nil {
+
+		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), excludeList); err != nil {
+			return fmt.Errorf("error archiving directory: %s", err)
+		}
+	case !model.SourceFile.IsNull():
+		if err := archiver.ArchiveFile(model.SourceFile.ValueString()); err != nil {
 			return fmt.Errorf("error archiving file: %s", err)
 		}
-	} else if filename, ok := d.GetOk("source_content_filename"); ok {
-		content := d.Get("source_content").(string)
-		if err := archiver.ArchiveContent([]byte(content), filename.(string)); err != nil {
+	case !model.SourceContentFilename.IsNull():
+		content := model.SourceContent.ValueString()
+
+		if err := archiver.ArchiveContent([]byte(content), model.SourceContentFilename.ValueString()); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
-	} else if v, ok := d.GetOk("source"); ok {
-		vL := v.(*schema.Set).List()
+	case !model.Source.IsNull():
 		content := make(map[string][]byte)
-		for _, v := range vL {
-			src := v.(map[string]interface{})
-			content[src["filename"].(string)] = []byte(src["content"].(string))
+
+		for _, elem := range model.Source.Elements() {
+			obj := elem.(types.Object)
+			attrs := obj.Attributes()
+			content[attrs["filename"].(types.String).ValueString()] = []byte(attrs["content"].(types.String).ValueString())
 		}
+
 		if err := archiver.ArchiveMultiple(content); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
-	} else {
-		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename' must be specified")
 	}
+
 	return nil
+}
+
+func (d *archiveFileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var model modelV0
+	diags := req.Config.Get(ctx, &model)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	outputPath := model.OutputPath.ValueString()
+
+	outputDirectory := path.Dir(outputPath)
+	if outputDirectory != "" {
+		if _, err := os.Stat(outputDirectory); err != nil {
+			if err := os.MkdirAll(outputDirectory, 0755); err != nil {
+				resp.Diagnostics.AddError(
+					"Output path error",
+					fmt.Sprintf("error creating output path: %s", err),
+				)
+				return
+			}
+		}
+	}
+
+	if err := archive(model); err != nil {
+		resp.Diagnostics.AddError(
+			"Archive creation error",
+			fmt.Sprintf("error creating archive: %s", err),
+		)
+		return
+	}
+
+	// Generate archived file stats
+	fi, err := os.Stat(outputPath)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Archive output error",
+			fmt.Sprintf("error reading output: %s", err),
+		)
+		return
+	}
+
+	sha1, base64sha256, md5, err := genFileShas(outputPath)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Hash generation error",
+			fmt.Sprintf("error generating hashed: %s", err),
+		)
+	}
+
+	model.OutputSha = types.StringValue(sha1)
+	model.OutputBase64Sha256 = types.StringValue(base64sha256)
+	model.OutputMd5 = types.StringValue(md5)
+	model.OutputSize = types.Int64Value(fi.Size())
+
+	model.ID = types.StringValue(sha1)
+
+	diags = resp.State.Set(ctx, model)
+	resp.Diagnostics.Append(diags...)
+}
+
+func (d *archiveFileDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_file"
+}
+
+type modelV0 struct {
+	ID                    types.String `tfsdk:"id"`
+	Source                types.Set    `tfsdk:"source"`
+	Type                  types.String `tfsdk:"type"`
+	SourceContent         types.String `tfsdk:"source_content"`
+	SourceContentFilename types.String `tfsdk:"source_content_filename"`
+	SourceFile            types.String `tfsdk:"source_file"`
+	SourceDir             types.String `tfsdk:"source_dir"`
+	Excludes              types.Set    `tfsdk:"excludes"`
+	OutputPath            types.String `tfsdk:"output_path"`
+	OutputSize            types.Int64  `tfsdk:"output_size"`
+	OutputSha             types.String `tfsdk:"output_sha"`
+	OutputBase64Sha256    types.String `tfsdk:"output_base64sha256"`
+	OutputMd5             types.String `tfsdk:"output_md5"`
+	OutputFileMode        types.String `tfsdk:"output_file_mode"`
 }
 
 func genFileShas(filename string) (string, string, string, error) {

@@ -1,9 +1,13 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"context"
+	"flag"
+	"log"
 
-	"github.com/hashicorp/terraform-provider-archive/internal/provider"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+
+	p "github.com/hashicorp/terraform-provider-archive/internal/provider"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -17,6 +21,17 @@ import (
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: archive.Provider})
+	var debug bool
+
+	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	flag.Parse()
+
+	err := providerserver.Serve(context.Background(), p.New, providerserver.ServeOpts{
+		Address:         "registry.terraform.io/hashicorp/archive",
+		Debug:           debug,
+		ProtocolVersion: 5,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 }
