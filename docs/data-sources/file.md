@@ -2,12 +2,12 @@
 page_title: "archive_file Data Source - terraform-provider-archive"
 subcategory: ""
 description: |-
-  Generates an archive from content, a file, or directory of files.
+  
 ---
 
 # archive_file (Data Source)
 
-Generates an archive from content, a file, or directory of files.
+
 
 ## Example Usage
 
@@ -79,11 +79,11 @@ data "archive_file" "lambda_my_function" {
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) The sha1 checksum hash of the output.
 - `output_base64sha256` (String) The base64-encoded SHA256 checksum of output archive file.
 - `output_md5` (String) The MD5 checksum of output archive file.
 - `output_sha` (String) The SHA1 checksum of output archive file.
-- `output_size` (Number) The size of the output archive file.
+- `output_size` (Number) The byte size of the output archive file.
 
 <a id="nestedblock--source"></a>
 ### Nested Schema for `source`
