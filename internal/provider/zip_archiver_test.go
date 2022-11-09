@@ -25,6 +25,8 @@ func TestZipArchiver_Content(t *testing.T) {
 
 func TestZipArchiver_File(t *testing.T) {
 	zipfilepath := "archive-file.zip"
+	defer os.Remove(zipfilepath)
+
 	archiver := NewZipArchiver(zipfilepath)
 	if err := archiver.ArchiveFile("./test-fixtures/test-file.txt"); err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -60,7 +62,7 @@ func TestZipArchiver_FileMode(t *testing.T) {
 
 func TestZipArchiver_FileModified(t *testing.T) {
 	var (
-		zipFilePath = filepath.FromSlash("archive-file.zip")
+		zipFilePath = filepath.FromSlash("archive-file-modified.zip")
 		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
 	)
 
@@ -72,6 +74,7 @@ func TestZipArchiver_FileModified(t *testing.T) {
 	}
 
 	zip()
+	defer os.Remove(zipFilePath)
 
 	expectedContents, err := os.ReadFile(zipFilePath)
 	if err != nil {
@@ -98,6 +101,8 @@ func TestZipArchiver_FileModified(t *testing.T) {
 
 func TestZipArchiver_Dir(t *testing.T) {
 	zipfilepath := "archive-dir.zip"
+	defer os.Remove(zipfilepath)
+
 	archiver := NewZipArchiver(zipfilepath)
 	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{""}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -111,7 +116,9 @@ func TestZipArchiver_Dir(t *testing.T) {
 }
 
 func TestZipArchiver_Dir_Exclude(t *testing.T) {
-	zipfilepath := "archive-dir.zip"
+	zipfilepath := "archive-dir-exclude.zip"
+	defer os.Remove(zipfilepath)
+
 	archiver := NewZipArchiver(zipfilepath)
 	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{"file2.txt"}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -124,7 +131,9 @@ func TestZipArchiver_Dir_Exclude(t *testing.T) {
 }
 
 func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
-	zipfilepath := "archive-dir.zip"
+	zipfilepath := "archive-dir-exclude-dir.zip"
+	defer os.Remove(zipfilepath)
+
 	archiver := NewZipArchiver(zipfilepath)
 	if err := archiver.ArchiveDir("./test-fixtures/", []string{"test-dir", "test-dir2/file2.txt"}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -139,6 +148,8 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 
 func TestZipArchiver_Multiple(t *testing.T) {
 	zipfilepath := "archive-content.zip"
+	defer os.Remove(zipfilepath)
+
 	content := map[string][]byte{
 		"file1.txt": []byte("This is file 1"),
 		"file2.txt": []byte("This is file 2"),
