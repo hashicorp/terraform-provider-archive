@@ -162,7 +162,7 @@ func (d *archiveFileDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, di
 	}, nil
 }
 
-func archive(model modelV0) error {
+func archive(ctx context.Context, model fileModel) error {
 	archiveType := model.Type.ValueString()
 	outputPath := model.OutputPath.ValueString()
 
@@ -181,9 +181,11 @@ func archive(model modelV0) error {
 		excludeList := make([]string, len(model.Excludes.Elements()))
 
 		if !model.Excludes.IsNull() {
-			for i, elem := range model.Excludes.Elements() {
-				e := elem.(types.String)
-				excludeList[i] = e.ValueString()
+			var elements []types.String
+			model.Excludes.ElementsAs(ctx, &elements, false)
+
+			for i, elem := range elements {
+				excludeList[i] = elem.ValueString()
 			}
 		}
 
@@ -203,10 +205,11 @@ func archive(model modelV0) error {
 	case !model.Source.IsNull():
 		content := make(map[string][]byte)
 
-		for _, elem := range model.Source.Elements() {
-			obj := elem.(types.Object)
-			attrs := obj.Attributes()
-			content[attrs["filename"].(types.String).ValueString()] = []byte(attrs["content"].(types.String).ValueString())
+		var elements []sourceModel
+		model.Source.ElementsAs(ctx, &elements, false)
+
+		for _, elem := range elements {
+			content[elem.Filename.ValueString()] = []byte(elem.Content.ValueString())
 		}
 
 		if err := archiver.ArchiveMultiple(content); err != nil {
@@ -218,7 +221,7 @@ func archive(model modelV0) error {
 }
 
 func (d *archiveFileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var model modelV0
+	var model fileModel
 	diags := req.Config.Get(ctx, &model)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -240,7 +243,7 @@ func (d *archiveFileDataSource) Read(ctx context.Context, req datasource.ReadReq
 		}
 	}
 
-	if err := archive(model); err != nil {
+	if err := archive(ctx, model); err != nil {
 		resp.Diagnostics.AddError(
 			"Archive creation error",
 			fmt.Sprintf("error creating archive: %s", err),
@@ -281,9 +284,9 @@ func (d *archiveFileDataSource) Metadata(_ context.Context, req datasource.Metad
 	resp.TypeName = req.ProviderTypeName + "_file"
 }
 
-type modelV0 struct {
+type fileModel struct {
 	ID                    types.String `tfsdk:"id"`
-	Source                types.Set    `tfsdk:"source"`
+	Source                types.Set    `tfsdk:"source"` // sourceModel
 	Type                  types.String `tfsdk:"type"`
 	SourceContent         types.String `tfsdk:"source_content"`
 	SourceContentFilename types.String `tfsdk:"source_content_filename"`
@@ -296,6 +299,11 @@ type modelV0 struct {
 	OutputBase64Sha256    types.String `tfsdk:"output_base64sha256"`
 	OutputMd5             types.String `tfsdk:"output_md5"`
 	OutputFileMode        types.String `tfsdk:"output_file_mode"`
+}
+
+type sourceModel struct {
+	Content  types.String `tfsdk:"content"`
+	Filename types.String `tfsdk:"filename"`
 }
 
 func genFileShas(filename string) (string, string, string, error) {
