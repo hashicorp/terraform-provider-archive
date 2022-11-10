@@ -26,7 +26,9 @@ func (p *archiveProvider) Configure(context.Context, provider.ConfigureRequest, 
 }
 
 func (p *archiveProvider) Resources(context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewArchiveFileResource,
+	}
 }
 
 func (p *archiveProvider) DataSources(context.Context) []func() datasource.DataSource {

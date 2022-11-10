@@ -395,6 +395,7 @@ func testTempDir(t *testing.T) string {
 	return tmp
 }
 
+//nolint:unparam
 func testExtractResourceAttr(resourceName string, attributeName string, attributeValue *string) r.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
