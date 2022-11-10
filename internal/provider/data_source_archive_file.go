@@ -29,6 +29,7 @@ type archiveFileDataSource struct{}
 
 func (d *archiveFileDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		Description: "Generates an archive from content, a file, or directory of files.",
 		Blocks: map[string]tfsdk.Block{
 			"source": {
 				Description: "Specifies attributes of a single source file to include into the archive.",

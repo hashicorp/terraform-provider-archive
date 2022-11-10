@@ -24,7 +24,8 @@ type archiveFileResource struct{}
 
 func (d *archiveFileResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
-		DeprecationMessage: "**NOTE**: Using archive_file as a resource is deprecated, use archive_file data source instead.",
+		Description:        `**NOTE**: This resource is deprecated, use data source instead.`,
+		DeprecationMessage: `**NOTE**: This resource is deprecated, use data source instead.`,
 		Blocks: map[string]tfsdk.Block{
 			"source": {
 				Description: "Specifies attributes of a single source file to include into the archive.",
