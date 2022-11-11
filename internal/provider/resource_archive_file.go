@@ -197,45 +197,68 @@ func (d *archiveFileResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	resp.Diagnostics.Append(updateModel(ctx, &model)...)
+
+	diags = resp.State.Set(ctx, model)
+	resp.Diagnostics.Append(diags...)
+}
+
+func (d *archiveFileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var model fileModel
+	diags := req.State.Get(ctx, &model)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(updateModel(ctx, &model)...)
+
+	diags = resp.State.Set(ctx, model)
+	resp.Diagnostics.Append(diags...)
+}
+
+func updateModel(ctx context.Context, model *fileModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 	outputPath := model.OutputPath.ValueString()
 
 	outputDirectory := path.Dir(outputPath)
 	if outputDirectory != "" {
 		if _, err := os.Stat(outputDirectory); err != nil {
 			if err := os.MkdirAll(outputDirectory, 0755); err != nil {
-				resp.Diagnostics.AddError(
+				diags.AddError(
 					"Output path error",
 					fmt.Sprintf("error creating output path: %s", err),
 				)
-				return
+				return diags
 			}
 		}
 	}
 
-	if err := archive(ctx, model); err != nil {
-		resp.Diagnostics.AddError(
+	if err := archive(ctx, *model); err != nil {
+		diags.AddError(
 			"Archive creation error",
 			fmt.Sprintf("error creating archive: %s", err),
 		)
-		return
+		return diags
 	}
 
 	// Generate archived file stats
 	fi, err := os.Stat(outputPath)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		diags.AddError(
 			"Archive output error",
 			fmt.Sprintf("error reading output: %s", err),
 		)
-		return
+		return diags
 	}
 
 	sha1, base64sha256, md5, err := genFileShas(outputPath)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		diags.AddError(
 			"Hash generation error",
 			fmt.Sprintf("error generating hashed: %s", err),
 		)
+		return diags
 	}
 
 	model.OutputSha = types.StringValue(sha1)
@@ -245,11 +268,7 @@ func (d *archiveFileResource) Create(ctx context.Context, req resource.CreateReq
 
 	model.ID = types.StringValue(sha1)
 
-	diags = resp.State.Set(ctx, model)
-	resp.Diagnostics.Append(diags...)
-}
-
-func (d *archiveFileResource) Read(_ context.Context, _ resource.ReadRequest, _ *resource.ReadResponse) {
+	return diags
 }
 
 func (d *archiveFileResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
