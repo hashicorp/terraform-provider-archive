@@ -338,6 +338,78 @@ func TestResource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 	})
 }
 
+// TestResource_FileConfig_ModifiedContents tests that archive_file resource replaces the resource on every read.
+// The contents of the source file are altered, but no aspect of the Terraform configuration is changed.
+// The change in the output hashes demonstrates that the resource Read function is replacing the resource.
+func TestResource_FileConfig_ModifiedContents(t *testing.T) {
+	td := testTempDir(t)
+	defer os.RemoveAll(td)
+
+	sourceFilePath := filepath.Join(td, "sourceFile")
+	outputFilePath := filepath.Join(td, "zip_file_acc_test_upgrade_file_config.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		Steps: []r.TestStep{
+			{
+				PreConfig: func() {
+					alterFileContents("content", sourceFilePath)
+				},
+				ProtoV5ProviderFactories: protoV5ProviderFactories(),
+				Config:                   testAccArchiveFileResourceFileSourceFileConfig(sourceFilePath, outputFilePath),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(outputFilePath, &fileSize),
+					r.TestCheckResourceAttrPtr("archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttr(
+						"archive_file.foo", "output_base64sha256", "8inOmQJB12dXqCyRTdaRO63yP22Rmuube/A1DLDii10=",
+					),
+					r.TestCheckResourceAttr(
+						"archive_file.foo", "output_md5", "20d9c8096f99174d128e5042279fe576",
+					),
+					r.TestCheckResourceAttr(
+						"archive_file.foo", "output_sha", "119d3169ec43fe95bbd38a3824f4e477f4e8d4e7",
+					),
+				),
+			},
+			{
+				PreConfig: func() {
+					alterFileContents("modified content", sourceFilePath)
+				},
+				ProtoV5ProviderFactories: protoV5ProviderFactories(),
+				Config:                   testAccArchiveFileResourceFileSourceFileConfig(sourceFilePath, outputFilePath),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(outputFilePath, &fileSize),
+					r.TestCheckResourceAttrPtr("archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttr(
+						"archive_file.foo", "output_base64sha256", "OnzXDJ3jda5RPuINpxKHQsZ+jSNOupxShSmW3iUWw7Q=",
+					),
+					r.TestCheckResourceAttr(
+						"archive_file.foo", "output_md5", "ce31b13da062764f2975d1ef08ee56fe",
+					),
+					r.TestCheckResourceAttr(
+						"archive_file.foo", "output_sha", "12c51ec24fc5dc10570abbc0b56ac5a3b4141b83",
+					),
+				),
+			},
+		},
+	})
+}
+
+func alterFileContents(content, path string) {
+	f, err := os.Create(path)
+	if err != nil {
+		panic(fmt.Sprintf("error creating file: %s", err))
+	}
+
+	defer f.Close()
+
+	_, err = f.Write([]byte(content))
+	if err != nil {
+		panic(fmt.Sprintf("error writing file: %s", err))
+	}
+}
+
 func testAccArchiveFileResourceContentConfig(outputPath string) string {
 	return fmt.Sprintf(`
 resource "archive_file" "foo" {
@@ -358,6 +430,19 @@ resource "archive_file" "foo" {
   output_file_mode = "0666"
 }
 `, filepath.ToSlash(outputPath))
+}
+
+func testAccArchiveFileResourceFileSourceFileConfig(sourceFile, outputPath string) string {
+	return fmt.Sprintf(`
+resource "archive_file" "foo" {
+  type             = "zip"
+  source_file      = "%s"
+  output_path      = "%s"
+  output_file_mode = "0666"
+}
+`,
+		filepath.ToSlash(sourceFile),
+		filepath.ToSlash(outputPath))
 }
 
 func testAccArchiveFileResourceDirConfig(outputPath string) string {
