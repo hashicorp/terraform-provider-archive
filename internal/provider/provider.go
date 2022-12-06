@@ -4,10 +4,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
 func New() provider.Provider {
@@ -18,8 +16,7 @@ var _ provider.Provider = (*archiveProvider)(nil)
 
 type archiveProvider struct{}
 
-func (p *archiveProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{}, nil
+func (p *archiveProvider) Schema(context.Context, provider.SchemaRequest, *provider.SchemaResponse) {
 }
 
 func (p *archiveProvider) Configure(context.Context, provider.ConfigureRequest, *provider.ConfigureResponse) {

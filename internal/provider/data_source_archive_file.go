@@ -11,11 +11,12 @@ import (
 	"os"
 	"path"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/schemavalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	fwpath "github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -27,140 +28,125 @@ func NewArchiveFileDataSource() datasource.DataSource {
 
 type archiveFileDataSource struct{}
 
-func (d *archiveFileDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Description: "Generates an archive from content, a file, or directory of files.",
-		Blocks: map[string]tfsdk.Block{
-			"source": {
+		Blocks: map[string]schema.Block{
+			"source": schema.SetNestedBlock{
 				Description: "Specifies attributes of a single source file to include into the archive.",
-				Attributes: map[string]tfsdk.Attribute{
-					"content": {
-						Description: "Add this content to the archive with `filename` as the filename.",
-						Type:        types.StringType,
-						Required:    true,
-						Validators: []tfsdk.AttributeValidator{
-							schemavalidator.ConflictsWith(
-								fwpath.MatchRoot("source_file"),
-								fwpath.MatchRoot("source_dir"),
-								fwpath.MatchRoot("source_content"),
-								fwpath.MatchRoot("source_content_filename"),
-							),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"content": schema.StringAttribute{
+							Description: "Add this content to the archive with `filename` as the filename.",
+							Required:    true,
+							Validators: []validator.String{
+								stringvalidator.ConflictsWith(
+									fwpath.MatchRoot("source_file"),
+									fwpath.MatchRoot("source_dir"),
+									fwpath.MatchRoot("source_content"),
+									fwpath.MatchRoot("source_content_filename"),
+								),
+							},
+						},
+						"filename": schema.StringAttribute{
+							Description: "Set this as the filename when declaring a `source`.",
+							Required:    true,
 						},
 					},
-					"filename": {
-						Description: "Set this as the filename when declaring a `source`.",
-						Type:        types.StringType,
-						Required:    true,
-					},
 				},
-				NestingMode: tfsdk.BlockNestingModeSet,
 			},
 		},
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				Description: "The sha1 checksum hash of the output.",
-				Type:        types.StringType,
 				Computed:    true,
 			},
-			"type": {
+			"type": schema.StringAttribute{
 				Description: "The type of archive to generate. NOTE: `zip` is supported.",
-				Type:        types.StringType,
 				Required:    true,
 			},
-			"source_content": {
+			"source_content": schema.StringAttribute{
 				Description: "Add only this content to the archive with `source_content_filename` as the filename.",
-				Type:        types.StringType,
 				Optional:    true,
-				Validators: []tfsdk.AttributeValidator{
-					schemavalidator.ConflictsWith(
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_file"),
 						fwpath.MatchRoot("source_dir"),
 					),
 				},
 			},
-			"source_content_filename": {
+			"source_content_filename": schema.StringAttribute{
 				Description: "Set this as the filename when using `source_content`.",
-				Type:        types.StringType,
 				Optional:    true,
-				Validators: []tfsdk.AttributeValidator{
-					schemavalidator.ConflictsWith(
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_file"),
 						fwpath.MatchRoot("source_dir"),
 					),
 				},
 			},
-			"source_file": {
+			"source_file": schema.StringAttribute{
 				Description: "Package this file into the archive.",
-				Type:        types.StringType,
 				Optional:    true,
-				Validators: []tfsdk.AttributeValidator{
-					schemavalidator.ConflictsWith(
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_dir"),
 						fwpath.MatchRoot("source_content"),
 						fwpath.MatchRoot("source_content_filename"),
 					),
 				},
 			},
-			"source_dir": {
+			"source_dir": schema.StringAttribute{
 				Description: "Package entire contents of this directory into the archive.",
-				Type:        types.StringType,
 				Optional:    true,
-				Validators: []tfsdk.AttributeValidator{
-					schemavalidator.ConflictsWith(
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_file"),
 						fwpath.MatchRoot("source_content"),
 						fwpath.MatchRoot("source_content_filename"),
 					),
 				},
 			},
-			"excludes": {
+			"excludes": schema.SetAttribute{
 				Description: "Specify files to ignore when reading the `source_dir`.",
-				Type: types.SetType{
-					ElemType: types.StringType,
-				},
-				Optional: true,
-				Validators: []tfsdk.AttributeValidator{
-					schemavalidator.ConflictsWith(
+				ElementType: types.StringType,
+				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_file"),
 						fwpath.MatchRoot("source_content"),
 						fwpath.MatchRoot("source_content_filename"),
 					),
 				},
 			},
-			"output_path": {
+			"output_path": schema.StringAttribute{
 				Description: "The output of the archive file.",
-				Type:        types.StringType,
 				Required:    true,
 			},
-			"output_size": {
+			"output_size": schema.Int64Attribute{
 				Description: "The byte size of the output archive file.",
-				Type:        types.Int64Type,
 				Computed:    true,
 			},
-			"output_sha": {
+			"output_sha": schema.StringAttribute{
 				Description: "The SHA1 checksum of output archive file.",
-				Type:        types.StringType,
 				Computed:    true,
 			},
-			"output_base64sha256": {
+			"output_base64sha256": schema.StringAttribute{
 				Description: "The base64-encoded SHA256 checksum of output archive file.",
-				Type:        types.StringType,
 				Computed:    true,
 			},
-			"output_md5": {
+			"output_md5": schema.StringAttribute{
 				Description: "The MD5 checksum of output archive file.",
-				Type:        types.StringType,
 				Computed:    true,
 			},
-			"output_file_mode": {
+			"output_file_mode": schema.StringAttribute{
 				Description: "String that specifies the octal file mode for all archived files. For example: `\"0666\"`. " +
 					"Setting this will ensure that cross platform usage of this module will not vary the modes of archived " +
 					"files (and ultimately checksums) resulting in more deterministic behavior.",
-				Type:     types.StringType,
 				Optional: true,
 			},
 		},
-	}, nil
+	}
 }
 
 func archive(ctx context.Context, model fileModel) error {
