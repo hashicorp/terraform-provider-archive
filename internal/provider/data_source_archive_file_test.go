@@ -87,8 +87,7 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 }
 
 func TestDataSource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_content_config.zip")
 

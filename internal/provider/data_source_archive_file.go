@@ -163,7 +163,7 @@ func archive(ctx context.Context, model fileModel) error {
 		archiver.SetOutputFileMode(outputFileMode)
 	}
 
-	switch true {
+	switch {
 	case !model.SourceDir.IsNull():
 		excludeList := make([]string, len(model.Excludes.Elements()))
 
