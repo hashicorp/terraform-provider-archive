@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	r "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccArchiveFile_Resource_Basic(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
 
@@ -86,8 +86,7 @@ func TestAccArchiveFile_Resource_Basic(t *testing.T) {
 }
 
 func TestResource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_content_config.zip")
 
@@ -143,8 +142,7 @@ func TestResource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
 }
 
 func TestResource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_file_config.zip")
 
@@ -200,8 +198,7 @@ func TestResource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
 }
 
 func TestResource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_dir_config.zip")
 
@@ -257,8 +254,7 @@ func TestResource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
 }
 
 func TestResource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_dir_excludes.zip")
 
@@ -298,8 +294,7 @@ func TestResource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
 }
 
 func TestResource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_source.zip")
 
@@ -342,8 +337,7 @@ func TestResource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 // The contents of the source file are altered, but no aspect of the Terraform configuration is changed.
 // The change in the output hashes demonstrates that the resource Read function is replacing the resource.
 func TestResource_FileConfig_ModifiedContents(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	sourceFilePath := filepath.Join(td, "sourceFile")
 	outputFilePath := filepath.Join(td, "zip_file_acc_test_upgrade_file_config.zip")
@@ -391,6 +385,18 @@ func TestResource_FileConfig_ModifiedContents(t *testing.T) {
 						"archive_file.foo", "output_sha", "12c51ec24fc5dc10570abbc0b56ac5a3b4141b83",
 					),
 				),
+			},
+		},
+	})
+}
+
+func TestResource_SourceConfigMissing(t *testing.T) {
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config:      testResourceSourceConfigMissing(),
+				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source_content_filename,source_file,source_dir]`),
 			},
 		},
 	})
@@ -482,4 +488,13 @@ resource "archive_file" "foo" {
 	output_path = "%s"
 }
 `, filepath.ToSlash(outputPath))
+}
+
+func testResourceSourceConfigMissing() string {
+	return `
+resource "archive_file" "foo" {
+  type                    = "zip"
+  output_path             = "path"
+}
+`
 }

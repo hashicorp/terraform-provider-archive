@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	r "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,8 +12,7 @@ import (
 )
 
 func TestAccArchiveFile_Basic(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
 
@@ -138,8 +138,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
 }
 
 func TestDataSource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_file_config.zip")
 
@@ -190,8 +189,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
 }
 
 func TestDataSource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_dir_config.zip")
 
@@ -242,8 +240,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
 }
 
 func TestDataSource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_dir_excludes.zip")
 
@@ -278,8 +275,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
 }
 
 func TestDataSource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
-	td := testTempDir(t)
-	defer os.RemoveAll(td)
+	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test_upgrade_source.zip")
 
@@ -308,6 +304,18 @@ func TestDataSource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_sha", &outputSha),
 				),
+			},
+		},
+	})
+}
+
+func TestAccArchiveFile_SourceConfigMissing(t *testing.T) {
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config:      testAccArchiveSourceConfigMissing(),
+				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source_content_filename,source_file,source_dir]`),
 			},
 		},
 	})
@@ -386,12 +394,13 @@ data "archive_file" "foo" {
 `, filepath.ToSlash(outputPath))
 }
 
-func testTempDir(t *testing.T) string {
-	tmp, err := os.MkdirTemp("", "tf")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return tmp
+func testAccArchiveSourceConfigMissing() string {
+	return `
+data "archive_file" "foo" {
+  type                    = "zip"
+  output_path             = "path"
+}
+`
 }
 
 //nolint:unparam

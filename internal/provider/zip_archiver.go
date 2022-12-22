@@ -60,8 +60,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	}
 	fh.Name = filepath.ToSlash(fi.Name())
 	fh.Method = zip.Deflate
-	// fh.Modified alone isn't enough when using a zero value
-	//nolint:staticcheck
+	//nolint:staticcheck // This is required as fh.SetModTime has been deprecated since Go 1.10 and using fh.Modified alone isn't enough when using a zero value
 	fh.SetModTime(time.Time{})
 
 	if a.outputFileMode != "" {

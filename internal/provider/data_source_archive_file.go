@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -28,31 +29,44 @@ func NewArchiveFileDataSource() datasource.DataSource {
 
 type archiveFileDataSource struct{}
 
+func (d *archiveFileDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.AtLeastOneOf(
+			fwpath.MatchRoot("source"),
+			fwpath.MatchRoot("source_content_filename"),
+			fwpath.MatchRoot("source_file"),
+			fwpath.MatchRoot("source_dir"),
+		),
+	}
+}
+
 func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Generates an archive from content, a file, or directory of files.",
 		Blocks: map[string]schema.Block{
 			"source": schema.SetNestedBlock{
-				Description: "Specifies attributes of a single source file to include into the archive.",
+				Description: "Specifies attributes of a single source file to include into the archive. " +
+					"One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, " +
+					"or `source_dir` must be specified.",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"content": schema.StringAttribute{
 							Description: "Add this content to the archive with `filename` as the filename.",
 							Required:    true,
-							Validators: []validator.String{
-								stringvalidator.ConflictsWith(
-									fwpath.MatchRoot("source_file"),
-									fwpath.MatchRoot("source_dir"),
-									fwpath.MatchRoot("source_content"),
-									fwpath.MatchRoot("source_content_filename"),
-								),
-							},
 						},
 						"filename": schema.StringAttribute{
 							Description: "Set this as the filename when declaring a `source`.",
 							Required:    true,
 						},
 					},
+				},
+				Validators: []validator.Set{
+					setvalidator.ConflictsWith(
+						fwpath.MatchRoot("source_file"),
+						fwpath.MatchRoot("source_dir"),
+						fwpath.MatchRoot("source_content"),
+						fwpath.MatchRoot("source_content_filename"),
+					),
 				},
 			},
 		},
@@ -66,8 +80,10 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				Required:    true,
 			},
 			"source_content": schema.StringAttribute{
-				Description: "Add only this content to the archive with `source_content_filename` as the filename.",
-				Optional:    true,
+				Description: "Add only this content to the archive with `source_content_filename` as the filename. " +
+					"One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, " +
+					"or `source_dir` must be specified.",
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_file"),
@@ -76,8 +92,10 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				},
 			},
 			"source_content_filename": schema.StringAttribute{
-				Description: "Set this as the filename when using `source_content`.",
-				Optional:    true,
+				Description: "Set this as the filename when using `source_content`. " +
+					"One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, " +
+					"or `source_dir` must be specified.",
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_file"),
@@ -86,8 +104,10 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				},
 			},
 			"source_file": schema.StringAttribute{
-				Description: "Package this file into the archive.",
-				Optional:    true,
+				Description: "Package this file into the archive. " +
+					"One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, " +
+					"or `source_dir` must be specified.",
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_dir"),
@@ -97,8 +117,10 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				},
 			},
 			"source_dir": schema.StringAttribute{
-				Description: "Package entire contents of this directory into the archive.",
-				Optional:    true,
+				Description: "Package entire contents of this directory into the archive. " +
+					"One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, " +
+					"or `source_dir` must be specified.",
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						fwpath.MatchRoot("source_file"),
