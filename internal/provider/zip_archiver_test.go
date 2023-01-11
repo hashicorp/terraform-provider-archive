@@ -14,6 +14,7 @@ import (
 func TestZipArchiver_Content(t *testing.T) {
 	zipfilepath := "archive-content.zip"
 	archiver := NewZipArchiver(zipfilepath)
+	defer os.Remove(zipfilepath)
 	if err := archiver.ArchiveContent([]byte("This is some content"), "content.txt"); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -50,13 +51,16 @@ func TestZipArchiver_FileMode(t *testing.T) {
 
 	stringArray := [5]string{"0444", "0644", "0666", "0744", "0777"}
 	for _, element := range stringArray {
-		archiver := NewZipArchiver(zipFilePath)
-		archiver.SetOutputFileMode(element)
-		if err := archiver.ArchiveFile(toZipPath); err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
+		func() {
+			archiver := NewZipArchiver(zipFilePath)
+			defer os.Remove(zipFilePath)
+			archiver.SetOutputFileMode(element)
+			if err := archiver.ArchiveFile(toZipPath); err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
 
-		ensureFileMode(t, zipFilePath, element)
+			ensureFileMode(t, zipFilePath, element)
+		}()
 	}
 }
 
