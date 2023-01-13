@@ -32,13 +32,13 @@ jobs:
       run: |
         make fmt
 
-      - name: Go vet
-        run: |
-          make vet
+    - name: Go vet
+      run: |
+        make vet
 
-      - name: Build
-        run: |
-          go build -v .
+    - name: Build
+      run: |
+        go build -v .
   
 
   # run acceptance tests in a matrix with Terraform core versions
