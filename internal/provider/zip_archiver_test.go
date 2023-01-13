@@ -99,34 +99,51 @@ func TestZipArchiver_FileModified(t *testing.T) {
 func TestZipArchiver_Dir(t *testing.T) {
 	zipfilepath := "archive-dir.zip"
 	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{""}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{""}, ""); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"file1.txt": []byte("This is file 1"),
-		"file2.txt": []byte("This is file 2"),
-		"file3.txt": []byte("This is file 3"),
+		"file1.txt":          []byte("This is file 1"),
+		"file2.txt":          []byte("This is file 2"),
+		"file3.txt":          []byte("This is file 3"),
+		"sub-dir1/file4.txt": []byte("This is sub-dir1/file4.txt"),
+	})
+}
+
+func TestZipArchiver_Dir_WithArchiveDirs(t *testing.T) {
+	zipfilepath := "archive-dir.zip"
+	archiver := NewZipArchiver(zipfilepath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{""}, "root/test-dir"); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipfilepath, map[string][]byte{
+		"root/test-dir/file1.txt":          []byte("This is file 1"),
+		"root/test-dir/file2.txt":          []byte("This is file 2"),
+		"root/test-dir/file3.txt":          []byte("This is file 3"),
+		"root/test-dir/sub-dir1/file4.txt": []byte("This is sub-dir1/file4.txt"),
 	})
 }
 
 func TestZipArchiver_Dir_Exclude(t *testing.T) {
 	zipfilepath := "archive-dir.zip"
 	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{"file2.txt"}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{"file2.txt"}, "root"); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
 	ensureContents(t, zipfilepath, map[string][]byte{
-		"file1.txt": []byte("This is file 1"),
-		"file3.txt": []byte("This is file 3"),
+		"root/file1.txt":          []byte("This is file 1"),
+		"root/file3.txt":          []byte("This is file 3"),
+		"root/sub-dir1/file4.txt": []byte("This is sub-dir1/file4.txt"),
 	})
 }
 
 func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	zipfilepath := "archive-dir.zip"
 	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/", []string{"test-dir", "test-dir2/file2.txt"}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/", []string{"test-dir", "test-dir2/file2.txt"}, ""); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
