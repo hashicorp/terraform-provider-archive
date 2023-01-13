@@ -315,7 +315,19 @@ func TestAccArchiveFile_SourceConfigMissing(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config:      testAccArchiveSourceConfigMissing(),
-				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source_content_filename,source_file,source_dir]`),
+				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir\]`),
+			},
+		},
+	})
+}
+
+func TestAccArchiveFile_SourceConfigConflicting(t *testing.T) {
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config:      testAccArchiveSourceConfigConflicting(),
+				ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
 			},
 		},
 	})
@@ -369,10 +381,10 @@ data "archive_file" "foo" {
 func testAccArchiveFileDirExcludesConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-	type        = "zip"
-	source_dir  = "test-fixtures/test-dir"
-	excludes    = ["test-fixtures/test-dir/file2.txt"]
-	output_path = "%s"
+  type        = "zip"
+  source_dir  = "test-fixtures/test-dir"
+  excludes    = ["test-fixtures/test-dir/file2.txt"]
+  output_path = "%s"
 }
 `, filepath.ToSlash(outputPath))
 }
@@ -380,16 +392,16 @@ data "archive_file" "foo" {
 func testAccArchiveFileMultiSourceConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-	type = "zip"
-	source {
-		filename = "content_1.txt"
-		content = "This is the content for content_1.txt"
-	}
-	source {
-		filename = "content_2.txt"
-		content = "This is the content for content_2.txt"
-	}
-	output_path = "%s"
+  type = "zip"
+  source {
+    filename = "content_1.txt"
+    content = "This is the content for content_1.txt"
+  }
+  source {
+    filename = "content_2.txt"
+    content = "This is the content for content_2.txt"
+  }
+  output_path = "%s"
 }
 `, filepath.ToSlash(outputPath))
 }
@@ -398,6 +410,20 @@ func testAccArchiveSourceConfigMissing() string {
 	return `
 data "archive_file" "foo" {
   type                    = "zip"
+  output_path             = "path"
+}
+`
+}
+
+func testAccArchiveSourceConfigConflicting() string {
+	return `
+data "archive_file" "foo" {
+  type                    = "zip"
+  source {
+    filename = "content_1.txt"
+    content = "This is the content for content_1.txt"
+  }
+  source_dir  = "test-fixtures/test-dir"
   output_path             = "path"
 }
 `
