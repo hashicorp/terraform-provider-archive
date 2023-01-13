@@ -28,17 +28,21 @@ jobs:
         go-version-file: 'go.mod'
       id: go
 
-    - name: Go fmt
-      run: |
-        make fmt
+    - name: Run linters
+      uses: golangci/golangci-lint-action@0ad9a0988b3973e851ab0a07adf248ec2e100376 # v3.3.1
+      with:
+        version: latest
 
-    - name: Go vet
+    - name: Generate
+      run: make generate
+
+    - name: Confirm no diff
       run: |
-        make vet
+        git diff --compact-summary --exit-code || \
+          (echo "*** Unexpected differences after code generation. Run 'make generate' and commit."; exit 1)
 
     - name: Build
-      run: |
-        go build -v .
+      run: make build
   
 
   # run acceptance tests in a matrix with Terraform core versions
