@@ -36,6 +36,11 @@ data "archive_file" "dotfiles" {
     content  = "${data.template_file.ssh_config.rendered}"
     filename = ".ssh/config"
   }
+  
+  sensitive_source {
+    content = "This is sensitive content"
+    filename = ".ssh/id_rsa"
+  }
 }
 
 # Archive a file to be used with Lambda using consistent file mode
@@ -79,11 +84,21 @@ NOTE: One of `source`, `source_content_filename` (with `source_content`), `sourc
 
 * `source` - (Optional) Specifies attributes of a single source file to include into the archive.
 
+* `sensitive_source` - (Optional) Specifies attributes of a single sensitive source file to include into the archive. 
+  Content will not be displayed in plans.
+
 * `excludes` - (Optional) Specify files to ignore when reading the `source_dir`.
 
 The `source` block supports the following:
 
 * `content` - (Required) Add this content to the archive with `filename` as the filename.
+
+* `filename` - (Required) Set this as the filename when declaring a `source`.
+
+The `sensitive_source` block supports the following:
+
+* `content` - (Required) Add this content to the archive with `filename` as the filename. 
+  Content will not be displayed in plans.
 
 * `filename` - (Required) Set this as the filename when declaring a `source`.
 

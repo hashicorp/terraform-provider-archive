@@ -53,6 +53,34 @@ func dataSourceFile() *schema.Resource {
 					return hashcode.String(buf.String())
 				},
 			},
+			"sensitive_source": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"content": {
+							Type:      schema.TypeString,
+							Required:  true,
+							ForceNew:  true,
+							Sensitive: true,
+						},
+						"filename": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+				ConflictsWith: []string{"source_file", "source_dir", "source_content", "source_content_filename"},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["filename"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["content"].(string)))
+					return hashcode.String(buf.String())
+				},
+			},
 			"source_content": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -203,19 +231,34 @@ func archive(d *schema.ResourceData) error {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
 	} else if v, ok := d.GetOk("source"); ok {
-		vL := v.(*schema.Set).List()
-		content := make(map[string][]byte)
-		for _, v := range vL {
-			src := v.(map[string]interface{})
-			content[src["filename"].(string)] = []byte(src["content"].(string))
+		content := genFileContentMap(v)
+		if v, ok := d.GetOk("sensitive_source"); ok {
+			for fileName, fileContent := range genFileContentMap(v) {
+				content[fileName] = fileContent
+			}
 		}
 		if err := archiver.ArchiveMultiple(content); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
+	} else if v, ok := d.GetOk("sensitive_source"); ok {
+		content := genFileContentMap(v)
+		if err := archiver.ArchiveMultiple(content); err != nil {
+			return fmt.Errorf("error archiving content: %s", err)
+		}
 	} else {
-		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename' must be specified")
+		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename', 'source', 'sensitive_source' must be specified")
 	}
 	return nil
+}
+
+func genFileContentMap(v interface{}) map[string][]byte {
+	vL := v.(*schema.Set).List()
+	content := make(map[string][]byte)
+	for _, v := range vL {
+		src := v.(map[string]interface{})
+		content[src["filename"].(string)] = []byte(src["content"].(string))
+	}
+	return content
 }
 
 func genFileShas(filename string) (string, string, string, error) {
