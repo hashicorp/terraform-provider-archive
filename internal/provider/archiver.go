@@ -10,6 +10,7 @@ type Archiver interface {
 	ArchiveFile(infilename string) error
 	ArchiveDir(indirname string, excludes []string) error
 	ArchiveMultiple(content map[string][]byte) error
+	ArchiveMultipleDirs(dirs []interface{}, rootDirs []interface{}, excludes []string) error
 	SetOutputFileMode(outputFileMode string)
 }
 

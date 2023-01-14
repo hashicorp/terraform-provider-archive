@@ -26,6 +26,33 @@ func dataSourceFile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"source_dirs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dirs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"root_dirs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+				ConflictsWith: []string{"source_file", "source_dir", "source_content", "source_content_filename"},
+			},
 			"source": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -44,7 +71,7 @@ func dataSourceFile() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"source_file", "source_dir", "source_content", "source_content_filename"},
+				ConflictsWith: []string{"source_file", "source_dir", "source_dirs", "source_content", "source_content_filename"},
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
@@ -57,31 +84,31 @@ func dataSourceFile() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_file", "source_dir"},
+				ConflictsWith: []string{"source_file", "source_dir", "source_dirs"},
 			},
 			"source_content_filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_file", "source_dir"},
+				ConflictsWith: []string{"source_file", "source_dir", "source_dirs"},
 			},
 			"source_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_dir"},
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_dir", "source_dirs"},
 			},
 			"source_dir": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_file", "source_dirs"},
 			},
 			"excludes": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"source_content", "source_content_filename", "source_file"},
+				ConflictsWith: []string{"source_content", "source_content_filename", "source_file", "source_dirs"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -211,6 +238,22 @@ func archive(d *schema.ResourceData) error {
 		}
 		if err := archiver.ArchiveMultiple(content); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
+		}
+	} else if v, ok := d.GetOk("source_dirs"); ok {
+		vL := v.(*schema.Set).List()
+		for _, v := range vL {
+			src := v.(map[string]interface{})
+			dirs := src["dirs"].([]interface{})
+			rootDirs := src["root_dirs"].([]interface{})
+			if excludes, ok := d.GetOk("excludes"); ok {
+				excludeList := expandStringList(excludes.(*schema.Set).List())
+
+				archiver.ArchiveMultipleDirs(dirs, rootDirs, excludeList)
+				return nil
+			} else {
+				archiver.ArchiveMultipleDirs(dirs, rootDirs, []string{""})
+				return nil
+			}
 		}
 	} else {
 		return fmt.Errorf("one of 'source_dir', 'source_file', 'source_content_filename' must be specified")

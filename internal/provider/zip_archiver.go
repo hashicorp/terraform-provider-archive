@@ -94,6 +94,150 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 	return false
 }
 
+func (a *ZipArchiver) ArchiveMultipleDirs(dirs []interface{}, rootDirs []interface{}, excludes []string) error {
+	if err := a.open(); err != nil {
+		return err
+	}
+
+	defer a.close()
+
+	// ensure exclusions are OS compatible paths
+	for i := range excludes {
+		excludes[i] = filepath.FromSlash(excludes[i])
+	}
+
+	for _, indirname := range rootDirs {
+		indirname := indirname.(string)
+		_, err := assertValidDir(indirname)
+		if err != nil {
+			return err
+		}
+
+		filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return fmt.Errorf("error encountered during file walk: %s", err)
+			}
+
+			relname, err := filepath.Rel(indirname, path)
+			if err != nil {
+				return fmt.Errorf("error relativizing file for archival: %s", err)
+			}
+
+			isMatch := checkMatch(relname, excludes)
+
+			if info.IsDir() {
+				if isMatch {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+
+			if isMatch {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			fh, err := zip.FileInfoHeader(info)
+			if err != nil {
+				return fmt.Errorf("error creating file header: %s", err)
+			}
+			fh.Name = filepath.ToSlash(relname)
+			fh.Method = zip.Deflate
+			// fh.Modified alone isn't enough when using a zero value
+			fh.SetModTime(time.Time{})
+
+			if a.outputFileMode != "" {
+				filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
+				if err != nil {
+					return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
+				}
+				fh.SetMode(os.FileMode(filemode))
+			}
+
+			f, err := a.writer.CreateHeader(fh)
+			if err != nil {
+				return fmt.Errorf("error creating file inside archive: %s", err)
+			}
+			content, err := ioutil.ReadFile(path)
+			if err != nil {
+				return fmt.Errorf("error reading file for archival: %s", err)
+			}
+			_, err = f.Write(content)
+			return err
+		})
+	}
+
+	for _, indirname := range dirs {
+		indirname := indirname.(string)
+		_, err := assertValidDir(indirname)
+		if err != nil {
+			return err
+		}
+
+		filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return fmt.Errorf("error encountered during file walk: %s", err)
+			}
+
+			relname, err := filepath.Rel(indirname, path)
+			if err != nil {
+				return fmt.Errorf("error relativizing file for archival: %s", err)
+			}
+
+			relname = fmt.Sprintf("%s/%s", filepath.Base(indirname), relname)
+
+			isMatch := checkMatch(relname, excludes)
+
+			if info.IsDir() {
+				if isMatch {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+
+			if isMatch {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			fh, err := zip.FileInfoHeader(info)
+			if err != nil {
+				return fmt.Errorf("error creating file header: %s", err)
+			}
+			fh.Name = filepath.ToSlash(relname)
+			fh.Method = zip.Deflate
+			// fh.Modified alone isn't enough when using a zero value
+			fh.SetModTime(time.Time{})
+
+			if a.outputFileMode != "" {
+				filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
+				if err != nil {
+					return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
+				}
+				fh.SetMode(os.FileMode(filemode))
+			}
+
+			f, err := a.writer.CreateHeader(fh)
+			if err != nil {
+				return fmt.Errorf("error creating file inside archive: %s", err)
+			}
+			content, err := ioutil.ReadFile(path)
+			if err != nil {
+				return fmt.Errorf("error reading file for archival: %s", err)
+			}
+			_, err = f.Write(content)
+			return err
+		})
+	}
+	return nil
+}
+
 func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
