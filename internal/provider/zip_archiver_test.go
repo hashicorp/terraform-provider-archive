@@ -94,6 +94,9 @@ func TestZipArchiver_FileModified(t *testing.T) {
 	if !bytes.Equal(expectedContents, actualContents) {
 		t.Fatalf("zip contents do not match, potentially a modified time issue")
 	}
+
+	oldestZipSupportedModTime, _ := time.Parse(time.RFC3339, "1980-01-01T00:00:00+00:00")
+	ensureModifiedtimes(t, zipFilePath, oldestZipSupportedModTime)
 }
 
 func TestZipArchiver_Dir(t *testing.T) {
@@ -151,6 +154,20 @@ func TestZipArchiver_Multiple(t *testing.T) {
 	}
 
 	ensureContents(t, zipfilepath, content)
+}
+
+func ensureModifiedtimes(t *testing.T, zipfilepath string, modifiedTime time.Time) {
+	r, err := zip.OpenReader(zipfilepath)
+	if err != nil {
+		t.Fatalf("could not open zip file: %s", err)
+	}
+	defer r.Close()
+
+	for _, cf := range r.File {
+		if !cf.Modified.Equal(modifiedTime) {
+			t.Fatalf("Modified time does not match, got %s, want %s", cf.Modified, modifiedTime)
+		}
+	}
 }
 
 func ensureContents(t *testing.T, zipfilepath string, wants map[string][]byte) {
