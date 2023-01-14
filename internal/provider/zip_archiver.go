@@ -6,8 +6,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -17,6 +20,8 @@ type ZipArchiver struct {
 	filewriter     *os.File
 	writer         *zip.Writer
 }
+
+const WINDOWS = runtime.GOOS == "windows"
 
 func NewZipArchiver(filepath string) Archiver {
 	return &ZipArchiver{
@@ -89,6 +94,14 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 
 		if exclude == fileName {
 			return true
+		} else if strings.Contains(exclude, "*") {
+			pattern := "^" + strings.Replace(exclude, "*", ".*", -1)
+			if WINDOWS {
+				pattern = strings.ReplaceAll(pattern, "\\", "\\\\")
+			}
+			if matches, _ := regexp.MatchString(pattern, fileName); matches {
+				return true
+			}
 		}
 	}
 	return false

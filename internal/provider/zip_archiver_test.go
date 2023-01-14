@@ -137,6 +137,48 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	})
 }
 
+func TestZipArchiver_Dir_Exclude_Suffix_Regex_With_Directory(t *testing.T) {
+	zipfilepath := "archive-dir.zip"
+	archiver := NewZipArchiver(zipfilepath)
+	if err := archiver.ArchiveDir("./test-fixtures/", []string{"*3.txt", "test-file.txt"}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipfilepath, map[string][]byte{
+		"test-dir/file1.txt":  []byte("This is file 1"),
+		"test-dir/file2.txt":  []byte("This is file 2"),
+		"test-dir2/file1.txt": []byte("This is file 1"),
+		"test-dir2/file2.txt": []byte("This is file 2"),
+	})
+}
+
+func TestZipArchiver_Dir_Exclude_Prefix_Regex_With_Directory(t *testing.T) {
+	zipfilepath := "archive-dir.zip"
+	archiver := NewZipArchiver(zipfilepath)
+	if err := archiver.ArchiveDir("./test-fixtures/", []string{"test-d*"}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipfilepath, map[string][]byte{
+		"test-file.txt": []byte("This is test content"),
+	})
+}
+
+func TestZipArchiver_Dir_Exclude_File_Type_Regex_With_Directory(t *testing.T) {
+	zipfilepath := "archive-dir.zip"
+	archiver := NewZipArchiver(zipfilepath)
+	if err := archiver.ArchiveDir("./test-fixtures/", []string{"test-dir2/*.txt"}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipfilepath, map[string][]byte{
+		"test-dir/file1.txt": []byte("This is file 1"),
+		"test-dir/file2.txt": []byte("This is file 2"),
+		"test-dir/file3.txt": []byte("This is file 3"),
+		"test-file.txt":      []byte("This is test content"),
+	})
+}
+
 func TestZipArchiver_Multiple(t *testing.T) {
 	zipfilepath := "archive-content.zip"
 	content := map[string][]byte{
