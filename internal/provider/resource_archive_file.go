@@ -2,36 +2,35 @@ package archive
 
 import (
 	"context"
-	"crypto/md5"
-	"crypto/sha1"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	fwpath "github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ datasource.DataSource = (*archiveFileDataSource)(nil)
+var _ resource.Resource = (*archiveFileResource)(nil)
 
-func NewArchiveFileDataSource() datasource.DataSource {
-	return &archiveFileDataSource{}
+func NewArchiveFileResource() resource.Resource {
+	return &archiveFileResource{}
 }
 
-type archiveFileDataSource struct{}
+type archiveFileResource struct{}
 
-func (d *archiveFileDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
-	return []datasource.ConfigValidator{
-		datasourcevalidator.AtLeastOneOf(
+func (d *archiveFileResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.AtLeastOneOf(
 			fwpath.MatchRoot("source"),
 			fwpath.MatchRoot("source_content_filename"),
 			fwpath.MatchRoot("source_file"),
@@ -40,9 +39,10 @@ func (d *archiveFileDataSource) ConfigValidators(context.Context) []datasource.C
 	}
 }
 
-func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Generates an archive from content, a file, or directory of files.",
+		Description:        `**NOTE**: This resource is deprecated, use data source instead.`,
+		DeprecationMessage: `**NOTE**: This resource is deprecated, use data source instead.`,
 		Blocks: map[string]schema.Block{
 			"source": schema.SetNestedBlock{
 				Description: "Specifies attributes of a single source file to include into the archive. " +
@@ -53,10 +53,16 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 						"content": schema.StringAttribute{
 							Description: "Add this content to the archive with `filename` as the filename.",
 							Required:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"filename": schema.StringAttribute{
 							Description: "Set this as the filename when declaring a `source`.",
 							Required:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -78,6 +84,9 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 			"type": schema.StringAttribute{
 				Description: "The type of archive to generate. NOTE: `zip` is supported.",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"source_content": schema.StringAttribute{
 				Description: "Add only this content to the archive with `source_content_filename` as the filename. " +
@@ -90,6 +99,9 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 						fwpath.MatchRoot("source_dir"),
 					),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"source_content_filename": schema.StringAttribute{
 				Description: "Set this as the filename when using `source_content`. " +
@@ -101,6 +113,9 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 						fwpath.MatchRoot("source_file"),
 						fwpath.MatchRoot("source_dir"),
 					),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"source_file": schema.StringAttribute{
@@ -115,6 +130,9 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 						fwpath.MatchRoot("source_content_filename"),
 					),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"source_dir": schema.StringAttribute{
 				Description: "Package entire contents of this directory into the archive. " +
@@ -128,6 +146,9 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 						fwpath.MatchRoot("source_content_filename"),
 					),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"excludes": schema.SetAttribute{
 				Description: "Specify files to ignore when reading the `source_dir`.",
@@ -140,10 +161,16 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 						fwpath.MatchRoot("source_content_filename"),
 					),
 				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
 			},
 			"output_path": schema.StringAttribute{
 				Description: "The output of the archive file.",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"output_size": schema.Int64Attribute{
 				Description: "The byte size of the output archive file.",
@@ -166,116 +193,84 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 					"Setting this will ensure that cross platform usage of this module will not vary the modes of archived " +
 					"files (and ultimately checksums) resulting in more deterministic behavior.",
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
 }
 
-func archive(ctx context.Context, model fileModel) error {
-	archiveType := model.Type.ValueString()
-	outputPath := model.OutputPath.ValueString()
-
-	archiver := getArchiver(archiveType, outputPath)
-	if archiver == nil {
-		return fmt.Errorf("archive type not supported: %s", archiveType)
-	}
-
-	outputFileMode := model.OutputFileMode.ValueString()
-	if outputFileMode != "" {
-		archiver.SetOutputFileMode(outputFileMode)
-	}
-
-	switch {
-	case !model.SourceDir.IsNull():
-		excludeList := make([]string, len(model.Excludes.Elements()))
-
-		if !model.Excludes.IsNull() {
-			var elements []types.String
-			model.Excludes.ElementsAs(ctx, &elements, false)
-
-			for i, elem := range elements {
-				excludeList[i] = elem.ValueString()
-			}
-		}
-
-		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), excludeList); err != nil {
-			return fmt.Errorf("error archiving directory: %s", err)
-		}
-	case !model.SourceFile.IsNull():
-		if err := archiver.ArchiveFile(model.SourceFile.ValueString()); err != nil {
-			return fmt.Errorf("error archiving file: %s", err)
-		}
-	case !model.SourceContentFilename.IsNull():
-		content := model.SourceContent.ValueString()
-
-		if err := archiver.ArchiveContent([]byte(content), model.SourceContentFilename.ValueString()); err != nil {
-			return fmt.Errorf("error archiving content: %s", err)
-		}
-	case !model.Source.IsNull():
-		content := make(map[string][]byte)
-
-		var elements []sourceModel
-		model.Source.ElementsAs(ctx, &elements, false)
-
-		for _, elem := range elements {
-			content[elem.Filename.ValueString()] = []byte(elem.Content.ValueString())
-		}
-
-		if err := archiver.ArchiveMultiple(content); err != nil {
-			return fmt.Errorf("error archiving content: %s", err)
-		}
-	}
-
-	return nil
-}
-
-func (d *archiveFileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *archiveFileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var model fileModel
-	diags := req.Config.Get(ctx, &model)
+	diags := req.Plan.Get(ctx, &model)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	resp.Diagnostics.Append(updateModel(ctx, &model)...)
+
+	diags = resp.State.Set(ctx, model)
+	resp.Diagnostics.Append(diags...)
+}
+
+func (d *archiveFileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var model fileModel
+	diags := req.State.Get(ctx, &model)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(updateModel(ctx, &model)...)
+
+	diags = resp.State.Set(ctx, model)
+	resp.Diagnostics.Append(diags...)
+}
+
+func updateModel(ctx context.Context, model *fileModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 	outputPath := model.OutputPath.ValueString()
 
 	outputDirectory := path.Dir(outputPath)
 	if outputDirectory != "" {
 		if _, err := os.Stat(outputDirectory); err != nil {
 			if err := os.MkdirAll(outputDirectory, 0755); err != nil {
-				resp.Diagnostics.AddError(
+				diags.AddError(
 					"Output path error",
 					fmt.Sprintf("error creating output path: %s", err),
 				)
-				return
+				return diags
 			}
 		}
 	}
 
-	if err := archive(ctx, model); err != nil {
-		resp.Diagnostics.AddError(
+	if err := archive(ctx, *model); err != nil {
+		diags.AddError(
 			"Archive creation error",
 			fmt.Sprintf("error creating archive: %s", err),
 		)
-		return
+		return diags
 	}
 
 	// Generate archived file stats
 	fi, err := os.Stat(outputPath)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		diags.AddError(
 			"Archive output error",
 			fmt.Sprintf("error reading output: %s", err),
 		)
-		return
+		return diags
 	}
 
 	sha1, base64sha256, md5, err := genFileShas(outputPath)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		diags.AddError(
 			"Hash generation error",
 			fmt.Sprintf("error generating hashed: %s", err),
 		)
+		return diags
 	}
 
 	model.OutputSha = types.StringValue(sha1)
@@ -285,53 +280,15 @@ func (d *archiveFileDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	model.ID = types.StringValue(sha1)
 
-	diags = resp.State.Set(ctx, model)
-	resp.Diagnostics.Append(diags...)
+	return diags
 }
 
-func (d *archiveFileDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *archiveFileResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
+}
+
+func (d *archiveFileResource) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
+}
+
+func (d *archiveFileResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_file"
-}
-
-type fileModel struct {
-	ID                    types.String `tfsdk:"id"`
-	Source                types.Set    `tfsdk:"source"` // sourceModel
-	Type                  types.String `tfsdk:"type"`
-	SourceContent         types.String `tfsdk:"source_content"`
-	SourceContentFilename types.String `tfsdk:"source_content_filename"`
-	SourceFile            types.String `tfsdk:"source_file"`
-	SourceDir             types.String `tfsdk:"source_dir"`
-	Excludes              types.Set    `tfsdk:"excludes"`
-	OutputPath            types.String `tfsdk:"output_path"`
-	OutputSize            types.Int64  `tfsdk:"output_size"`
-	OutputSha             types.String `tfsdk:"output_sha"`
-	OutputBase64Sha256    types.String `tfsdk:"output_base64sha256"`
-	OutputMd5             types.String `tfsdk:"output_md5"`
-	OutputFileMode        types.String `tfsdk:"output_file_mode"`
-}
-
-type sourceModel struct {
-	Content  types.String `tfsdk:"content"`
-	Filename types.String `tfsdk:"filename"`
-}
-
-func genFileShas(filename string) (string, string, string, error) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return "", "", "", fmt.Errorf("could not compute file '%s' checksum: %s", filename, err)
-	}
-	h := sha1.New()
-	h.Write(data)
-	sha1 := hex.EncodeToString(h.Sum(nil))
-
-	h256 := sha256.New()
-	h256.Write(data)
-	shaSum := h256.Sum(nil)
-	sha256base64 := base64.StdEncoding.EncodeToString(shaSum[:])
-
-	md5 := md5.New()
-	md5.Write(data)
-	md5Sum := hex.EncodeToString(md5.Sum(nil))
-
-	return sha1, sha256base64, md5Sum, nil
 }

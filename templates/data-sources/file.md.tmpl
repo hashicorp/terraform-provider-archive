@@ -1,0 +1,27 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/data-sources/file/data-source.tf" }}
+
+{{ tffile "examples/data-sources/file/multiple-files.tf" }}
+
+{{ tffile "examples/data-sources/file/lambda.tf" }}
+
+~> **Note regarding symbolic links**: Due to a bug, the `archive_file` data
+  source does not currently create proper zip archives when the source includes
+  symbolic links (also known as "symlinks"). Please see [GitHub Issue
+  #6](https://github.com/terraform-providers/terraform-provider-archive/issues/6)
+  for more details and workaround options. This message will be removed when the
+  bug is fixed.
+
+{{ .SchemaMarkdown | trimspace }}
