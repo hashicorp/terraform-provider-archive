@@ -1,4 +1,4 @@
-## 2.3.0 (unreleased)
+## 2.3.0 (January 18, 2023)
 
 NOTES:
 
