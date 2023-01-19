@@ -1,17 +1,13 @@
 package archive
 
 import (
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 )
 
-var testProviders = map[string]*schema.Provider{
-	"archive": Provider(),
-}
-
-func TestProvider(t *testing.T) {
-	if err := Provider().InternalValidate(); err != nil {
-		t.Fatalf("err: %s", err)
+//nolint:unparam
+func protoV5ProviderFactories() map[string]func() (tfprotov5.ProviderServer, error) {
+	return map[string]func() (tfprotov5.ProviderServer, error){
+		"archive": providerserver.NewProtocol5WithError(New()),
 	}
 }

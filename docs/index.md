@@ -1,5 +1,4 @@
 ---
-layout: "archive"
 page_title: "Provider: Archive"
 description: |-
   The Archive provider is used to manage archive files.
@@ -9,10 +8,5 @@ description: |-
 
 The archive provider exposes resources to manage archive files.
 
-Use the navigation to the left to read about the available resources.
-
-## Example Usage
-
-```hcl
-provider "archive" {}
-```
+This provider requires no configuration. For information on the resources
+it provides, see the navigation bar.

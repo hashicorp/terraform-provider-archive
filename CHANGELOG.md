@@ -1,3 +1,9 @@
+## 2.3.0 (January 18, 2023)
+
+NOTES:
+
+* Provider has been re-written using the new [`terraform-plugin-framework`](https://www.terraform.io/plugin/framework) ([#170](https://github.com/hashicorp/terraform-provider-archive/pull/170)).
+
 ## 2.2.0 (May 04, 2021)
 
 ENHANCEMENTS:

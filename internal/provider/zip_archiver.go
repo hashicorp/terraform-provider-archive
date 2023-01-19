@@ -3,7 +3,6 @@ package archive
 import (
 	"archive/zip"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -45,7 +44,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 		return err
 	}
 
-	content, err := ioutil.ReadFile(infilename)
+	content, err := os.ReadFile(infilename)
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	}
 	fh.Name = filepath.ToSlash(fi.Name())
 	fh.Method = zip.Deflate
-	// fh.Modified alone isn't enough when using a zero value
+	//nolint:staticcheck // This is required as fh.SetModTime has been deprecated since Go 1.10 and using fh.Modified alone isn't enough when using a zero value
 	fh.SetModTime(time.Time{})
 
 	if a.outputFileMode != "" {
@@ -145,6 +144,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		fh.Name = filepath.ToSlash(relname)
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
+		//nolint:staticcheck
 		fh.SetModTime(time.Time{})
 
 		if a.outputFileMode != "" {
@@ -159,7 +159,7 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
 		}
-		content, err := ioutil.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("error reading file for archival: %s", err)
 		}
