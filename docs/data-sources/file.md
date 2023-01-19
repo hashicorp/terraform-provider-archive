@@ -80,9 +80,12 @@ data "archive_file" "lambda_my_function" {
 ### Read-Only
 
 - `id` (String) The sha1 checksum hash of the output.
-- `output_base64sha256` (String) The base64-encoded SHA256 checksum of output archive file.
-- `output_md5` (String) The MD5 checksum of output archive file.
-- `output_sha` (String) The SHA1 checksum of output archive file.
+- `output_base64sha256` (String) Base64 Encoded SHA256 checksum of output file
+- `output_base64sha512` (String) Base64 Encoded SHA512 checksum of output file
+- `output_md5` (String) MD5 of output file
+- `output_sha` (String) SHA1 checksum of output file
+- `output_sha256` (String) SHA256 checksum of output file
+- `output_sha512` (String) SHA512 checksum of output file
 - `output_size` (Number) The byte size of the output archive file.
 
 <a id="nestedblock--source"></a>
