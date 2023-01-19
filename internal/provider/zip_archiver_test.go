@@ -12,27 +12,27 @@ import (
 )
 
 func TestZipArchiver_Content(t *testing.T) {
-	zipfilepath := "archive-content.zip"
-	archiver := NewZipArchiver(zipfilepath)
+	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
 	if err := archiver.ArchiveContent([]byte("This is some content"), "content.txt"); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	ensureContents(t, zipfilepath, map[string][]byte{
+	ensureContents(t, zipFilePath, map[string][]byte{
 		"content.txt": []byte("This is some content"),
 	})
 }
 
 func TestZipArchiver_File(t *testing.T) {
-	zipfilepath := "archive-file.zip"
-	defer os.Remove(zipfilepath)
+	zipFilePath := filepath.Join(t.TempDir(), "archive-file.zip")
 
-	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveFile("./test-fixtures/test-file.txt"); err != nil {
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveFile("./test-fixtures/test-dir/test-file.txt"); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	ensureContents(t, zipfilepath, map[string][]byte{
+	ensureContents(t, zipFilePath, map[string][]byte{
 		"test-file.txt": []byte("This is test content"),
 	})
 }
@@ -45,7 +45,7 @@ func TestZipArchiver_FileMode(t *testing.T) {
 
 	var (
 		zipFilePath = file.Name()
-		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
+		toZipPath   = filepath.FromSlash("./test-fixtures/test-dir/test-file.txt")
 	)
 
 	stringArray := [5]string{"0444", "0644", "0666", "0744", "0777"}
@@ -62,19 +62,18 @@ func TestZipArchiver_FileMode(t *testing.T) {
 
 func TestZipArchiver_FileModified(t *testing.T) {
 	var (
-		zipFilePath = filepath.FromSlash("archive-file-modified.zip")
-		toZipPath   = filepath.FromSlash("./test-fixtures/test-file.txt")
+		zipFilePath = filepath.Join(t.TempDir(), "archive-file-modified.zip")
+		toZipPath   = filepath.FromSlash("./test-fixtures/test-dir/test-file.txt")
 	)
 
-	var zip = func() {
+	var zipFunc = func() {
 		archiver := NewZipArchiver(zipFilePath)
 		if err := archiver.ArchiveFile(toZipPath); err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
 	}
 
-	zip()
-	defer os.Remove(zipFilePath)
+	zipFunc()
 
 	expectedContents, err := os.ReadFile(zipFilePath)
 	if err != nil {
@@ -87,7 +86,7 @@ func TestZipArchiver_FileModified(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	zip()
+	zipFunc()
 
 	actualContents, err := os.ReadFile(zipFilePath)
 	if err != nil {
@@ -100,15 +99,14 @@ func TestZipArchiver_FileModified(t *testing.T) {
 }
 
 func TestZipArchiver_Dir(t *testing.T) {
-	zipfilepath := "archive-dir.zip"
-	defer os.Remove(zipfilepath)
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir.zip")
 
-	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{""}); err != nil {
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", []string{""}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	ensureContents(t, zipfilepath, map[string][]byte{
+	ensureContents(t, zipFilePath, map[string][]byte{
 		"file1.txt": []byte("This is file 1"),
 		"file2.txt": []byte("This is file 2"),
 		"file3.txt": []byte("This is file 3"),
@@ -116,30 +114,28 @@ func TestZipArchiver_Dir(t *testing.T) {
 }
 
 func TestZipArchiver_Dir_Exclude(t *testing.T) {
-	zipfilepath := "archive-dir-exclude.zip"
-	defer os.Remove(zipfilepath)
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-exclude.zip")
 
-	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{"file2.txt"}); err != nil {
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", []string{"file2.txt"}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	ensureContents(t, zipfilepath, map[string][]byte{
+	ensureContents(t, zipFilePath, map[string][]byte{
 		"file1.txt": []byte("This is file 1"),
 		"file3.txt": []byte("This is file 3"),
 	})
 }
 
 func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
-	zipfilepath := "archive-dir-exclude-dir.zip"
-	defer os.Remove(zipfilepath)
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-exclude-dir.zip")
 
-	archiver := NewZipArchiver(zipfilepath)
-	if err := archiver.ArchiveDir("./test-fixtures/", []string{"test-dir", "test-dir2/file2.txt"}); err != nil {
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{"test-dir1", "test-dir2/file2.txt"}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	ensureContents(t, zipfilepath, map[string][]byte{
+	ensureContents(t, zipFilePath, map[string][]byte{
 		"test-dir2/file1.txt": []byte("This is file 1"),
 		"test-dir2/file3.txt": []byte("This is file 3"),
 		"test-file.txt":       []byte("This is test content"),
@@ -147,8 +143,7 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 }
 
 func TestZipArchiver_Multiple(t *testing.T) {
-	zipfilepath := "archive-content.zip"
-	defer os.Remove(zipfilepath)
+	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 
 	content := map[string][]byte{
 		"file1.txt": []byte("This is file 1"),
@@ -156,12 +151,64 @@ func TestZipArchiver_Multiple(t *testing.T) {
 		"file3.txt": []byte("This is file 3"),
 	}
 
-	archiver := NewZipArchiver(zipfilepath)
+	archiver := NewZipArchiver(zipFilePath)
 	if err := archiver.ArchiveMultiple(content); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	ensureContents(t, zipfilepath, content)
+	ensureContents(t, zipFilePath, content)
+}
+
+func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-file.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file/target", []string{""}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"file1.txt":               []byte("This is file 1"),
+		"test-symlink1.txt":       []byte("This is test content"),
+		"test-nested-symlink.txt": []byte("This is test content"),
+	})
+}
+
+func TestZipArchiver_Dir_With_Symlink_Dir(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-symlink-dir1/target", []string{""}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"file1.txt":                                                 []byte("This is file 1"),
+		"symlink-to-sample/file1.txt":                               []byte("This is file 1"),
+		"symlink-to-sample/file2.txt":                               []byte("This is file 2"),
+		"symlink-to-sample/file3.txt":                               []byte("This is file 3"),
+		"symlink-to-symlink-to-sample2/file1.txt":                   []byte("This is file 1"),
+		"symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt": []byte("This is file 1"),
+	})
+}
+
+func TestZipArchiver_Dir_With_Symlink_Dir_Exclude_With_Directory(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-symlink-dir1/target", []string{
+		"symlink-to-sample/file1.txt",
+		"symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt",
+	}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"file1.txt":                               []byte("This is file 1"),
+		"symlink-to-sample/file2.txt":             []byte("This is file 2"),
+		"symlink-to-sample/file3.txt":             []byte("This is file 3"),
+		"symlink-to-symlink-to-sample2/file1.txt": []byte("This is file 1"),
+	})
 }
 
 func ensureContents(t *testing.T, zipfilepath string, wants map[string][]byte) {

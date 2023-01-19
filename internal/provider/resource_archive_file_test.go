@@ -470,7 +470,7 @@ func testAccArchiveFileResourceFileConfig(outputPath string) string {
 	return fmt.Sprintf(`
 resource "archive_file" "foo" {
   type             = "zip"
-  source_file      = "test-fixtures/test-file.txt"
+  source_file      = "test-fixtures/test-dir/test-file.txt"
   output_path      = "%s"
   output_file_mode = "0666"
 }
@@ -494,7 +494,7 @@ func testAccArchiveFileResourceDirConfig(outputPath string) string {
 	return fmt.Sprintf(`
 resource "archive_file" "foo" {
   type             = "zip"
-  source_dir       = "test-fixtures/test-dir"
+  source_dir       = "test-fixtures/test-dir/test-dir1"
   output_path      = "%s"
   output_file_mode = "0666"
 }

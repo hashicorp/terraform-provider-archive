@@ -387,7 +387,7 @@ func testAccArchiveFileFileConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type             = "zip"
-  source_file      = "test-fixtures/test-file.txt"
+  source_file      = "test-fixtures/test-dir/test-file.txt"
   output_path      = "%s"
   output_file_mode = "0666"
 }
@@ -398,7 +398,7 @@ func testAccArchiveFileDirConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type             = "zip"
-  source_dir       = "test-fixtures/test-dir"
+  source_dir       = "test-fixtures/test-dir/test-dir1"
   output_path      = "%s"
   output_file_mode = "0666"
 }
@@ -409,8 +409,8 @@ func testAccArchiveFileDirExcludesConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type        = "zip"
-  source_dir  = "test-fixtures/test-dir"
-  excludes    = ["test-fixtures/test-dir/file2.txt"]
+  source_dir  = "test-fixtures/test-dir/test-dir1"
+  excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt"]
   output_path = "%s"
 }
 `, filepath.ToSlash(outputPath))

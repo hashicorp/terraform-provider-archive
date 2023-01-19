@@ -17,6 +17,8 @@ type ZipArchiver struct {
 	writer         *zip.Writer
 }
 
+const maxRecursion = 1024
+
 func NewZipArchiver(filepath string) Archiver {
 	return &ZipArchiver{
 		filepath: filepath,
@@ -109,8 +111,11 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	}
 	defer a.close()
 
-	return filepath.Walk(indirname, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(indirname, a.createWalkFunc("", indirname, excludes))
+}
 
+func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, excludes []string) func(path string, info os.FileInfo, err error) error {
+	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error encountered during file walk: %s", err)
 		}
@@ -120,7 +125,9 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 			return fmt.Errorf("error relativizing file for archival: %s", err)
 		}
 
-		isMatch := checkMatch(relname, excludes)
+		archivePath := filepath.Join(basePath, relname)
+
+		isMatch := checkMatch(archivePath, excludes)
 
 		if info.IsDir() {
 			if isMatch {
@@ -137,11 +144,29 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 			return err
 		}
 
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			realPath, err := readSymlinkRecursive(path, maxRecursion)
+			if err != nil {
+				return err
+			}
+
+			realInfo, err := os.Stat(realPath)
+			if err != nil {
+				return err
+			}
+
+			if realInfo.IsDir() {
+				return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, excludes))
+			}
+
+			info = realInfo
+		}
+
 		fh, err := zip.FileInfoHeader(info)
 		if err != nil {
 			return fmt.Errorf("error creating file header: %s", err)
 		}
-		fh.Name = filepath.ToSlash(relname)
+		fh.Name = filepath.ToSlash(archivePath)
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
 		//nolint:staticcheck
@@ -165,7 +190,47 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 		}
 		_, err = f.Write(content)
 		return err
-	})
+	}
+}
+
+func readSymlinkRecursive(fileName string, maxRecursion int) (string, error) {
+	currentFile := fileName
+	recursionCount := 0
+	realPath := ""
+
+	for recursionCount < maxRecursion {
+		dir := filepath.Dir(currentFile)
+
+		realFileName, err := os.Readlink(fileName)
+		if err != nil {
+			return realPath, err
+		}
+
+		realAbsFileName, err := filepath.Abs(realFileName)
+		if err != nil {
+			return realPath, err
+		}
+
+		realPath = filepath.Join(dir, realFileName)
+
+		// If symlink is using absolute file path then use directly.
+		if realFileName == realAbsFileName {
+			realPath = realFileName
+		}
+
+		realInfo, err := os.Stat(realPath)
+		if err != nil {
+			return realPath, err
+		}
+
+		if realInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
+			return realPath, nil
+		}
+
+		recursionCount++
+	}
+
+	return realPath, fmt.Errorf("symlink recursion limit exceeded: %s", fileName)
 }
 
 func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
