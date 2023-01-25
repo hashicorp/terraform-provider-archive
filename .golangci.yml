@@ -9,6 +9,7 @@ linters:
     - errcheck
     - exportloopref
     - forcetypeassert
+    - godot
     - gofmt
     - gosimple
     - ineffassign
