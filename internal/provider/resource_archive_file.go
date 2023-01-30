@@ -176,18 +176,6 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "The byte size of the output archive file.",
 				Computed:    true,
 			},
-			"output_sha": schema.StringAttribute{
-				Description: "The SHA1 checksum of output archive file.",
-				Computed:    true,
-			},
-			"output_base64sha256": schema.StringAttribute{
-				Description: "The base64-encoded SHA256 checksum of output archive file.",
-				Computed:    true,
-			},
-			"output_md5": schema.StringAttribute{
-				Description: "The MD5 checksum of output archive file.",
-				Computed:    true,
-			},
 			"output_file_mode": schema.StringAttribute{
 				Description: "String that specifies the octal file mode for all archived files. For example: `\"0666\"`. " +
 					"Setting this will ensure that cross platform usage of this module will not vary the modes of archived " +
@@ -196,6 +184,30 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"output_md5": schema.StringAttribute{
+				Description: "MD5 of output file",
+				Computed:    true,
+			},
+			"output_sha": schema.StringAttribute{
+				Description: "SHA1 checksum of output file",
+				Computed:    true,
+			},
+			"output_sha256": schema.StringAttribute{
+				Description: "SHA256 checksum of output file",
+				Computed:    true,
+			},
+			"output_base64sha256": schema.StringAttribute{
+				Description: "Base64 Encoded SHA256 checksum of output file",
+				Computed:    true,
+			},
+			"output_sha512": schema.StringAttribute{
+				Description: "SHA512 checksum of output file",
+				Computed:    true,
+			},
+			"output_base64sha512": schema.StringAttribute{
+				Description: "Base64 Encoded SHA512 checksum of output file",
+				Computed:    true,
 			},
 		},
 	}
@@ -263,8 +275,9 @@ func updateModel(ctx context.Context, model *fileModel) diag.Diagnostics {
 		)
 		return diags
 	}
+	model.OutputSize = types.Int64Value(fi.Size())
 
-	sha1, base64sha256, md5, err := genFileShas(outputPath)
+	checksums, err := genFileChecksums(outputPath)
 	if err != nil {
 		diags.AddError(
 			"Hash generation error",
@@ -272,13 +285,14 @@ func updateModel(ctx context.Context, model *fileModel) diag.Diagnostics {
 		)
 		return diags
 	}
+	model.OutputMd5 = types.StringValue(checksums.md5Hex)
+	model.OutputSha = types.StringValue(checksums.sha1Hex)
+	model.OutputSha256 = types.StringValue(checksums.sha256Hex)
+	model.OutputBase64Sha256 = types.StringValue(checksums.sha256Base64)
+	model.OutputSha512 = types.StringValue(checksums.sha512Hex)
+	model.OutputBase64Sha512 = types.StringValue(checksums.sha512Base64)
 
-	model.OutputSha = types.StringValue(sha1)
-	model.OutputBase64Sha256 = types.StringValue(base64sha256)
-	model.OutputMd5 = types.StringValue(md5)
-	model.OutputSize = types.Int64Value(fi.Size())
-
-	model.ID = types.StringValue(sha1)
+	model.ID = types.StringValue(checksums.sha1Hex)
 
 	return diags
 }

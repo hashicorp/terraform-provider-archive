@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -149,23 +150,35 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				Description: "The byte size of the output archive file.",
 				Computed:    true,
 			},
-			"output_sha": schema.StringAttribute{
-				Description: "The SHA1 checksum of output archive file.",
-				Computed:    true,
-			},
-			"output_base64sha256": schema.StringAttribute{
-				Description: "The base64-encoded SHA256 checksum of output archive file.",
-				Computed:    true,
-			},
-			"output_md5": schema.StringAttribute{
-				Description: "The MD5 checksum of output archive file.",
-				Computed:    true,
-			},
 			"output_file_mode": schema.StringAttribute{
 				Description: "String that specifies the octal file mode for all archived files. For example: `\"0666\"`. " +
 					"Setting this will ensure that cross platform usage of this module will not vary the modes of archived " +
 					"files (and ultimately checksums) resulting in more deterministic behavior.",
 				Optional: true,
+			},
+			"output_md5": schema.StringAttribute{
+				Description: "MD5 of output file",
+				Computed:    true,
+			},
+			"output_sha": schema.StringAttribute{
+				Description: "SHA1 checksum of output file",
+				Computed:    true,
+			},
+			"output_sha256": schema.StringAttribute{
+				Description: "SHA256 checksum of output file",
+				Computed:    true,
+			},
+			"output_base64sha256": schema.StringAttribute{
+				Description: "Base64 Encoded SHA256 checksum of output file",
+				Computed:    true,
+			},
+			"output_sha512": schema.StringAttribute{
+				Description: "SHA512 checksum of output file",
+				Computed:    true,
+			},
+			"output_base64sha512": schema.StringAttribute{
+				Description: "Base64 Encoded SHA512 checksum of output file",
+				Computed:    true,
 			},
 		},
 	}
@@ -269,21 +282,23 @@ func (d *archiveFileDataSource) Read(ctx context.Context, req datasource.ReadReq
 		)
 		return
 	}
+	model.OutputSize = types.Int64Value(fi.Size())
 
-	sha1, base64sha256, md5, err := genFileShas(outputPath)
+	checksums, err := genFileChecksums(outputPath)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Hash generation error",
-			fmt.Sprintf("error generating hashed: %s", err),
+			fmt.Sprintf("error generating checksums: %s", err),
 		)
 	}
+	model.OutputMd5 = types.StringValue(checksums.md5Hex)
+	model.OutputSha = types.StringValue(checksums.sha1Hex)
+	model.OutputSha256 = types.StringValue(checksums.sha256Hex)
+	model.OutputBase64Sha256 = types.StringValue(checksums.sha256Base64)
+	model.OutputSha512 = types.StringValue(checksums.sha512Hex)
+	model.OutputBase64Sha512 = types.StringValue(checksums.sha512Base64)
 
-	model.OutputSha = types.StringValue(sha1)
-	model.OutputBase64Sha256 = types.StringValue(base64sha256)
-	model.OutputMd5 = types.StringValue(md5)
-	model.OutputSize = types.Int64Value(fi.Size())
-
-	model.ID = types.StringValue(sha1)
+	model.ID = types.StringValue(checksums.sha1Hex)
 
 	diags = resp.State.Set(ctx, model)
 	resp.Diagnostics.Append(diags...)
@@ -304,10 +319,13 @@ type fileModel struct {
 	Excludes              types.Set    `tfsdk:"excludes"`
 	OutputPath            types.String `tfsdk:"output_path"`
 	OutputSize            types.Int64  `tfsdk:"output_size"`
-	OutputSha             types.String `tfsdk:"output_sha"`
-	OutputBase64Sha256    types.String `tfsdk:"output_base64sha256"`
-	OutputMd5             types.String `tfsdk:"output_md5"`
 	OutputFileMode        types.String `tfsdk:"output_file_mode"`
+	OutputMd5             types.String `tfsdk:"output_md5"`
+	OutputSha             types.String `tfsdk:"output_sha"`
+	OutputSha256          types.String `tfsdk:"output_sha256"`
+	OutputBase64Sha256    types.String `tfsdk:"output_base64sha256"`
+	OutputSha512          types.String `tfsdk:"output_sha512"`
+	OutputBase64Sha512    types.String `tfsdk:"output_base64sha512"`
 }
 
 type sourceModel struct {
@@ -315,23 +333,36 @@ type sourceModel struct {
 	Filename types.String `tfsdk:"filename"`
 }
 
-func genFileShas(filename string) (string, string, string, error) {
+type fileChecksums struct {
+	md5Hex       string
+	sha1Hex      string
+	sha256Hex    string
+	sha256Base64 string
+	sha512Hex    string
+	sha512Base64 string
+}
+
+func genFileChecksums(filename string) (fileChecksums, error) {
+	var checksums fileChecksums
+
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return "", "", "", fmt.Errorf("could not compute file '%s' checksum: %s", filename, err)
+		return checksums, fmt.Errorf("could not compute file '%s' checksum: %s", filename, err)
 	}
-	h := sha1.New()
-	h.Write(data)
-	sha1 := hex.EncodeToString(h.Sum(nil))
 
-	h256 := sha256.New()
-	h256.Write(data)
-	shaSum := h256.Sum(nil)
-	sha256base64 := base64.StdEncoding.EncodeToString(shaSum[:])
+	md5Sum := md5.Sum(data)
+	checksums.md5Hex = hex.EncodeToString(md5Sum[:])
 
-	md5 := md5.New()
-	md5.Write(data)
-	md5Sum := hex.EncodeToString(md5.Sum(nil))
+	sha1Sum := sha1.Sum(data)
+	checksums.sha1Hex = hex.EncodeToString(sha1Sum[:])
 
-	return sha1, sha256base64, md5Sum, nil
+	sha256Sum := sha256.Sum256(data)
+	checksums.sha256Hex = hex.EncodeToString(sha256Sum[:])
+	checksums.sha256Base64 = base64.StdEncoding.EncodeToString(sha256Sum[:])
+
+	sha512Sum := sha512.Sum512(data)
+	checksums.sha512Hex = hex.EncodeToString(sha512Sum[:])
+	checksums.sha512Base64 = base64.StdEncoding.EncodeToString(sha512Sum[:])
+
+	return checksums, nil
 }
