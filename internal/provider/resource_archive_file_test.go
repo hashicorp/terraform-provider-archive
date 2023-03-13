@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"testing"
 
-	r "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	r "github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccArchiveFile_Resource_Basic(t *testing.T) {
