@@ -1,5 +1,5 @@
 kind: ENHANCEMENTS
-body: 'data-source/archive_file: Follow symlinks during archive creation ([183](https://github.com/hashicorp/terraform-provider-archive/pull/183)).'
+body: 'data-source/archive_file: Follow symlinks during archive creation'
 time: 2023-02-09T16:52:54.111677Z
 custom:
   Issue: "183"
