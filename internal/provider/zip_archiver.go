@@ -145,7 +145,7 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, excludes
 		}
 
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-			realPath, err := readSymlinkRecursive(path, maxRecursion)
+			realPath, err := filepath.EvalSymlinks(path)
 			if err != nil {
 				return err
 			}
@@ -191,46 +191,6 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, excludes
 		_, err = f.Write(content)
 		return err
 	}
-}
-
-func readSymlinkRecursive(fileName string, maxRecursion int) (string, error) {
-	currentFile := fileName
-	recursionCount := 0
-	realPath := ""
-
-	for recursionCount < maxRecursion {
-		dir := filepath.Dir(currentFile)
-
-		realFileName, err := os.Readlink(fileName)
-		if err != nil {
-			return realPath, err
-		}
-
-		realAbsFileName, err := filepath.Abs(realFileName)
-		if err != nil {
-			return realPath, err
-		}
-
-		realPath = filepath.Join(dir, realFileName)
-
-		// If symlink is using absolute file path then use directly.
-		if realFileName == realAbsFileName {
-			realPath = realFileName
-		}
-
-		realInfo, err := os.Stat(realPath)
-		if err != nil {
-			return realPath, err
-		}
-
-		if realInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
-			return realPath, nil
-		}
-
-		recursionCount++
-	}
-
-	return realPath, fmt.Errorf("symlink recursion limit exceeded: %s", fileName)
 }
 
 func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {

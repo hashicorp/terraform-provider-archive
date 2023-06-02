@@ -441,6 +441,66 @@ func TestResource_SourceConfigConflicting(t *testing.T) {
 	})
 }
 
+func TestAccArchiveFile_Resource_Symlinks(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "archive_file" "foo" {
+  type             = "zip"
+  source_file      = "test-fixtures/test-dir-with-symlink-file/sample/test-symlink.txt"
+  output_path      = "%s"
+  output_file_mode = "0666"
+}
+`, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+resource "archive_file" "foo" {
+  type             = "zip"
+  source_dir       = "test-fixtures/test-symlink-dir1/target"
+  output_path      = "%s"
+  output_file_mode = "0666"
+}
+`, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"file1.txt":                                                 []byte(`This is file 1`),
+							"symlink-to-sample/file1.txt":                               []byte(`This is file 1`),
+							"symlink-to-sample/file2.txt":                               []byte(`This is file 2`),
+							"symlink-to-sample/file3.txt":                               []byte(`This is file 3`),
+							"symlink-to-symlink-to-sample2/file1.txt":                   []byte(`This is file 1`),
+							"symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt": []byte(`This is file 1`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
 func alterFileContents(content, path string) {
 	f, err := os.Create(path)
 	if err != nil {
