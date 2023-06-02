@@ -17,8 +17,6 @@ type ZipArchiver struct {
 	writer         *zip.Writer
 }
 
-const maxRecursion = 1024
-
 func NewZipArchiver(filepath string) Archiver {
 	return &ZipArchiver{
 		filepath: filepath,
