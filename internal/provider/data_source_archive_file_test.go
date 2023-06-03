@@ -365,6 +365,11 @@ func TestAccArchiveFile_Symlinks(t *testing.T) {
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
 
+	absSourceFilePath, err := filepath.Abs("test-fixtures/test-dir-with-symlink-file/sample/test-symlink.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var fileSize string
 	r.ParallelTest(t, r.TestCase{
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
@@ -373,11 +378,11 @@ func TestAccArchiveFile_Symlinks(t *testing.T) {
 				Config: fmt.Sprintf(`
 data "archive_file" "foo" {
   type             = "zip"
-  source_file      = "test-fixtures/test-dir-with-symlink-file/sample/test-symlink.txt"
+  source_file      = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(f)),
+`, filepath.ToSlash(absSourceFilePath), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
