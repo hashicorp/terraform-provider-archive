@@ -365,31 +365,31 @@ func TestAccArchiveFile_Symlinks(t *testing.T) {
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
 
-	symlinkFile := "test-fixtures/test-dir-with-symlink-file/test-symlink.txt"
+	symlinkFile := filepath.ToSlash("test-fixtures/test-dir-with-symlink-file/test-symlink.txt")
 	symlinkFileAbs, err := filepath.Abs(symlinkFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirWithRegularFiles := "test-fixtures/test-symlink-dir"
+	symlinkDirWithRegularFiles := filepath.ToSlash("test-fixtures/test-symlink-dir")
 	symlinkDirWithRegularFilesAbs, err := filepath.Abs(symlinkDirWithRegularFiles)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirWithSymlinkFiles := "test-fixtures/test-dir-with-symlink-file"
+	symlinkDirWithSymlinkFiles := filepath.ToSlash("test-fixtures/test-dir-with-symlink-file")
 	symlinkDirWithSymlinkFilesAbs, err := filepath.Abs(symlinkDirWithSymlinkFiles)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkFileInSymlinkDir := "test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt"
+	symlinkFileInSymlinkDir := filepath.ToSlash("test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt")
 	symlinkFileInSymlinkDirAbs, err := filepath.Abs(symlinkFileInSymlinkDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirInRegularDir := "test-fixtures/test-dir-with-symlink-dir"
+	symlinkDirInRegularDir := filepath.ToSlash("test-fixtures/test-dir-with-symlink-dir")
 	symlinkDirInRegularDirAbs, err := filepath.Abs(symlinkDirInRegularDir)
 	if err != nil {
 		t.Fatal(err)
@@ -401,13 +401,13 @@ func TestAccArchiveFile_Symlinks(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_file      = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkFile), filepath.ToSlash(f)),
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, symlinkFile, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -422,145 +422,13 @@ data "archive_file" "foo" {
 			},
 			{
 				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_file      = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileSize(f, &fileSize),
-					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{
-							"test-symlink.txt": []byte(`This is test content`),
-						})
-						ensureFileMode(t, value, "0666")
-						return nil
-					}),
-				),
-			},
-			{
-				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_dir       = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkDirWithRegularFiles), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileSize(f, &fileSize),
-					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{
-							"file1.txt": []byte(`This is file 1`),
-							"file2.txt": []byte(`This is file 2`),
-							"file3.txt": []byte(`This is file 3`),
-						})
-						ensureFileMode(t, value, "0666")
-						return nil
-					}),
-				),
-			},
-			{
-				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_dir       = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileSize(f, &fileSize),
-					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{
-							"file1.txt": []byte(`This is file 1`),
-							"file2.txt": []byte(`This is file 2`),
-							"file3.txt": []byte(`This is file 3`),
-						})
-						ensureFileMode(t, value, "0666")
-						return nil
-					}),
-				),
-			},
-			{
-				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_dir       = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkDirWithSymlinkFiles), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileSize(f, &fileSize),
-					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{
-							"test-file.txt":    []byte(`This is test content`),
-							"test-symlink.txt": []byte(`This is test content`),
-						})
-						ensureFileMode(t, value, "0666")
-						return nil
-					}),
-				),
-			},
-			{
-				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_dir       = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkDirWithSymlinkFilesAbs), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileSize(f, &fileSize),
-					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{
-							"test-file.txt":    []byte(`This is test content`),
-							"test-symlink.txt": []byte(`This is test content`),
-						})
-						ensureFileMode(t, value, "0666")
-						return nil
-					}),
-				),
-			},
-			{
-				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_file      = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkFileInSymlinkDir), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					testAccArchiveFileSize(f, &fileSize),
-					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{
-							"test-symlink.txt": []byte(`This is test content`),
-						})
-						ensureFileMode(t, value, "0666")
-						return nil
-					}),
-				),
-			},
-			{
-				Config: fmt.Sprintf(`
-data "archive_file" "foo" {
-  type             = "zip"
-  source_file      = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
-}
-`, filepath.ToSlash(symlinkFileInSymlinkDirAbs), filepath.ToSlash(f)),
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, symlinkFileAbs, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -581,7 +449,139 @@ data "archive_file" "foo" {
 			 output_path      = "%s"
 			 output_file_mode = "0666"
 			}
-			`, symlinkDirInRegularDir, filepath.ToSlash(f)),
+			`, symlinkDirWithRegularFiles, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"file1.txt": []byte(`This is file 1`),
+							"file2.txt": []byte(`This is file 2`),
+							"file3.txt": []byte(`This is file 3`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, symlinkDirWithRegularFilesAbs, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"file1.txt": []byte(`This is file 1`),
+							"file2.txt": []byte(`This is file 2`),
+							"file3.txt": []byte(`This is file 3`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, symlinkDirWithSymlinkFiles, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-file.txt":    []byte(`This is test content`),
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, symlinkDirWithSymlinkFilesAbs, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-file.txt":    []byte(`This is test content`),
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, symlinkFileInSymlinkDir, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, symlinkFileInSymlinkDirAbs, filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+						data "archive_file" "foo" {
+						 type             = "zip"
+						 source_dir       = "%s"
+						 output_path      = "%s"
+						 output_file_mode = "0666"
+						}
+						`, symlinkDirInRegularDir, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),

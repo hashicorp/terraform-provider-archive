@@ -446,31 +446,31 @@ func TestResource_ArchiveFile_Symlinks(t *testing.T) {
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
 
-	symlinkFile := "test-fixtures/test-dir-with-symlink-file/test-symlink.txt"
+	symlinkFile := filepath.ToSlash("test-fixtures/test-dir-with-symlink-file/test-symlink.txt")
 	symlinkFileAbs, err := filepath.Abs(symlinkFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirWithRegularFiles := "test-fixtures/test-symlink-dir"
+	symlinkDirWithRegularFiles := filepath.ToSlash("test-fixtures/test-symlink-dir")
 	symlinkDirWithRegularFilesAbs, err := filepath.Abs(symlinkDirWithRegularFiles)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirWithSymlinkFiles := "test-fixtures/test-dir-with-symlink-file"
+	symlinkDirWithSymlinkFiles := filepath.ToSlash("test-fixtures/test-dir-with-symlink-file")
 	symlinkDirWithSymlinkFilesAbs, err := filepath.Abs(symlinkDirWithSymlinkFiles)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkFileInSymlinkDir := "test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt"
+	symlinkFileInSymlinkDir := filepath.ToSlash("test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt")
 	symlinkFileInSymlinkDirAbs, err := filepath.Abs(symlinkFileInSymlinkDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirInRegularDir := "test-fixtures/test-dir-with-symlink-dir"
+	symlinkDirInRegularDir := filepath.ToSlash("test-fixtures/test-dir-with-symlink-dir")
 	symlinkDirInRegularDirAbs, err := filepath.Abs(symlinkDirInRegularDir)
 	if err != nil {
 		t.Fatal(err)
@@ -488,7 +488,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkFile), filepath.ToSlash(f)),
+`, symlinkFile, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -509,7 +509,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
+`, symlinkFileAbs, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -530,7 +530,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkDirWithRegularFiles), filepath.ToSlash(f)),
+`, symlinkDirWithRegularFiles, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -553,7 +553,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
+`, symlinkDirWithRegularFilesAbs, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -576,7 +576,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkDirWithSymlinkFiles), filepath.ToSlash(f)),
+`, symlinkDirWithSymlinkFiles, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -598,7 +598,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkDirWithSymlinkFilesAbs), filepath.ToSlash(f)),
+`, symlinkDirWithSymlinkFilesAbs, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -620,7 +620,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkFileInSymlinkDir), filepath.ToSlash(f)),
+`, symlinkFileInSymlinkDir, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -641,7 +641,7 @@ data "archive_file" "foo" {
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(symlinkFileInSymlinkDirAbs), filepath.ToSlash(f)),
+`, symlinkFileInSymlinkDirAbs, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -656,13 +656,13 @@ data "archive_file" "foo" {
 			},
 			{
 				Config: fmt.Sprintf(`
-			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
-			}
-			`, symlinkDirInRegularDir, filepath.ToSlash(f)),
+data "archive_file" "foo" {
+ type             = "zip"
+ source_dir       = "%s"
+ output_path      = "%s"
+ output_file_mode = "0666"
+}
+`, symlinkDirInRegularDir, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -679,13 +679,13 @@ data "archive_file" "foo" {
 			},
 			{
 				Config: fmt.Sprintf(`
-			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
-			}
-			`, symlinkDirInRegularDirAbs, filepath.ToSlash(f)),
+data "archive_file" "foo" {
+ type             = "zip"
+ source_dir       = "%s"
+ output_path      = "%s"
+ output_file_mode = "0666"
+}
+`, symlinkDirInRegularDirAbs, filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
