@@ -604,7 +604,7 @@ func TestAccArchiveFile_Symlinks(t *testing.T) {
 			 output_path      = "%s"
 			 output_file_mode = "0666"
 			}
-			`, symlinkDirInRegularDirAbs, filepath.ToSlash(f)),
+			`, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
