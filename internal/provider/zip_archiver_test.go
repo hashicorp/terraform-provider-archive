@@ -3,12 +3,11 @@ package archive
 import (
 	"archive/zip"
 	"bytes"
-	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 )
@@ -220,10 +219,11 @@ func TestZipArchiver_Dir_DoNotFollowSymlinks(t *testing.T) {
 		FollowSymlinks: false,
 	})
 
-	expectedError := errors.New("error reading file for archival: read test-fixtures/test-dir-with-symlink-dir/test-symlink-dir: is a directory")
+	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures(\/|\\)test-dir-with-symlink-dir(\/|\\)test-symlink-dir: `)
+	found := regex.Match([]byte(err.Error()))
 
-	if !strings.Contains(err.Error(), expectedError.Error()) {
-		t.Fatalf("expected error %q, got: %s", expectedError, err)
+	if !found {
+		t.Fatalf("expedted error to match %q, got: %s", regex.String(), err.Error())
 	}
 }
 
@@ -272,10 +272,11 @@ func TestZipArchiver_Dir_Exclude_DoNotFollowSymlinks(t *testing.T) {
 		FollowSymlinks: false,
 	})
 
-	expectedError := errors.New("error reading file for archival: read test-fixtures/test-dir-with-symlink-dir/test-symlink-dir: is a directory")
+	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures(\/|\\)test-dir-with-symlink-dir(\/|\\)test-symlink-dir: `)
+	found := regex.Match([]byte(err.Error()))
 
-	if !strings.Contains(err.Error(), expectedError.Error()) {
-		t.Fatalf("expected error %q, got: %s", expectedError, err)
+	if !found {
+		t.Fatalf("expedted error to match %q, got: %s", regex.String(), err.Error())
 	}
 }
 
