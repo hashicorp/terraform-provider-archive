@@ -446,31 +446,31 @@ func TestResource_ArchiveFile_Symlinks(t *testing.T) {
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
 
-	symlinkFile := "test-fixtures/test-dir-with-symlink-file/sample/test-symlink.txt"
+	symlinkFile := "test-fixtures/test-dir-with-symlink-file/test-symlink.txt"
 	symlinkFileAbs, err := filepath.Abs(symlinkFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirWithRegularFiles := "test-fixtures/test-symlink-dir1/target/symlink-to-sample"
+	symlinkDirWithRegularFiles := "test-fixtures/test-symlink-dir"
 	symlinkDirWithRegularFilesAbs, err := filepath.Abs(symlinkDirWithRegularFiles)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirWithSymlinkFiles := "test-fixtures/test-dir-with-symlink-file/sample"
+	symlinkDirWithSymlinkFiles := "test-fixtures/test-dir-with-symlink-file"
 	symlinkDirWithSymlinkFilesAbs, err := filepath.Abs(symlinkDirWithSymlinkFiles)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkFileInSymlinkDir := "test-fixtures/test-symlink-dir1/target/symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt"
+	symlinkFileInSymlinkDir := "test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt"
 	symlinkFileInSymlinkDirAbs, err := filepath.Abs(symlinkFileInSymlinkDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDirInRegularDir := "test-fixtures/test-symlink-dir1/target"
+	symlinkDirInRegularDir := "test-fixtures"
 	symlinkDirInRegularDirAbs, err := filepath.Abs(symlinkDirInRegularDir)
 	if err != nil {
 		t.Fatal(err)
@@ -626,7 +626,7 @@ data "archive_file" "foo" {
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
 						ensureContents(t, value, map[string][]byte{
-							"symlink-to-sample-file1.txt": []byte(`This is file 1`),
+							"test-symlink.txt": []byte(`This is test content`),
 						})
 						ensureFileMode(t, value, "0666")
 						return nil
@@ -647,7 +647,7 @@ data "archive_file" "foo" {
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
 						ensureContents(t, value, map[string][]byte{
-							"symlink-to-sample-file1.txt": []byte(`This is file 1`),
+							"test-symlink.txt": []byte(`This is test content`),
 						})
 						ensureFileMode(t, value, "0666")
 						return nil
@@ -668,12 +668,20 @@ data "archive_file" "foo" {
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
 						ensureContents(t, value, map[string][]byte{
-							"file1.txt":                                                 []byte(`This is file 1`),
-							"symlink-to-sample/file1.txt":                               []byte(`This is file 1`),
-							"symlink-to-sample/file2.txt":                               []byte(`This is file 2`),
-							"symlink-to-sample/file3.txt":                               []byte(`This is file 3`),
-							"symlink-to-symlink-to-sample2/file1.txt":                   []byte(`This is file 1`),
-							"symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt": []byte(`This is file 1`),
+							"test-dir/test-dir1/file1.txt":                        []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                        []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                        []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                        []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                        []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                        []byte("This is file 3"),
+							"test-dir/test-file.txt":                              []byte("This is test content"),
+							"test-dir-with-symlink-file/test-file.txt":            []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt":         []byte("This is test content"),
+							"test-symlink-dir/file1.txt":                          []byte("This is file 1"),
+							"test-symlink-dir/file2.txt":                          []byte("This is file 2"),
+							"test-symlink-dir/file3.txt":                          []byte("This is file 3"),
+							"test-symlink-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
+							"test-symlink-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
 						})
 						ensureFileMode(t, value, "0666")
 						return nil
@@ -694,12 +702,20 @@ data "archive_file" "foo" {
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
 						ensureContents(t, value, map[string][]byte{
-							"file1.txt":                                                 []byte(`This is file 1`),
-							"symlink-to-sample/file1.txt":                               []byte(`This is file 1`),
-							"symlink-to-sample/file2.txt":                               []byte(`This is file 2`),
-							"symlink-to-sample/file3.txt":                               []byte(`This is file 3`),
-							"symlink-to-symlink-to-sample2/file1.txt":                   []byte(`This is file 1`),
-							"symlink-to-symlink-to-sample2/symlink-to-sample-file1.txt": []byte(`This is file 1`),
+							"test-dir/test-dir1/file1.txt":                        []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                        []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                        []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                        []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                        []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                        []byte("This is file 3"),
+							"test-dir/test-file.txt":                              []byte("This is test content"),
+							"test-dir-with-symlink-file/test-file.txt":            []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt":         []byte("This is test content"),
+							"test-symlink-dir/file1.txt":                          []byte("This is file 1"),
+							"test-symlink-dir/file2.txt":                          []byte("This is file 2"),
+							"test-symlink-dir/file3.txt":                          []byte("This is file 3"),
+							"test-symlink-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
+							"test-symlink-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
 						})
 						ensureFileMode(t, value, "0666")
 						return nil
