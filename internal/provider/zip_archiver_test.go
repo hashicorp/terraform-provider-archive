@@ -3,10 +3,12 @@ package archive
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -102,7 +104,7 @@ func TestZipArchiver_Dir(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", []string{""}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", ArchiveDirOpts{}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -117,7 +119,9 @@ func TestZipArchiver_Dir_Exclude(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-exclude.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", []string{"file2.txt"}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", ArchiveDirOpts{
+		Excludes: []string{"file2.txt"},
+	}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -131,7 +135,9 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-exclude-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir", []string{"test-dir1", "test-dir2/file2.txt"}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir", ArchiveDirOpts{
+		Excludes: []string{"test-dir1", "test-dir2/file2.txt"},
+	}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -163,7 +169,9 @@ func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-file.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file", []string{""}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file", ArchiveDirOpts{
+		FollowSymlinks: true,
+	}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -173,11 +181,13 @@ func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
 	})
 }
 
-func TestZipArchiver_Dir_With_Symlink_Dir(t *testing.T) {
+func TestZipArchiver_Dir_FollowSymlinks(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures", []string{""}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
+		FollowSymlinks: true,
+	}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -202,13 +212,31 @@ func TestZipArchiver_Dir_With_Symlink_Dir(t *testing.T) {
 	})
 }
 
-func TestZipArchiver_Dir_With_Symlink_Dir_Exclude_With_Directory(t *testing.T) {
+func TestZipArchiver_Dir_DoNotFollowSymlinks(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures", []string{
-		"test-symlink-dir/file1.txt",
-		"test-symlink-dir-with-symlink-file/test-symlink.txt",
+	err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
+		FollowSymlinks: false,
+	})
+
+	expectedError := errors.New("error reading file for archival: read test-fixtures/test-dir-with-symlink-dir/test-symlink-dir: is a directory")
+
+	if !strings.Contains(err.Error(), expectedError.Error()) {
+		t.Fatalf("expected error %q, got: %s", expectedError, err)
+	}
+}
+
+func TestZipArchiver_Dir_Exclude_FollowSymlinks(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
+		Excludes: []string{
+			"test-symlink-dir/file1.txt",
+			"test-symlink-dir-with-symlink-file/test-symlink.txt",
+		},
+		FollowSymlinks: true,
 	}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -230,6 +258,25 @@ func TestZipArchiver_Dir_With_Symlink_Dir_Exclude_With_Directory(t *testing.T) {
 		"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
 		"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
 	})
+}
+
+func TestZipArchiver_Dir_Exclude_DoNotFollowSymlinks(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
+		Excludes: []string{
+			"test-dir/test-dir1/file1.txt",
+			"test-symlink-dir-with-symlink-file/test-symlink.txt",
+		},
+		FollowSymlinks: false,
+	})
+
+	expectedError := errors.New("error reading file for archival: read test-fixtures/test-dir-with-symlink-dir/test-symlink-dir: is a directory")
+
+	if !strings.Contains(err.Error(), expectedError.Error()) {
+		t.Fatalf("expected error %q, got: %s", expectedError, err)
+	}
 }
 
 func ensureContents(t *testing.T, zipfilepath string, wants map[string][]byte) {

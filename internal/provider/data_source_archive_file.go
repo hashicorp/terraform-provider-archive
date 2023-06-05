@@ -142,6 +142,11 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 					),
 				},
 			},
+			"follow_symlinks": schema.BoolAttribute{
+				Optional: true,
+				Description: "Boolean flag indicating whether symbolic links should be followed during the creation of " +
+					"the archive. Defaults to false.",
+			},
 			"output_path": schema.StringAttribute{
 				Description: "The output of the archive file.",
 				Required:    true,
@@ -211,7 +216,12 @@ func archive(ctx context.Context, model fileModel) error {
 			}
 		}
 
-		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), excludeList); err != nil {
+		opts := ArchiveDirOpts{
+			Excludes:       excludeList,
+			FollowSymlinks: model.FollowSymlinks.ValueBool(),
+		}
+
+		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), opts); err != nil {
 			return fmt.Errorf("error archiving directory: %s", err)
 		}
 	case !model.SourceFile.IsNull():
@@ -317,6 +327,7 @@ type fileModel struct {
 	SourceFile            types.String `tfsdk:"source_file"`
 	SourceDir             types.String `tfsdk:"source_dir"`
 	Excludes              types.Set    `tfsdk:"excludes"`
+	FollowSymlinks        types.Bool   `tfsdk:"follow_symlinks"`
 	OutputPath            types.String `tfsdk:"output_path"`
 	OutputSize            types.Int64  `tfsdk:"output_size"`
 	OutputFileMode        types.String `tfsdk:"output_file_mode"`

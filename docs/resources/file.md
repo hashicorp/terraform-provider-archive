@@ -23,6 +23,7 @@ description: |-
 ### Optional
 
 - `excludes` (Set of String) Specify files to ignore when reading the `source_dir`.
+- `follow_symlinks` (Boolean) Boolean flag indicating whether symbolic links should be followed during the creation of the archive. Defaults to false.
 - `output_file_mode` (String) String that specifies the octal file mode for all archived files. For example: `"0666"`. Setting this will ensure that cross platform usage of this module will not vary the modes of archived files (and ultimately checksums) resulting in more deterministic behavior.
 - `source` (Block Set) Specifies attributes of a single source file to include into the archive. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified. (see [below for nested schema](#nestedblock--source))
 - `source_content` (String) Add only this content to the archive with `source_content_filename` as the filename. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified.

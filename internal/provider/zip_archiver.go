@@ -93,15 +93,15 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 	return false
 }
 
-func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
+func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 	_, err := assertValidDir(indirname)
 	if err != nil {
 		return err
 	}
 
 	// ensure exclusions are OS compatible paths
-	for i := range excludes {
-		excludes[i] = filepath.FromSlash(excludes[i])
+	for i := range opts.Excludes {
+		opts.Excludes[i] = filepath.FromSlash(opts.Excludes[i])
 	}
 
 	if err := a.open(); err != nil {
@@ -109,10 +109,10 @@ func (a *ZipArchiver) ArchiveDir(indirname string, excludes []string) error {
 	}
 	defer a.close()
 
-	return filepath.Walk(indirname, a.createWalkFunc("", indirname, excludes))
+	return filepath.Walk(indirname, a.createWalkFunc("", indirname, opts))
 }
 
-func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, excludes []string) func(path string, info os.FileInfo, err error) error {
+func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts ArchiveDirOpts) func(path string, info os.FileInfo, err error) error {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error encountered during file walk: %s", err)
@@ -125,7 +125,7 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, excludes
 
 		archivePath := filepath.Join(basePath, relname)
 
-		isMatch := checkMatch(archivePath, excludes)
+		isMatch := checkMatch(archivePath, opts.Excludes)
 
 		if info.IsDir() {
 			if isMatch {
@@ -143,21 +143,23 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, excludes
 		}
 
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-			realPath, err := filepath.EvalSymlinks(path)
-			if err != nil {
-				return err
-			}
+			if opts.FollowSymlinks {
+				realPath, err := filepath.EvalSymlinks(path)
+				if err != nil {
+					return err
+				}
 
-			realInfo, err := os.Stat(realPath)
-			if err != nil {
-				return err
-			}
+				realInfo, err := os.Stat(realPath)
+				if err != nil {
+					return err
+				}
 
-			if realInfo.IsDir() {
-				return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, excludes))
-			}
+				if realInfo.IsDir() {
+					return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, opts))
+				}
 
-			info = realInfo
+				info = realInfo
+			}
 		}
 
 		fh, err := zip.FileInfoHeader(info)

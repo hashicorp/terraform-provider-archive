@@ -5,10 +5,15 @@ import (
 	"os"
 )
 
+type ArchiveDirOpts struct {
+	Excludes       []string
+	FollowSymlinks bool
+}
+
 type Archiver interface {
 	ArchiveContent(content []byte, infilename string) error
 	ArchiveFile(infilename string) error
-	ArchiveDir(indirname string, excludes []string) error
+	ArchiveDir(indirname string, opts ArchiveDirOpts) error
 	ArchiveMultiple(content map[string][]byte) error
 	SetOutputFileMode(outputFileMode string)
 }
