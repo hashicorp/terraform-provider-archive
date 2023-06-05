@@ -182,20 +182,23 @@ func TestZipArchiver_Dir_With_Symlink_Dir(t *testing.T) {
 	}
 
 	ensureContents(t, zipFilePath, map[string][]byte{
-		"test-dir/test-dir1/file1.txt":                        []byte("This is file 1"),
-		"test-dir/test-dir1/file2.txt":                        []byte("This is file 2"),
-		"test-dir/test-dir1/file3.txt":                        []byte("This is file 3"),
-		"test-dir/test-dir2/file1.txt":                        []byte("This is file 1"),
-		"test-dir/test-dir2/file2.txt":                        []byte("This is file 2"),
-		"test-dir/test-dir2/file3.txt":                        []byte("This is file 3"),
-		"test-dir/test-file.txt":                              []byte("This is test content"),
-		"test-dir-with-symlink-file/test-file.txt":            []byte("This is test content"),
-		"test-dir-with-symlink-file/test-symlink.txt":         []byte("This is test content"),
-		"test-symlink-dir/file1.txt":                          []byte("This is file 1"),
-		"test-symlink-dir/file2.txt":                          []byte("This is file 2"),
-		"test-symlink-dir/file3.txt":                          []byte("This is file 3"),
-		"test-symlink-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
-		"test-symlink-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
+		"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
+		"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
+		"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+		"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
+		"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
+		"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
+		"test-dir/test-file.txt":                               []byte("This is test content"),
+		"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
+		"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
+		"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+		"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
+		"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+		"test-symlink-dir/file1.txt":                           []byte("This is file 1"),
+		"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
+		"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+		"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
+		"test-symlink-dir-with-symlink-file/test-symlink.txt":  []byte("This is test content"),
 	})
 }
 
@@ -211,18 +214,21 @@ func TestZipArchiver_Dir_With_Symlink_Dir_Exclude_With_Directory(t *testing.T) {
 	}
 
 	ensureContents(t, zipFilePath, map[string][]byte{
-		"test-dir/test-dir1/file1.txt":                     []byte("This is file 1"),
-		"test-dir/test-dir1/file2.txt":                     []byte("This is file 2"),
-		"test-dir/test-dir1/file3.txt":                     []byte("This is file 3"),
-		"test-dir/test-dir2/file1.txt":                     []byte("This is file 1"),
-		"test-dir/test-dir2/file2.txt":                     []byte("This is file 2"),
-		"test-dir/test-dir2/file3.txt":                     []byte("This is file 3"),
-		"test-dir/test-file.txt":                           []byte("This is test content"),
-		"test-dir-with-symlink-file/test-file.txt":         []byte("This is test content"),
-		"test-dir-with-symlink-file/test-symlink.txt":      []byte("This is test content"),
-		"test-symlink-dir/file2.txt":                       []byte("This is file 2"),
-		"test-symlink-dir/file3.txt":                       []byte("This is file 3"),
-		"test-symlink-dir-with-symlink-file/test-file.txt": []byte("This is test content"),
+		"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
+		"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
+		"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+		"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
+		"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
+		"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
+		"test-dir/test-file.txt":                               []byte("This is test content"),
+		"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
+		"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
+		"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+		"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
+		"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+		"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
+		"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+		"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
 	})
 }
 
