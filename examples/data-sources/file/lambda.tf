@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # Archive a file to be used with Lambda using consistent file mode
 
 data "archive_file" "lambda_my_function" {

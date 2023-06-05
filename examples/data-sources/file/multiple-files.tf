@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # Archive multiple files and exclude file.
 
 data "archive_file" "dotfiles" {
