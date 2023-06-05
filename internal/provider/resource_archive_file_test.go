@@ -476,6 +476,12 @@ func TestResource_ArchiveFile_Symlinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	multipleDirsAndFiles := "test-fixtures"
+	multipleDirsAndFilesAbs, err := filepath.Abs(multipleDirsAndFiles)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var fileSize string
 	r.ParallelTest(t, r.TestCase{
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
@@ -694,6 +700,80 @@ data "archive_file" "foo" {
 							"test-symlink-dir/file1.txt": []byte("This is file 1"),
 							"test-symlink-dir/file2.txt": []byte("This is file 2"),
 							"test-symlink-dir/file3.txt": []byte("This is file 3"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(multipleDirsAndFiles), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-file.txt":                               []byte("This is test content"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+							"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+							"test-symlink-dir/file1.txt":                           []byte("This is file 1"),
+							"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
+							"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+							"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
+							"test-symlink-dir-with-symlink-file/test-symlink.txt":  []byte("This is test content"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(multipleDirsAndFilesAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-file.txt":                               []byte("This is test content"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+							"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+							"test-symlink-dir/file1.txt":                           []byte("This is file 1"),
+							"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
+							"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+							"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
+							"test-symlink-dir-with-symlink-file/test-symlink.txt":  []byte("This is test content"),
 						})
 						ensureFileMode(t, value, "0666")
 						return nil
