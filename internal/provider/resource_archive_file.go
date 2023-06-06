@@ -165,7 +165,7 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 					setplanmodifier.RequiresReplace(),
 				},
 			},
-			"follow_symlinks": schema.BoolAttribute{
+			"exclude_symlink_directories": schema.BoolAttribute{
 				Optional: true,
 				Description: "Boolean flag indicating whether symbolic links should be followed during the creation of " +
 					"the archive. Defaults to false.",

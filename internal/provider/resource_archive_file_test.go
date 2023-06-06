@@ -441,7 +441,7 @@ func TestResource_SourceConfigConflicting(t *testing.T) {
 	})
 }
 
-func TestResource_ArchiveFile_FollowSymlinks(t *testing.T) {
+func TestResource_ArchiveFile_IncludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
@@ -493,7 +493,6 @@ resource "archive_file" "foo" {
   source_file      = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkFile), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -515,7 +514,6 @@ resource "archive_file" "foo" {
   source_file      = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -537,7 +535,6 @@ resource "archive_file" "foo" {
   source_dir       = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkDirWithRegularFiles), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -561,7 +558,6 @@ resource "archive_file" "foo" {
   source_dir       = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -585,7 +581,6 @@ resource "archive_file" "foo" {
   source_dir       = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkDirWithSymlinkFiles), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -608,7 +603,6 @@ resource "archive_file" "foo" {
   source_dir       = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkDirWithSymlinkFilesAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -631,7 +625,6 @@ resource "archive_file" "foo" {
   source_file      = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkFileInSymlinkDir), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -653,7 +646,6 @@ resource "archive_file" "foo" {
   source_file      = "%s"
   output_path      = "%s"
   output_file_mode = "0666"
-  follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkFileInSymlinkDirAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -675,7 +667,6 @@ resource "archive_file" "foo" {
  source_dir       = "%s"
  output_path      = "%s"
  output_file_mode = "0666"
- follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkDirInRegularDir), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -699,7 +690,6 @@ resource "archive_file" "foo" {
  source_dir       = "%s"
  output_path      = "%s"
  output_file_mode = "0666"
- follow_symlinks  = true
 }
 `, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -723,7 +713,6 @@ resource "archive_file" "foo" {
  source_dir       = "%s"
  output_path      = "%s"
  output_file_mode = "0666"
- follow_symlinks  = true
 }
 `, filepath.ToSlash(multipleDirsAndFiles), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -761,7 +750,6 @@ resource "archive_file" "foo" {
  source_dir       = "%s"
  output_path      = "%s"
  output_file_mode = "0666"
- follow_symlinks  = true
 }
 `, filepath.ToSlash(multipleDirsAndFilesAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -796,7 +784,7 @@ resource "archive_file" "foo" {
 	})
 }
 
-func TestResource_ArchiveFile_DoNotFollowSymlinks(t *testing.T) {
+func TestResource_ArchiveFile_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
@@ -814,10 +802,11 @@ func TestResource_ArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 resource "archive_file" "foo" {
-  type             = "zip"
-  source_file      = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
+  type                        = "zip"
+  source_file                 = "%s"
+  output_path                 = "%s"
+  output_file_mode            = "0666"
+  exclude_symlink_directories = true
 }
 `, filepath.ToSlash(symlinkFile), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -835,10 +824,11 @@ resource "archive_file" "foo" {
 			{
 				Config: fmt.Sprintf(`
 resource "archive_file" "foo" {
-  type             = "zip"
-  source_file      = "%s"
-  output_path      = "%s"
-  output_file_mode = "0666"
+  type                        = "zip"
+  source_file                 = "%s"
+  output_path                 = "%s"
+  output_file_mode            = "0666"
+  exclude_symlink_directories = true
 }
 `, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(

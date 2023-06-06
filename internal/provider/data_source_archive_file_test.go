@@ -360,7 +360,7 @@ func TestAccArchiveFile_SourceConfigConflicting(t *testing.T) {
 	})
 }
 
-func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
+func TestAccArchiveFile_IncludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
@@ -412,7 +412,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_file      = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkFile), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -434,7 +433,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_file      = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -456,7 +454,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkDirWithRegularFiles), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -480,7 +477,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -504,7 +500,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkDirWithSymlinkFiles), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -527,7 +522,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkDirWithSymlinkFilesAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -550,7 +544,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_file      = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkFileInSymlinkDir), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -572,7 +565,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_file      = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkFileInSymlinkDirAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -594,7 +586,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkDirInRegularDir), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -618,7 +609,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -642,7 +632,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(multipleDirsAndFiles), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -680,7 +669,6 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 			 source_dir       = "%s"
 			 output_path      = "%s"
 			 output_file_mode = "0666"
-			 follow_symlinks  = true
 			}
 			`, filepath.ToSlash(multipleDirsAndFilesAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -715,7 +703,7 @@ func TestAccArchiveFile_FollowSymlinks(t *testing.T) {
 	})
 }
 
-func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
+func TestAccArchiveFile_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
@@ -763,10 +751,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_file      = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkFile), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -784,10 +773,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_file      = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -805,10 +795,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirWithRegularFiles), filepath.ToSlash(f)),
 				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
@@ -816,10 +807,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
 				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
@@ -827,10 +819,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirWithSymlinkFiles), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -849,10 +842,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirWithSymlinkFilesAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -871,10 +865,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_file      = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkFileInSymlinkDir), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -892,10 +887,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_file      = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkFileInSymlinkDirAbs), filepath.ToSlash(f)),
 				Check: r.ComposeTestCheckFunc(
@@ -913,10 +909,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirInRegularDir), filepath.ToSlash(f)),
 				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
@@ -924,10 +921,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
 				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
@@ -935,10 +933,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(multipleDirsAndFiles), filepath.ToSlash(f)),
 				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
@@ -946,10 +945,11 @@ func TestAccArchiveFile_DoNotFollowSymlinks(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 			data "archive_file" "foo" {
-			 type             = "zip"
-			 source_dir       = "%s"
-			 output_path      = "%s"
-			 output_file_mode = "0666"
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(multipleDirsAndFilesAbs), filepath.ToSlash(f)),
 				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),

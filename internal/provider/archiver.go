@@ -6,8 +6,8 @@ import (
 )
 
 type ArchiveDirOpts struct {
-	Excludes       []string
-	FollowSymlinks bool
+	Excludes                  []string
+	ExcludeSymlinkDirectories bool
 }
 
 type Archiver interface {

@@ -168,9 +168,7 @@ func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-file.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file", ArchiveDirOpts{
-		FollowSymlinks: true,
-	}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir-with-symlink-file", ArchiveDirOpts{}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -184,9 +182,7 @@ func TestZipArchiver_Dir_FollowSymlinks(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
-	if err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
-		FollowSymlinks: true,
-	}); err != nil {
+	if err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
@@ -216,7 +212,7 @@ func TestZipArchiver_Dir_DoNotFollowSymlinks(t *testing.T) {
 
 	archiver := NewZipArchiver(zipFilePath)
 	err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
-		FollowSymlinks: false,
+		ExcludeSymlinkDirectories: true,
 	})
 
 	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures(\/|\\)test-dir-with-symlink-dir(\/|\\)test-symlink-dir: `)
@@ -236,7 +232,6 @@ func TestZipArchiver_Dir_Exclude_FollowSymlinks(t *testing.T) {
 			"test-symlink-dir/file1.txt",
 			"test-symlink-dir-with-symlink-file/test-symlink.txt",
 		},
-		FollowSymlinks: true,
 	}); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -269,7 +264,7 @@ func TestZipArchiver_Dir_Exclude_DoNotFollowSymlinks(t *testing.T) {
 			"test-dir/test-dir1/file1.txt",
 			"test-symlink-dir-with-symlink-file/test-symlink.txt",
 		},
-		FollowSymlinks: false,
+		ExcludeSymlinkDirectories: true,
 	})
 
 	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures(\/|\\)test-dir-with-symlink-dir(\/|\\)test-symlink-dir: `)

@@ -143,7 +143,7 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts Arc
 		}
 
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-			if opts.FollowSymlinks {
+			if !opts.ExcludeSymlinkDirectories {
 				realPath, err := filepath.EvalSymlinks(path)
 				if err != nil {
 					return err
