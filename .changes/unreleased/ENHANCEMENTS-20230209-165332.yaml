@@ -1,5 +1,0 @@
-kind: ENHANCEMENTS
-body: 'resource/archive_file: Follow symlinks during archive creation'
-time: 2023-02-09T16:53:32.431162Z
-custom:
-  Issue: "183"
