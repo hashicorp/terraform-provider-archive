@@ -178,7 +178,7 @@ func TestZipArchiver_Dir_With_Symlink_File(t *testing.T) {
 	})
 }
 
-func TestZipArchiver_Dir_FollowSymlinks(t *testing.T) {
+func TestZipArchiver_Dir_DoNotExcludeSymlinkDirectories(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
@@ -207,7 +207,7 @@ func TestZipArchiver_Dir_FollowSymlinks(t *testing.T) {
 	})
 }
 
-func TestZipArchiver_Dir_DoNotFollowSymlinks(t *testing.T) {
+func TestZipArchiver_Dir_ExcludeSymlinkDirectories(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
@@ -223,7 +223,7 @@ func TestZipArchiver_Dir_DoNotFollowSymlinks(t *testing.T) {
 	}
 }
 
-func TestZipArchiver_Dir_Exclude_FollowSymlinks(t *testing.T) {
+func TestZipArchiver_Dir_Exclude_DoNotExcludeSymlinkDirectories(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
@@ -255,7 +255,7 @@ func TestZipArchiver_Dir_Exclude_FollowSymlinks(t *testing.T) {
 	})
 }
 
-func TestZipArchiver_Dir_Exclude_DoNotFollowSymlinks(t *testing.T) {
+func TestZipArchiver_Dir_Exclude_ExcludeSymlinkDirectories(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
 
 	archiver := NewZipArchiver(zipFilePath)
