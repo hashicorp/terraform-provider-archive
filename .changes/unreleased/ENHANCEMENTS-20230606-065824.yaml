@@ -1,7 +1,0 @@
-kind: ENHANCEMENTS
-body: 'data-source/archive_file: Added attribute `exclude_symlink_directories` which
-  will exclude symbolically linked directories from the archive when set to true.
-  Defaults to false'
-time: 2023-06-06T06:58:24.84474+01:00
-custom:
-  Issue: "183"

@@ -1,3 +1,14 @@
+## 2.4.0 (June 07, 2023)
+
+NOTES:
+
+* This Go module has been updated to Go 1.19 per the [Go support policy](https://golang.org/doc/devel/release.html#policy). Any consumers building on earlier Go versions may experience errors. ([#200](https://github.com/hashicorp/terraform-provider-archive/issues/200))
+
+ENHANCEMENTS:
+
+* data-source/archive_file: Added attribute `exclude_symlink_directories` which will exclude symbolically linked directories from the archive when set to true. Defaults to false ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
+* resource/archive_file: Added attribute `exclude_symlink_directories` which will exclude symbolically linked directories from the archive when set to true. Defaults to false ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
+
 ## 2.3.0 (January 18, 2023)
 
 NOTES:
