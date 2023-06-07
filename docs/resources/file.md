@@ -49,5 +49,3 @@ Required:
 
 - `content` (String) Add this content to the archive with `filename` as the filename.
 - `filename` (String) Set this as the filename when declaring a `source`.
-
-
