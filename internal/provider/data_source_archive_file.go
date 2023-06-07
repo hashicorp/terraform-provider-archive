@@ -142,6 +142,11 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 					),
 				},
 			},
+			"exclude_symlink_directories": schema.BoolAttribute{
+				Optional: true,
+				Description: "Boolean flag indicating whether symbolically linked directories should be excluded during " +
+					"the creation of the archive. Defaults to false.",
+			},
 			"output_path": schema.StringAttribute{
 				Description: "The output of the archive file.",
 				Required:    true,
@@ -211,7 +216,15 @@ func archive(ctx context.Context, model fileModel) error {
 			}
 		}
 
-		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), excludeList); err != nil {
+		opts := ArchiveDirOpts{
+			Excludes: excludeList,
+		}
+
+		if !model.ExcludeSymlinkDirectories.IsNull() {
+			opts.ExcludeSymlinkDirectories = model.ExcludeSymlinkDirectories.ValueBool()
+		}
+
+		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), opts); err != nil {
 			return fmt.Errorf("error archiving directory: %s", err)
 		}
 	case !model.SourceFile.IsNull():
@@ -309,23 +322,24 @@ func (d *archiveFileDataSource) Metadata(_ context.Context, req datasource.Metad
 }
 
 type fileModel struct {
-	ID                    types.String `tfsdk:"id"`
-	Source                types.Set    `tfsdk:"source"` // sourceModel
-	Type                  types.String `tfsdk:"type"`
-	SourceContent         types.String `tfsdk:"source_content"`
-	SourceContentFilename types.String `tfsdk:"source_content_filename"`
-	SourceFile            types.String `tfsdk:"source_file"`
-	SourceDir             types.String `tfsdk:"source_dir"`
-	Excludes              types.Set    `tfsdk:"excludes"`
-	OutputPath            types.String `tfsdk:"output_path"`
-	OutputSize            types.Int64  `tfsdk:"output_size"`
-	OutputFileMode        types.String `tfsdk:"output_file_mode"`
-	OutputMd5             types.String `tfsdk:"output_md5"`
-	OutputSha             types.String `tfsdk:"output_sha"`
-	OutputSha256          types.String `tfsdk:"output_sha256"`
-	OutputBase64Sha256    types.String `tfsdk:"output_base64sha256"`
-	OutputSha512          types.String `tfsdk:"output_sha512"`
-	OutputBase64Sha512    types.String `tfsdk:"output_base64sha512"`
+	ID                        types.String `tfsdk:"id"`
+	Source                    types.Set    `tfsdk:"source"` // sourceModel
+	Type                      types.String `tfsdk:"type"`
+	SourceContent             types.String `tfsdk:"source_content"`
+	SourceContentFilename     types.String `tfsdk:"source_content_filename"`
+	SourceFile                types.String `tfsdk:"source_file"`
+	SourceDir                 types.String `tfsdk:"source_dir"`
+	Excludes                  types.Set    `tfsdk:"excludes"`
+	ExcludeSymlinkDirectories types.Bool   `tfsdk:"exclude_symlink_directories"`
+	OutputPath                types.String `tfsdk:"output_path"`
+	OutputSize                types.Int64  `tfsdk:"output_size"`
+	OutputFileMode            types.String `tfsdk:"output_file_mode"`
+	OutputMd5                 types.String `tfsdk:"output_md5"`
+	OutputSha                 types.String `tfsdk:"output_sha"`
+	OutputSha256              types.String `tfsdk:"output_sha256"`
+	OutputBase64Sha256        types.String `tfsdk:"output_base64sha256"`
+	OutputSha512              types.String `tfsdk:"output_sha512"`
+	OutputBase64Sha512        types.String `tfsdk:"output_base64sha512"`
 }
 
 type sourceModel struct {

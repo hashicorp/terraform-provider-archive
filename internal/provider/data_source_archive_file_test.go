@@ -360,6 +360,938 @@ func TestAccArchiveFile_SourceConfigConflicting(t *testing.T) {
 	})
 }
 
+// TestAccArchiveFile_SymlinkFile_Relative verifies that a symlink to a file using a relative path generates an
+// archive which includes the file.
+func TestAccArchiveFile_SymlinkFile_Relative(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-file/test-symlink.txt"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkFile_Absolute verifies that a symlink to a file using an absolute path generates an
+// archive which includes the file.
+func TestAccArchiveFile_SymlinkFile_Absolute(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkFileAbs, err := filepath.Abs("test-fixtures/test-dir-with-symlink-file/test-symlink.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectory_Relative verifies that a symlink to a directory using a relative path
+// generates an archive which includes the files in the directory.
+func TestAccArchiveFile_SymlinkDirectory_Relative(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash("test-fixtures/test-symlink-dir"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"file1.txt": []byte(`This is file 1`),
+							"file2.txt": []byte(`This is file 2`),
+							"file3.txt": []byte(`This is file 3`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectory_Absolute verifies that a symlink to a directory using an absolute path
+// generates an archive which includes the files in the directory.
+func TestAccArchiveFile_SymlinkDirectory_Absolute(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkDirWithRegularFilesAbs, err := filepath.Abs("test-fixtures/test-symlink-dir")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"file1.txt": []byte(`This is file 1`),
+							"file2.txt": []byte(`This is file 2`),
+							"file3.txt": []byte(`This is file 3`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_DirectoryWithSymlinkFile_Relative verifies that a relative path to a directory containing
+// a symlink file generates an archive which includes the files in the directory.
+func TestAccArchiveFile_DirectoryWithSymlinkFile_Relative(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-file"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-file.txt":    []byte(`This is test content`),
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_DirectoryWithSymlinkFile_Absolute verifies that an absolute path to a directory containing
+// a symlink file generates an archive which includes the files in the directory.
+func TestAccArchiveFile_DirectoryWithSymlinkFile_Absolute(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkDirWithSymlinkFilesAbs, err := filepath.Abs("test-fixtures/test-dir-with-symlink-file")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(symlinkDirWithSymlinkFilesAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-file.txt":    []byte(`This is test content`),
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Relative verifies that a relative path to a symlink
+// file in a symlink directory generates an archive which includes the files in the directory.
+func TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Relative(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash("test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Absolute verifies that an absolute path to a symlink
+// file in a symlink directory generates an archive which includes the files in the directory.
+func TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Absolute(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkFileInSymlinkDirAbs, err := filepath.Abs("test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_file      = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(symlinkFileInSymlinkDirAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative verifies that a relative path to a
+// directory containing a symlink to a directory generates an archive which includes the directory.
+func TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-dir"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink-dir/file1.txt": []byte("This is file 1"),
+							"test-symlink-dir/file2.txt": []byte("This is file 2"),
+							"test-symlink-dir/file3.txt": []byte("This is file 3"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute verifies that an absolute path to a
+// directory containing a symlink to a directory generates an archive which includes the directory.
+func TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkDirInRegularDirAbs, err := filepath.Abs("test-fixtures/test-dir-with-symlink-dir")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink-dir/file1.txt": []byte("This is file 1"),
+							"test-symlink-dir/file2.txt": []byte("This is file 2"),
+							"test-symlink-dir/file3.txt": []byte("This is file 3"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_Multiple_Relative verifies that a relative path to a directory containing multiple
+// directories including symlink directories generates an archive which includes the directories and files.
+func TestAccArchiveFile_Multiple_Relative(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash("test-fixtures"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-file.txt":                               []byte("This is test content"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+							"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+							"test-symlink-dir/file1.txt":                           []byte("This is file 1"),
+							"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
+							"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+							"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
+							"test-symlink-dir-with-symlink-file/test-symlink.txt":  []byte("This is test content"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_Multiple_Absolute verifies that an absolute path to a directory containing multiple
+// directories including symlink directories generates an archive which includes the directories and files.
+func TestAccArchiveFile_Multiple_Absolute(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	multipleDirsAndFilesAbs, err := filepath.Abs("test-fixtures")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type             = "zip"
+			 source_dir       = "%s"
+			 output_path      = "%s"
+			 output_file_mode = "0666"
+			}
+			`, filepath.ToSlash(multipleDirsAndFilesAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
+							"test-dir/test-file.txt":                               []byte("This is test content"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
+							"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+							"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+							"test-symlink-dir/file1.txt":                           []byte("This is file 1"),
+							"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
+							"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+							"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
+							"test-symlink-dir-with-symlink-file/test-symlink.txt":  []byte("This is test content"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkFile_Relative_ExcludeSymlinkDirectories verifies that a symlink to a file using a relative
+// path generates an archive which includes the file.
+func TestAccArchiveFile_SymlinkFile_Relative_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-file/test-symlink.txt"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkFile_Absolute_ExcludeSymlinkDirectories verifies that a symlink to a file using an absolute
+// path generates an archive which includes the file.
+func TestAccArchiveFile_SymlinkFile_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkFileAbs, err := filepath.Abs("test-fixtures/test-dir-with-symlink-file/test-symlink.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash(symlinkFileAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectory_Relative_ExcludeSymlinkDirectories verifies that an error is generated when
+// trying to use a symlink to a directory.
+func TestAccArchiveFile_SymlinkDirectory_Relative_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash("test-fixtures/test-symlink-dir"), filepath.ToSlash(f)),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectory_Absolute_ExcludeSymlinkDirectories verifies that an error is generated when
+// trying to use a symlink to a directory.
+func TestAccArchiveFile_SymlinkDirectory_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkDirWithRegularFilesAbs, err := filepath.Abs("test-fixtures/test-symlink-dir")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_DirectoryWithSymlinkFile_Relative_ExcludeSymlinkDirectories verifies that a relative path to a
+// directory containing a symlink file generates an archive which includes the files in the directory.
+func TestAccArchiveFile_DirectoryWithSymlinkFile_Relative_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-file"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-file.txt":    []byte(`This is test content`),
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_DirectoryWithSymlinkFile_Absolute_ExcludeSymlinkDirectories verifies that an absolute path to a
+// directory containing a symlink file generates an archive which includes the files in the directory.
+func TestAccArchiveFile_DirectoryWithSymlinkFile_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkDirWithSymlinkFilesAbs, err := filepath.Abs("test-fixtures/test-dir-with-symlink-file")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash(symlinkDirWithSymlinkFilesAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-file.txt":    []byte(`This is test content`),
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Relative_ExcludeSymlinkDirectories verifies that a relative path
+// to a symlink file in a symlink directory generates an archive which includes the files in the directory.
+func TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Relative_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash("test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt"), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Absolute_ExcludeSymlinkDirectories verifies that an absolute path
+// to a symlink file in a symlink directory generates an archive which includes the files in the directory.
+func TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkFileInSymlinkDirAbs, err := filepath.Abs("test-fixtures/test-symlink-dir-with-symlink-file/test-symlink.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fileSize string
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_file                 = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash(symlinkFileInSymlinkDirAbs), filepath.ToSlash(f)),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-symlink.txt": []byte(`This is test content`),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative_ExcludeSymlinkDirectories verifies that an error is
+// generated when trying to a directory which contains a symlink to a directory.
+func TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-dir"), filepath.ToSlash(f)),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute_ExcludeSymlinkDirectories verifies that an error is
+// generated when trying to a directory which contains a symlink to a directory.
+func TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	symlinkDirInRegularDirAbs, err := filepath.Abs("test-fixtures/test-dir-with-symlink-dir")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_Multiple_Relative_ExcludeSymlinkDirectories verifies that an error is
+// generated when trying to a directory which contains a symlink to a directory.
+func TestAccArchiveFile_Multiple_Relative_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash("test-fixtures"), filepath.ToSlash(f)),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+			},
+		},
+	})
+}
+
+// TestAccArchiveFile_Multiple_Absolute_ExcludeSymlinkDirectories verifies that an error is
+// generated when trying to a directory which contains a symlink to a directory.
+func TestAccArchiveFile_Multiple_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
+	td := t.TempDir()
+
+	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	multipleDirsAndFilesAbs, err := filepath.Abs("test-fixtures")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config: fmt.Sprintf(`
+			data "archive_file" "foo" {
+			 type                        = "zip"
+			 source_dir                  = "%s"
+			 output_path                 = "%s"
+			 output_file_mode            = "0666"
+			 exclude_symlink_directories = true
+			}
+			`, filepath.ToSlash(multipleDirsAndFilesAbs), filepath.ToSlash(f)),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+			},
+		},
+	})
+}
+
 func testAccArchiveFileSize(filename string, fileSize *string) r.TestCheckFunc {
 	return func(s *terraform.State) error {
 		*fileSize = ""
@@ -387,7 +1319,7 @@ func testAccArchiveFileFileConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type             = "zip"
-  source_file      = "test-fixtures/test-file.txt"
+  source_file      = "test-fixtures/test-dir/test-file.txt"
   output_path      = "%s"
   output_file_mode = "0666"
 }
@@ -398,7 +1330,7 @@ func testAccArchiveFileDirConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type             = "zip"
-  source_dir       = "test-fixtures/test-dir"
+  source_dir       = "test-fixtures/test-dir/test-dir1"
   output_path      = "%s"
   output_file_mode = "0666"
 }
@@ -409,8 +1341,8 @@ func testAccArchiveFileDirExcludesConfig(outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
   type        = "zip"
-  source_dir  = "test-fixtures/test-dir"
-  excludes    = ["test-fixtures/test-dir/file2.txt"]
+  source_dir  = "test-fixtures/test-dir/test-dir1"
+  excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt"]
   output_path = "%s"
 }
 `, filepath.ToSlash(outputPath))
