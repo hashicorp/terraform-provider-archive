@@ -148,7 +148,7 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 			"exclude_symlink_directories": schema.BoolAttribute{
 				Optional: true,
 				Description: "Boolean flag indicating whether symbolically linked directories should be excluded during " +
-					"the creation of the archive. Defaults to false.",
+					"the creation of the archive. Defaults to `false`.",
 			},
 			"output_path": schema.StringAttribute{
 				Description: "The output of the archive file.",
