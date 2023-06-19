@@ -9,11 +9,17 @@ ENHANCEMENTS:
 * data-source/archive_file: Added attribute `exclude_symlink_directories` which will exclude symbolically linked directories from the archive when set to true. Defaults to false ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
 * resource/archive_file: Added attribute `exclude_symlink_directories` which will exclude symbolically linked directories from the archive when set to true. Defaults to false ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
 
+BUG FIXES:
+
+* data-source/archive_file: Symbolically linked directories are included in archives by default rather than generating an error ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
+* resource/archive_file: Symbolically linked directories are included in archives by default rather than generating an error ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
+
 ## 2.3.0 (January 18, 2023)
 
 NOTES:
 
 * Provider has been re-written using the new [`terraform-plugin-framework`](https://www.terraform.io/plugin/framework) ([#170](https://github.com/hashicorp/terraform-provider-archive/pull/170)).
+* resource/archive_file: The `archive_file` resource was deprecated in [v2.3.0](https://github.com/hashicorp/terraform-provider-archive/releases/tag/v2.3.0) and will be removed in the next major release.
 
 ## 2.2.0 (May 04, 2021)
 
