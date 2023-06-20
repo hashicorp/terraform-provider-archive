@@ -1,5 +1,0 @@
-kind: NOTES
-body: 'resource/archive_file: The `archive_file` resource was deprecated in [v2.3.0](https://github.com/hashicorp/terraform-provider-archive/releases/tag/v2.3.0)'
-time: 2023-06-09T10:04:17.761541+01:00
-custom:
-  Issue: "224"
