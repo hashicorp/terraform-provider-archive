@@ -1,7 +1,0 @@
-kind: BUG FIXES
-body: Reading from a directory file that contains file data will now return an error.
-  The zip specification does not permit directory files to contain file data, so this
-  change only affects reading from invalid archives
-time: 2023-09-08T14:01:49.241856+01:00
-custom:
-  Issue: "260"
