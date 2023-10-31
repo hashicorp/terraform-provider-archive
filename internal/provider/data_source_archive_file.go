@@ -81,7 +81,7 @@ func (d *archiveFileDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 				Computed:    true,
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of archive to generate. NOTE: `zip, tgz, opaque` are supported.",
+				Description: "The type of archive to generate. NOTE: `zip, tgz` are supported.",
 				Required:    true,
 			},
 			"source_content": schema.StringAttribute{
@@ -220,12 +220,10 @@ func archive(ctx context.Context, model fileModel) error {
 			}
 		}
 		sourceDir := model.SourceDir.ValueString()
-		relPath, err := filepath.Rel(sourceDir, outputPath)
-		if err != nil {
-			return fmt.Errorf("error getting relative directory: %s", err)
-		}
-		if !strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) && relPath != ".." {
-			excludeList = append(excludeList, relPath)
+		if relPath, err := filepath.Rel(sourceDir, outputPath); err == nil {
+			if !strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) && relPath != ".." {
+				excludeList = append(excludeList, relPath)
+			}
 		}
 
 		opts := ArchiveDirOpts{

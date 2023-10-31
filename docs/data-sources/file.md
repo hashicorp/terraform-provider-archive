@@ -97,20 +97,6 @@ data "archive_file" "example" {
 ```
 
 ```terraform
-data "archive_file" "example" {
-  type        = "zip"
-  output_path = "example.zip"
-  source_file = "example.txt"
-}
-
-data "archive_file" "main" {
-  type        = "opaque"
-  output_path = "${path.module}/main.zip"
-  source_file = "${path.module}/example.zip"
-}
-```
-
-```terraform
 # Archive a single directory.
 
 data "archive_file" "example" {
@@ -192,7 +178,7 @@ data "archive_file" "example" {
 ### Required
 
 - `output_path` (String) The output of the archive file.
-- `type` (String) The type of archive to generate. NOTE: `zip, tgz, opaque` are supported.
+- `type` (String) The type of archive to generate. NOTE: `zip, tgz` are supported.
 
 ### Optional
 

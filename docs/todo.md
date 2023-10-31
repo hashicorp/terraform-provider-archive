@@ -74,9 +74,7 @@ zip, tar, tar.gz, base64, tar.bz2, tar.xz, tar.lz4, tar.sz
 
 Added support for tgz type.
 
-* opaque
 * zip
-* tar
 * tgz
 
 #### 2

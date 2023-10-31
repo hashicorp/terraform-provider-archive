@@ -83,10 +83,6 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	return err
 }
 
-func (a *ZipArchiver) ArchiveUrl(inurlname string) error {
-	return nil
-}
-
 func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 	if err := assertValidDir(indirname); err != nil {
 		return err

@@ -87,10 +87,6 @@ func (a *TgzArchiver) ArchiveFile(infilename string) error {
 	return nil
 }
 
-func (a *TgzArchiver) ArchiveUrl(inurlname string) error {
-	return nil
-}
-
 func (a *TgzArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 	if err := assertValidDir(indirname); err != nil {
 		return err

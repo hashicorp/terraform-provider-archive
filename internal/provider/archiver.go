@@ -18,7 +18,6 @@ type Archiver interface {
 	ArchiveContent(content []byte, infilename string) error
 	ArchiveFile(infilename string) error
 	ArchiveDir(indirname string, opts ArchiveDirOpts) error
-	ArchiveUrl(inurlname string) error
 	ArchiveMultiple(content map[string][]byte) error
 	SetOutputFileMode(outputFileMode string)
 }
