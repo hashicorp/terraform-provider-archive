@@ -6,6 +6,7 @@ package archive
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 type ArchiveDirOpts struct {
@@ -17,6 +18,7 @@ type Archiver interface {
 	ArchiveContent(content []byte, infilename string) error
 	ArchiveFile(infilename string) error
 	ArchiveDir(indirname string, opts ArchiveDirOpts) error
+	ArchiveUrl(inurlname string) error
 	ArchiveMultiple(content map[string][]byte) error
 	SetOutputFileMode(outputFileMode string)
 }
@@ -25,6 +27,7 @@ type ArchiverBuilder func(outputPath string) Archiver
 
 var archiverBuilders = map[string]ArchiverBuilder{
 	"zip": NewZipArchiver,
+	"tgz": NewTgzArchiver,
 }
 
 func getArchiver(archiveType string, outputPath string) Archiver {
@@ -42,16 +45,32 @@ func assertValidFile(infilename string) (os.FileInfo, error) {
 	return fi, err
 }
 
-func assertValidDir(indirname string) (os.FileInfo, error) {
+func assertValidDir(indirname string) error {
 	fi, err := os.Stat(indirname)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fi, fmt.Errorf("could not archive missing directory: %s", indirname)
+			return fmt.Errorf("could not archive missing directory: %s", indirname)
 		}
-		return fi, err
+		return err
 	}
 	if !fi.IsDir() {
-		return fi, fmt.Errorf("could not archive directory that is a file: %s", indirname)
+		return fmt.Errorf("could not archive directory that is a file: %s", indirname)
 	}
-	return fi, nil
+	return nil
+}
+
+func checkMatch(fileName string, excludes []string) (bool, error) {
+	for _, exclude := range excludes {
+		if exclude == "" {
+			continue
+		}
+		m, err := filepath.Match(exclude, fileName)
+		if err != nil {
+			return false, err
+		}
+		if m {
+			return true, nil
+		}
+	}
+	return false, nil
 }

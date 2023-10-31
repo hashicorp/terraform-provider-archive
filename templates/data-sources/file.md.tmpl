@@ -11,10 +11,26 @@ description: |-
 
 ## Example Usage
 
-{{ tffile "examples/data-sources/file/data-source.tf" }}
+{{ tffile "examples/archive-file-s3/main.tf" }}
 
-{{ tffile "examples/data-sources/file/multiple-files.tf" }}
+{{ tffile "examples/lambda/main.tf" }}
 
-{{ tffile "examples/data-sources/file/lambda.tf" }}
+{{ tffile "examples/multiple-files/main.tf" }}
+
+{{ tffile "examples/opaque/main.tf" }}
+
+{{ tffile "examples/source-dir/main.tf" }}
+
+{{ tffile "examples/source-dir-tgz/main.tf" }}
+
+{{ tffile "examples/source-dirs-py/main.tf" }}
+
+{{ tffile "examples/source-file/main.tf" }}
+
+{{ tffile "examples/source-file-content/main.tf" }}
+
+{{ tffile "examples/source-file-content-tgz/main.tf" }}
+
+{{ tffile "examples/source-file-tgz/main.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}

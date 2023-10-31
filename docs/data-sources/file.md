@@ -12,43 +12,177 @@ Generates an archive from content, a file, or directory of files.
 ## Example Usage
 
 ```terraform
-# Archive a single file.
+# Archive a single file to s3.
 
-data "archive_file" "init" {
-  type        = "zip"
-  source_file = "${path.module}/init.tpl"
-  output_path = "${path.module}/files/init.zip"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.19.0"
+    }
+  }
 }
-```
 
-```terraform
-# Archive multiple files and exclude file.
-
-data "archive_file" "dotfiles" {
+data "archive_file" "example" {
   type        = "zip"
-  output_path = "${path.module}/files/dotfiles.zip"
-  excludes    = ["${path.module}/unwanted.zip"]
+  output_path = "main.zip"
+  source_file = "main.py"
+}
 
-  source {
-    content  = data.template_file.vimrc.rendered
-    filename = ".vimrc"
+resource "aws_s3_bucket" "example" {
+  bucket = "bad-lambda-layer-bucket"
+  tags = {
+    "adsk:moniker" = "AMPS-C-UW2"
   }
+}
 
-  source {
-    content  = data.template_file.ssh_config.rendered
-    filename = ".ssh/config"
-  }
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket.example.id
+  key    = data.archive_file.example.output_path
+  source = data.archive_file.example.output_path
 }
 ```
 
 ```terraform
 # Archive a file to be used with Lambda using consistent file mode
 
-data "archive_file" "lambda_my_function" {
+data "archive_file" "example" {
   type             = "zip"
-  source_file      = "${path.module}/../lambda/my-function/index.js"
+  output_path      = "${path.module}/main.zip"
   output_file_mode = "0666"
-  output_path      = "${path.module}/files/lambda-my-function.js.zip"
+  source_file      = "${path.module}/main.py"
+}
+```
+
+```terraform
+# Archive multiple files from a template.
+
+terraform {
+  required_providers {
+    template = {
+      source  = "hashicorp/template"
+      version = "2.2.0"
+    }
+  }
+}
+
+data "template_file" "foo" {
+  template = file("${path.module}/foo.tpl")
+  vars = {
+    foo = "bar"
+  }
+}
+
+data "template_file" "hello" {
+  template = file("${path.module}/hello.tpl")
+  vars = {
+    hello = "world"
+  }
+}
+
+data "archive_file" "example" {
+  type        = "zip"
+  output_path = "${path.module}/example.zip"
+
+  source {
+    content  = data.template_file.foo.rendered
+    filename = "foo.txt"
+  }
+
+  source {
+    content  = data.template_file.hello.rendered
+    filename = "hello.txt"
+  }
+}
+```
+
+```terraform
+data "archive_file" "example" {
+  type        = "zip"
+  output_path = "example.zip"
+  source_file = "example.txt"
+}
+
+data "archive_file" "main" {
+  type        = "opaque"
+  output_path = "${path.module}/main.zip"
+  source_file = "${path.module}/example.zip"
+}
+```
+
+```terraform
+# Archive a single directory.
+
+data "archive_file" "example" {
+  type             = "zip"
+  output_path      = "${path.module}/main.zip"
+  source_dir       = "${path.module}/dir"
+  output_file_mode = "0666"
+  excludes         = ["exclude.txt"]
+}
+```
+
+```terraform
+# Archive a single directory as tgz.
+
+data "archive_file" "example" {
+  type             = "tgz"
+  output_path      = "${path.module}/main.tar.gz"
+  source_dir       = "${path.module}/dir"
+  output_file_mode = "0400"
+  excludes         = ["exclude.txt"]
+}
+```
+
+```terraform
+data "archive_file" "example" {
+  type        = "zip"
+  output_path = "main.zip"
+  source_dir  = "${path.module}/src"
+}
+```
+
+```terraform
+# Archive a single file.
+
+data "archive_file" "example" {
+  type             = "zip"
+  output_path      = "${path.module}/main.zip"
+  output_file_mode = "0666"
+  source_file      = "${path.module}/main.txt"
+}
+```
+
+```terraform
+# Archive content.
+
+data "archive_file" "example" {
+  type                    = "zip"
+  output_path             = "${path.module}/main.zip"
+  source_content_filename = "example.txt"
+  source_content          = "example"
+}
+```
+
+```terraform
+# Archive content as tgz.
+
+data "archive_file" "example" {
+  type                    = "tgz"
+  output_path             = "${path.module}/main.tar.gz"
+  source_content_filename = "example.txt"
+  source_content          = "example"
+}
+```
+
+```terraform
+# Archive a single file as tgz.
+
+data "archive_file" "example" {
+  type             = "tgz"
+  output_path      = "${path.module}/main.tar.gz"
+  output_file_mode = "0400"
+  source_file      = "${path.module}/main.txt"
 }
 ```
 
@@ -58,7 +192,7 @@ data "archive_file" "lambda_my_function" {
 ### Required
 
 - `output_path` (String) The output of the archive file.
-- `type` (String) The type of archive to generate. NOTE: `zip` is supported.
+- `type` (String) The type of archive to generate. NOTE: `zip, tgz, opaque` are supported.
 
 ### Optional
 

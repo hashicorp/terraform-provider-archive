@@ -4,44 +4,50 @@
 package archive
 
 import (
-	"archive/zip"
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
-	"time"
 )
 
-type ZipArchiver struct {
+type TgzArchiver struct {
 	filepath       string
-	outputFileMode string // Default value "" means unset
+	outputFileMode string
 	filewriter     *os.File
-	zipwriter      *zip.Writer
+	gzipwriter     *gzip.Writer
+	tarwriter      *tar.Writer
 }
 
-func NewZipArchiver(filepath string) Archiver {
-	return &ZipArchiver{
+func NewTgzArchiver(filepath string) Archiver {
+	return &TgzArchiver{
 		filepath: filepath,
 	}
 }
 
-func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
+func (a *TgzArchiver) ArchiveContent(content []byte, infilename string) error {
 	if err := a.open(); err != nil {
 		return err
 	}
 	defer a.close()
 
-	f, err := a.zipwriter.Create(filepath.ToSlash(infilename))
-	if err != nil {
+	if err := a.tarwriter.WriteHeader(&tar.Header{
+		Name: infilename,
+		Mode: 0600,
+		Size: int64(len(content)),
+	}); err != nil {
+		return err
+	}
+	if _, err := a.tarwriter.Write(content); err != nil {
 		return err
 	}
 
-	_, err = f.Write(content)
-	return err
+	return nil
 }
 
-func (a *ZipArchiver) ArchiveFile(infilename string) error {
+func (a *TgzArchiver) ArchiveFile(infilename string) error {
 	fi, err := assertValidFile(infilename)
 	if err != nil {
 		return err
@@ -57,42 +63,39 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	}
 	defer a.close()
 
-	fh, err := zip.FileInfoHeader(fi)
+	fih, err := tar.FileInfoHeader(fi, "")
 	if err != nil {
 		return fmt.Errorf("error creating file header: %s", err)
 	}
-	fh.Name = filepath.ToSlash(fi.Name())
-	fh.Method = zip.Deflate
-	//nolint:staticcheck // This is required as fh.SetModTime has been deprecated since Go 1.10 and using fh.Modified alone isn't enough when using a zero value
-	fh.SetModTime(time.Time{})
 
 	if a.outputFileMode != "" {
-		filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
+		filemode, err := strconv.ParseInt(a.outputFileMode, 0, 64)
 		if err != nil {
 			return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
 		}
-		fh.SetMode(os.FileMode(filemode))
+		fih.Mode = filemode
 	}
 
-	f, err := a.zipwriter.CreateHeader(fh)
-	if err != nil {
+	if err := a.tarwriter.WriteHeader(fih); err != nil {
 		return fmt.Errorf("error creating file inside archive: %s", err)
 	}
 
-	_, err = f.Write(content)
-	return err
-}
+	if _, err = a.tarwriter.Write(content); err != nil {
+		return err
+	}
 
-func (a *ZipArchiver) ArchiveUrl(inurlname string) error {
 	return nil
 }
 
-func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
+func (a *TgzArchiver) ArchiveUrl(inurlname string) error {
+	return nil
+}
+
+func (a *TgzArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 	if err := assertValidDir(indirname); err != nil {
 		return err
 	}
 
-	// ensure exclusions are OS compatible paths
 	for i := range opts.Excludes {
 		opts.Excludes[i] = filepath.FromSlash(opts.Excludes[i])
 	}
@@ -105,8 +108,8 @@ func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 	return filepath.Walk(indirname, a.createWalkFunc("", indirname, opts))
 }
 
-func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts ArchiveDirOpts) func(path string, info os.FileInfo, err error) error {
-	return func(path string, info os.FileInfo, err error) error {
+func (a *TgzArchiver) createWalkFunc(basePath string, indirname string, opts ArchiveDirOpts) func(path string, info os.FileInfo, err error) error {
+	return func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error encountered during file walk: %s", err)
 		}
@@ -123,18 +126,10 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts Arc
 			return fmt.Errorf("error matching file for archival: %s", err)
 		}
 
-		if info.IsDir() {
+		if fi.IsDir() {
 			if isExcluded {
 				return filepath.SkipDir
 			}
-
-			if archivePath != "." {
-				_, err := a.zipwriter.Create(archivePath + "/")
-				if err != nil {
-					return fmt.Errorf("error adding directory for archival: %s", err)
-				}
-			}
-
 			return nil
 		}
 
@@ -142,45 +137,44 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts Arc
 			return nil
 		}
 
-		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+		if err != nil {
+			return err
+		}
+
+		if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
 			if !opts.ExcludeSymlinkDirectories {
 				realPath, err := filepath.EvalSymlinks(path)
 				if err != nil {
 					return err
 				}
 
-				realInfo, err := os.Stat(realPath)
+				realFileInfo, err := os.Stat(realPath)
 				if err != nil {
 					return err
 				}
 
-				if realInfo.IsDir() {
+				if realFileInfo.IsDir() {
 					return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, opts))
 				}
 
-				info = realInfo
+				fi = realFileInfo
 			}
 		}
 
-		fh, err := zip.FileInfoHeader(info)
+		fih, err := tar.FileInfoHeader(fi, "")
 		if err != nil {
 			return fmt.Errorf("error creating file header: %s", err)
 		}
-		fh.Name = filepath.ToSlash(archivePath)
-		fh.Method = zip.Deflate
-		// fh.Modified alone isn't enough when using a zero value
-		//nolint:staticcheck
-		fh.SetModTime(time.Time{})
 
 		if a.outputFileMode != "" {
-			filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
+			filemode, err := strconv.ParseInt(a.outputFileMode, 0, 64)
 			if err != nil {
 				return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
 			}
-			fh.SetMode(os.FileMode(filemode))
+			fih.Mode = filemode
 		}
 
-		f, err := a.zipwriter.CreateHeader(fh)
+		err = a.tarwriter.WriteHeader(fih)
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
 		}
@@ -188,12 +182,12 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts Arc
 		if err != nil {
 			return fmt.Errorf("error reading file for archival: %s", err)
 		}
-		_, err = f.Write(content)
+		_, err = a.tarwriter.Write(content)
 		return err
 	}
 }
 
-func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
+func (a *TgzArchiver) ArchiveMultiple(content map[string][]byte) error {
 	if err := a.open(); err != nil {
 		return err
 	}
@@ -209,36 +203,43 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	sort.Strings(keys)
 
 	for _, filename := range keys {
-		f, err := a.zipwriter.Create(filepath.ToSlash(filename))
-		if err != nil {
+		if err := a.tarwriter.WriteHeader(&tar.Header{
+			Name: filename,
+			Mode: 0600,
+			Size: int64(len(content[filename])),
+		}); err != nil {
 			return err
 		}
-		_, err = f.Write(content[filename])
-		if err != nil {
+		if _, err := a.tarwriter.Write(content[filename]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (a *ZipArchiver) SetOutputFileMode(outputFileMode string) {
+func (a *TgzArchiver) SetOutputFileMode(outputFileMode string) {
 	a.outputFileMode = outputFileMode
 }
 
-func (a *ZipArchiver) open() error {
+func (a *TgzArchiver) open() error {
 	f, err := os.Create(a.filepath)
 	if err != nil {
 		return err
 	}
 	a.filewriter = f
-	a.zipwriter = zip.NewWriter(f)
+	a.gzipwriter = gzip.NewWriter(f)
+	a.tarwriter = tar.NewWriter(a.gzipwriter)
 	return nil
 }
 
-func (a *ZipArchiver) close() {
-	if a.zipwriter != nil {
-		a.zipwriter.Close()
-		a.zipwriter = nil
+func (a *TgzArchiver) close() {
+	if a.tarwriter != nil {
+		a.tarwriter.Close()
+		a.tarwriter = nil
+	}
+	if a.gzipwriter != nil {
+		a.gzipwriter.Close()
+		a.gzipwriter = nil
 	}
 	if a.filewriter != nil {
 		a.filewriter.Close()
