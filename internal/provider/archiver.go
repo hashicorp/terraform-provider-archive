@@ -24,7 +24,8 @@ type Archiver interface {
 type ArchiverBuilder func(outputPath string) Archiver
 
 var archiverBuilders = map[string]ArchiverBuilder{
-	"zip": NewZipArchiver,
+	"zip":    NewZipArchiver,
+	"tar.gz": NewTarGzArchiver,
 }
 
 func getArchiver(archiveType string, outputPath string) Archiver {

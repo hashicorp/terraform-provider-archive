@@ -139,7 +139,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileContentConfig(f),
+				Config: testAccArchiveFileContentConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -156,7 +156,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileContentConfig(f),
+				Config:                   testAccArchiveFileContentConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
@@ -190,7 +190,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileFileConfig(f),
+				Config: testAccArchiveFileFileConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -207,7 +207,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileFileConfig(f),
+				Config:                   testAccArchiveFileFileConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
@@ -241,7 +241,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileDirConfig(f),
+				Config: testAccArchiveFileDirConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -258,7 +258,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileDirConfig(f),
+				Config:                   testAccArchiveFileDirConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
@@ -292,7 +292,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileDirExcludesConfig(f),
+				Config: testAccArchiveFileDirExcludesConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					testExtractResourceAttr("data.archive_file.foo", "output_sha", &outputSha),
@@ -301,7 +301,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileDirExcludesConfig(f),
+				Config:                   testAccArchiveFileDirExcludesConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_sha", &outputSha),
@@ -327,7 +327,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileMultiSourceConfig(f),
+				Config: testAccArchiveFileMultiSourceConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					testExtractResourceAttr("data.archive_file.foo", "output_sha", &outputSha),
@@ -336,7 +336,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileMultiSourceConfig(f),
+				Config:                   testAccArchiveFileMultiSourceConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_sha", &outputSha),
@@ -347,27 +347,35 @@ func TestDataSource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 }
 
 func TestAccArchiveFile_SourceConfigMissing(t *testing.T) {
-	r.ParallelTest(t, r.TestCase{
-		ProtoV5ProviderFactories: protoV5ProviderFactories(),
-		Steps: []r.TestStep{
-			{
-				Config:      testAccArchiveSourceConfigMissing(),
-				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir\]`),
-			},
-		},
-	})
+	for _, format := range []string{"zip", "tar.gz"} {
+		t.Run(format, func(t *testing.T) {
+			r.ParallelTest(t, r.TestCase{
+				ProtoV5ProviderFactories: protoV5ProviderFactories(),
+				Steps: []r.TestStep{
+					{
+						Config:      testAccArchiveSourceConfigMissing(format),
+						ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir\]`),
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestAccArchiveFile_SourceConfigConflicting(t *testing.T) {
-	r.ParallelTest(t, r.TestCase{
-		ProtoV5ProviderFactories: protoV5ProviderFactories(),
-		Steps: []r.TestStep{
-			{
-				Config:      testAccArchiveSourceConfigConflicting(),
-				ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
-			},
-		},
-	})
+	for _, format := range []string{"zip", "tar.gz"} {
+		t.Run(format, func(t *testing.T) {
+			r.ParallelTest(t, r.TestCase{
+				ProtoV5ProviderFactories: protoV5ProviderFactories(),
+				Steps: []r.TestStep{
+					{
+						Config:      testAccArchiveSourceConfigConflicting(format),
+						ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
+					},
+				},
+			})
+		})
+	}
 }
 
 // TestAccArchiveFile_SymlinkFile_Relative verifies that a symlink to a file using a relative path generates an
@@ -1352,48 +1360,48 @@ func testAccArchiveFileSize(filename string, fileSize *string) r.TestCheckFunc {
 	}
 }
 
-func testAccArchiveFileContentConfig(outputPath string) string {
+func testAccArchiveFileContentConfig(format, outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type                    = "zip"
+  type                    = "%s"
   source_content          = "This is some content"
   source_content_filename = "content.txt"
   output_path             = "%s"
 }
-`, filepath.ToSlash(outputPath))
+`, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileFileConfig(outputPath string) string {
+func testAccArchiveFileFileConfig(format, outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type             = "zip"
+  type             = "%s"
   source_file      = "test-fixtures/test-dir/test-file.txt"
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(outputPath))
+`, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileDirConfig(outputPath string) string {
+func testAccArchiveFileDirConfig(format, outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type             = "zip"
+  type             = "%s"
   source_dir       = "test-fixtures/test-dir/test-dir1"
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, filepath.ToSlash(outputPath))
+`, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileDirExcludesConfig(outputPath string) string {
+func testAccArchiveFileDirExcludesConfig(format, outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type        = "zip"
+  type        = "%s"
   source_dir  = "test-fixtures/test-dir/test-dir1"
   excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt"]
   output_path = "%s"
 }
-`, filepath.ToSlash(outputPath))
+`, format, filepath.ToSlash(outputPath))
 }
 
 func testAccArchiveFileDirExcludesGlobConfig(outputPath string) string {
@@ -1407,10 +1415,10 @@ data "archive_file" "foo" {
 `, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileMultiSourceConfig(outputPath string) string {
+func testAccArchiveFileMultiSourceConfig(format, outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type = "zip"
+  type = "%s"
   source {
     filename = "content_1.txt"
     content = "This is the content for content_1.txt"
@@ -1421,22 +1429,22 @@ data "archive_file" "foo" {
   }
   output_path = "%s"
 }
-`, filepath.ToSlash(outputPath))
+`, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveSourceConfigMissing() string {
-	return `
+func testAccArchiveSourceConfigMissing(format string) string {
+	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type                    = "zip"
+  type                    = "%s"
   output_path             = "path"
 }
-`
+`, format)
 }
 
-func testAccArchiveSourceConfigConflicting() string {
-	return `
+func testAccArchiveSourceConfigConflicting(format string) string {
+	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type                    = "zip"
+  type                    = "%s"
   source {
     filename = "content_1.txt"
     content = "This is the content for content_1.txt"
@@ -1444,7 +1452,7 @@ data "archive_file" "foo" {
   source_dir  = "test-fixtures/test-dir"
   output_path             = "path"
 }
-`
+`, format)
 }
 
 //nolint:unparam
