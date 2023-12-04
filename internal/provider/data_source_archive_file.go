@@ -12,9 +12,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"os"
-	"path"
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -23,6 +20,10 @@ import (
 	fwpath "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 )
 
 var _ datasource.DataSource = (*archiveFileDataSource)(nil)
@@ -44,7 +45,7 @@ func (d *archiveFileDataSource) ConfigValidators(context.Context) []datasource.C
 	}
 }
 
-func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *archiveFileDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Generates an archive from content, a file, or directory of files.",
 		Blocks: map[string]schema.Block{
@@ -80,7 +81,7 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of archive to generate. NOTE: `zip` is supported.",
+				Description: "The type of archive to generate. NOTE: `zip, tgz` are supported.",
 				Required:    true,
 			},
 			"source_content": schema.StringAttribute{
@@ -208,14 +209,20 @@ func archive(ctx context.Context, model fileModel) error {
 
 	switch {
 	case !model.SourceDir.IsNull():
-		excludeList := make([]string, len(model.Excludes.Elements()))
+		var excludeList []string
 
 		if !model.Excludes.IsNull() {
 			var elements []types.String
 			model.Excludes.ElementsAs(ctx, &elements, false)
 
-			for i, elem := range elements {
-				excludeList[i] = elem.ValueString()
+			for _, element := range elements {
+				excludeList = append(excludeList, element.ValueString())
+			}
+		}
+		sourceDir := model.SourceDir.ValueString()
+		if relPath, err := filepath.Rel(sourceDir, outputPath); err == nil {
+			if !strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) && relPath != ".." {
+				excludeList = append(excludeList, relPath)
 			}
 		}
 
@@ -227,7 +234,7 @@ func archive(ctx context.Context, model fileModel) error {
 			opts.ExcludeSymlinkDirectories = model.ExcludeSymlinkDirectories.ValueBool()
 		}
 
-		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), opts); err != nil {
+		if err := archiver.ArchiveDir(sourceDir, opts); err != nil {
 			return fmt.Errorf("error archiving directory: %s", err)
 		}
 	case !model.SourceFile.IsNull():

@@ -144,9 +144,28 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	}
 
 	ensureContents(t, zipFilePath, map[string][]byte{
+		"test-dir2/":          {},
 		"test-dir2/file1.txt": []byte("This is file 1"),
 		"test-dir2/file3.txt": []byte("This is file 3"),
 		"test-file.txt":       []byte("This is test content"),
+	})
+}
+
+func TestZipArchiver_Dir_Exclude_With_Glob(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir/", ArchiveDirOpts{
+		Excludes: []string{"test-dir1/file?.txt", "test-dir2/*1.txt"}}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"test-file.txt":       []byte("This is test content"),
+		"test-dir1/":          {},
+		"test-dir2/":          {},
+		"test-dir2/file2.txt": []byte("This is file 2"),
+		"test-dir2/file3.txt": []byte("This is file 3"),
 	})
 }
 
@@ -190,21 +209,29 @@ func TestZipArchiver_Dir_DoNotExcludeSymlinkDirectories(t *testing.T) {
 	}
 
 	ensureContents(t, zipFilePath, map[string][]byte{
+		"test-dir/":                                            {},
+		"test-dir/test-dir1/":                                  {},
 		"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
 		"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
 		"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+		"test-dir/test-dir2/":                                  {},
 		"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
 		"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
 		"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
 		"test-dir/test-file.txt":                               []byte("This is test content"),
+		"test-dir-with-symlink-dir/":                           {},
+		"test-dir-with-symlink-dir/test-symlink-dir/":          {},
 		"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
 		"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
 		"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+		"test-dir-with-symlink-file/":                          {},
 		"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
 		"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+		"test-symlink-dir/":                                    {},
 		"test-symlink-dir/file1.txt":                           []byte("This is file 1"),
 		"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
 		"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+		"test-symlink-dir-with-symlink-file/":                  {},
 		"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
 		"test-symlink-dir-with-symlink-file/test-symlink.txt":  []byte("This is test content"),
 	})
@@ -240,20 +267,28 @@ func TestZipArchiver_Dir_Exclude_DoNotExcludeSymlinkDirectories(t *testing.T) {
 	}
 
 	ensureContents(t, zipFilePath, map[string][]byte{
+		"test-dir/":                                            {},
+		"test-dir/test-dir1/":                                  {},
 		"test-dir/test-dir1/file1.txt":                         []byte("This is file 1"),
 		"test-dir/test-dir1/file2.txt":                         []byte("This is file 2"),
 		"test-dir/test-dir1/file3.txt":                         []byte("This is file 3"),
+		"test-dir/test-dir2/":                                  {},
 		"test-dir/test-dir2/file1.txt":                         []byte("This is file 1"),
 		"test-dir/test-dir2/file2.txt":                         []byte("This is file 2"),
 		"test-dir/test-dir2/file3.txt":                         []byte("This is file 3"),
 		"test-dir/test-file.txt":                               []byte("This is test content"),
+		"test-dir-with-symlink-dir/":                           {},
+		"test-dir-with-symlink-dir/test-symlink-dir/":          {},
 		"test-dir-with-symlink-dir/test-symlink-dir/file1.txt": []byte("This is file 1"),
 		"test-dir-with-symlink-dir/test-symlink-dir/file2.txt": []byte("This is file 2"),
 		"test-dir-with-symlink-dir/test-symlink-dir/file3.txt": []byte("This is file 3"),
+		"test-dir-with-symlink-file/":                          {},
 		"test-dir-with-symlink-file/test-file.txt":             []byte("This is test content"),
 		"test-dir-with-symlink-file/test-symlink.txt":          []byte("This is test content"),
+		"test-symlink-dir/":                                    {},
 		"test-symlink-dir/file2.txt":                           []byte("This is file 2"),
 		"test-symlink-dir/file3.txt":                           []byte("This is file 3"),
+		"test-symlink-dir-with-symlink-file/":                  {},
 		"test-symlink-dir-with-symlink-file/test-file.txt":     []byte("This is test content"),
 	})
 }
@@ -274,13 +309,13 @@ func TestZipArchiver_Dir_Exclude_ExcludeSymlinkDirectories(t *testing.T) {
 	found := regex.Match([]byte(err.Error()))
 
 	if !found {
-		t.Fatalf("expedted error to match %q, got: %s", regex.String(), err.Error())
+		t.Fatalf("expected error to match %q, got: %s", regex.String(), err.Error())
 	}
 }
 
-func ensureContents(t *testing.T, zipfilepath string, wants map[string][]byte) {
+func ensureContents(t *testing.T, zipFilePath string, wants map[string][]byte) {
 	t.Helper()
-	r, err := zip.OpenReader(zipfilepath)
+	r, err := zip.OpenReader(zipFilePath)
 	if err != nil {
 		t.Fatalf("could not open zip file: %s", err)
 	}
@@ -319,9 +354,9 @@ func ensureContent(t *testing.T, wants map[string][]byte, got *zip.File) {
 	}
 }
 
-func ensureFileMode(t *testing.T, zipfilepath string, outputFileMode string) {
+func ensureFileMode(t *testing.T, zipFilePath string, outputFileMode string) {
 	t.Helper()
-	r, err := zip.OpenReader(zipfilepath)
+	r, err := zip.OpenReader(zipFilePath)
 	if err != nil {
 		t.Fatalf("could not open zip file: %s", err)
 	}
