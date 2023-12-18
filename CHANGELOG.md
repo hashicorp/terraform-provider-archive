@@ -1,3 +1,9 @@
+## 2.4.1 (December 18, 2023)
+
+NOTES:
+
+* This release introduces no functional changes. It does however include dependency updates which address upstream CVEs. ([#287](https://github.com/hashicorp/terraform-provider-archive/issues/287))
+
 ## 2.4.0 (June 07, 2023)
 
 NOTES:
@@ -13,7 +19,6 @@ BUG FIXES:
 
 * data-source/archive_file: Symbolically linked directories are included in archives by default rather than generating an error ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
 * resource/archive_file: Symbolically linked directories are included in archives by default rather than generating an error ([#183](https://github.com/hashicorp/terraform-provider-archive/issues/183))
-
 ## 2.3.0 (January 18, 2023)
 
 NOTES:

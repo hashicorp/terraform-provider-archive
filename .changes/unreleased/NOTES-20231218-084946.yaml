@@ -1,6 +1,0 @@
-kind: NOTES
-body: This release introduces no functional changes. It does however include dependency
-  updates which address upstream CVEs.
-time: 2023-12-18T08:49:46.904647-05:00
-custom:
-  Issue: "287"
