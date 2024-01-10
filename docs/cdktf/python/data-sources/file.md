@@ -117,4 +117,4 @@ Required:
 - `content` (String) Add this content to the archive with `filename` as the filename.
 - `filename` (String) Set this as the filename when declaring a `source`.
 
-<!-- cache-key: cdktf-0.19.0 input-d3e4d9d868812b91ebfd286a3305959de07442df7fcbac30222b0c2a83a87bdf -->
+<!-- cache-key: cdktf-0.20.0 input-d3e4d9d868812b91ebfd286a3305959de07442df7fcbac30222b0c2a83a87bdf -->
