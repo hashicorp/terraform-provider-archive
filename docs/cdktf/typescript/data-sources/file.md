@@ -101,13 +101,13 @@ class MyConvertedCode extends TerraformStack {
 ### Optional
 
 - `excludeSymlinkDirectories` (Boolean) Boolean flag indicating whether symbolically linked directories should be excluded during the creation of the archive. Defaults to `false`.
-- `excludes` (Set of String) Specify files to ignore when reading the `source_dir`.
+- `excludes` (Set of String) Specify files to ignore when reading the `sourceDir`.
 - `outputFileMode` (String) String that specifies the octal file mode for all archived files. For example: `"0666"`. Setting this will ensure that cross platform usage of this module will not vary the modes of archived files (and ultimately checksums) resulting in more deterministic behavior.
-- `source` (Block Set) Specifies attributes of a single source file to include into the archive. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified. (see [below for nested schema](#nestedblock--source))
-- `sourceContent` (String) Add only this content to the archive with `source_content_filename` as the filename. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified.
-- `sourceContentFilename` (String) Set this as the filename when using `source_content`. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified.
-- `sourceDir` (String) Package entire contents of this directory into the archive. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified.
-- `sourceFile` (String) Package this file into the archive. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified.
+- `source` (Block Set) Specifies attributes of a single source file to include into the archive. One and only one of `source`, `sourceContentFilename` (with `sourceContent`), `sourceFile`, or `sourceDir` must be specified. (see [below for nested schema](#nestedblock--source))
+- `sourceContent` (String) Add only this content to the archive with `sourceContentFilename` as the filename. One and only one of `source`, `sourceContentFilename` (with `sourceContent`), `sourceFile`, or `sourceDir` must be specified.
+- `sourceContentFilename` (String) Set this as the filename when using `sourceContent`. One and only one of `source`, `sourceContentFilename` (with `sourceContent`), `sourceFile`, or `sourceDir` must be specified.
+- `sourceDir` (String) Package entire contents of this directory into the archive. One and only one of `source`, `sourceContentFilename` (with `sourceContent`), `sourceFile`, or `sourceDir` must be specified.
+- `sourceFile` (String) Package this file into the archive. One and only one of `source`, `sourceContentFilename` (with `sourceContent`), `sourceFile`, or `sourceDir` must be specified.
 
 ### Read-Only
 
@@ -128,4 +128,4 @@ Required:
 - `content` (String) Add this content to the archive with `filename` as the filename.
 - `filename` (String) Set this as the filename when declaring a `source`.
 
-<!-- cache-key: cdktf-0.19.0 input-d3e4d9d868812b91ebfd286a3305959de07442df7fcbac30222b0c2a83a87bdf -->
+<!-- cache-key: cdktf-0.20.0 input-d3e4d9d868812b91ebfd286a3305959de07442df7fcbac30222b0c2a83a87bdf -->
