@@ -1,0 +1,7 @@
+kind: BUG FIXES
+body: 'data-source/archive_file: Prevent error when generating archive from source
+  containing symbolically linked directories, and `exclude_symlink_directories` 
+  is set to true'
+time: 2024-01-15T10:13:58.177253Z
+custom:
+  Issue: "298"
