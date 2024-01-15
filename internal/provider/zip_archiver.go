@@ -146,23 +146,25 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts Arc
 		}
 
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-			if !opts.ExcludeSymlinkDirectories {
-				realPath, err := filepath.EvalSymlinks(path)
-				if err != nil {
-					return err
-				}
-
-				realInfo, err := os.Stat(realPath)
-				if err != nil {
-					return err
-				}
-
-				if realInfo.IsDir() {
-					return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, opts))
-				}
-
-				info = realInfo
+			realPath, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return err
 			}
+
+			realInfo, err := os.Stat(realPath)
+			if err != nil {
+				return err
+			}
+
+			if realInfo.IsDir() {
+				if !opts.ExcludeSymlinkDirectories {
+					return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, opts))
+				} else {
+					return filepath.SkipDir
+				}
+			}
+
+			info = realInfo
 		}
 
 		fh, err := zip.FileInfoHeader(info)
