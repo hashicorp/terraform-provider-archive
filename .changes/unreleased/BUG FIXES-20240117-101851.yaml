@@ -1,0 +1,5 @@
+kind: BUG FIXES
+body: 'resource/archive_file: Return error when generated archive would be empty'
+time: 2024-01-17T10:18:51.941981Z
+custom:
+  Issue: "298"

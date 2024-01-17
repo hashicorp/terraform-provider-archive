@@ -107,15 +107,28 @@ func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 		opts.Excludes[i] = filepath.FromSlash(opts.Excludes[i])
 	}
 
+	// Determine whether an empty archive would be generated.
+	isArchiveEmpty := true
+
+	err = filepath.Walk(indirname, a.createWalkFunc("", indirname, opts, &isArchiveEmpty, true))
+	if err != nil {
+		return err
+	}
+
+	// Return an error if an empty archive would be generated.
+	if isArchiveEmpty {
+		return fmt.Errorf("archive has not been created as it would be empty")
+	}
+
 	if err := a.open(); err != nil {
 		return err
 	}
 	defer a.close()
 
-	return filepath.Walk(indirname, a.createWalkFunc("", indirname, opts))
+	return filepath.Walk(indirname, a.createWalkFunc("", indirname, opts, &isArchiveEmpty, false))
 }
 
-func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts ArchiveDirOpts) func(path string, info os.FileInfo, err error) error {
+func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDirOpts, isArchiveEmpty *bool, dryRun bool) func(path string, info os.FileInfo, err error) error {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error encountered during file walk: %s", err)
@@ -158,13 +171,19 @@ func (a *ZipArchiver) createWalkFunc(basePath string, indirname string, opts Arc
 
 			if realInfo.IsDir() {
 				if !opts.ExcludeSymlinkDirectories {
-					return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, opts))
+					return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, opts, isArchiveEmpty, dryRun))
 				} else {
 					return filepath.SkipDir
 				}
 			}
 
 			info = realInfo
+		}
+
+		*isArchiveEmpty = false
+
+		if dryRun {
+			return nil
 		}
 
 		fh, err := zip.FileInfoHeader(info)

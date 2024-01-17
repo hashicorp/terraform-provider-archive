@@ -980,12 +980,7 @@ func TestAccArchiveFile_SymlinkDirectory_Relative_ExcludeSymlinkDirectories(t *t
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash("test-fixtures/test-symlink-dir"), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{})
-						return nil
-					}),
-				),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
@@ -1016,12 +1011,7 @@ func TestAccArchiveFile_SymlinkDirectory_Absolute_ExcludeSymlinkDirectories(t *t
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{})
-						return nil
-					}),
-				),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
@@ -1210,12 +1200,7 @@ func TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative_ExcludeSymlinkDir
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-dir"), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{})
-						return nil
-					}),
-				),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
@@ -1245,12 +1230,7 @@ func TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute_ExcludeSym
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
-				Check: r.ComposeTestCheckFunc(
-					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
-						ensureContents(t, value, map[string][]byte{})
-						return nil
-					}),
-				),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
