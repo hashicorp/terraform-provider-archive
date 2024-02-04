@@ -1029,8 +1029,8 @@ func TestAccArchiveFile_SymlinkFile_Absolute_ExcludeSymlinkDirectories(t *testin
 	})
 }
 
-// TestAccArchiveFile_SymlinkDirectory_Relative_ExcludeSymlinkDirectories verifies that an error is generated when
-// trying to use a symlink to a directory.
+// TestAccArchiveFile_SymlinkDirectory_Relative_ExcludeSymlinkDirectories verifies that an empty archive
+// is generated when trying to archive a directory which only contains a symlink to a directory.
 func TestAccArchiveFile_SymlinkDirectory_Relative_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
@@ -1049,14 +1049,14 @@ func TestAccArchiveFile_SymlinkDirectory_Relative_ExcludeSymlinkDirectories(t *t
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash("test-fixtures/test-symlink-dir"), filepath.ToSlash(f)),
-				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
 }
 
-// TestAccArchiveFile_SymlinkDirectory_Absolute_ExcludeSymlinkDirectories verifies that an error is generated when
-// trying to use a symlink to a directory.
+// TestAccArchiveFile_SymlinkDirectory_Absolute_ExcludeSymlinkDirectories verifies that an empty archive
+// is generated when trying to archive a directory which only contains a symlink to a directory.
 func TestAccArchiveFile_SymlinkDirectory_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
@@ -1080,7 +1080,7 @@ func TestAccArchiveFile_SymlinkDirectory_Absolute_ExcludeSymlinkDirectories(t *t
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirWithRegularFilesAbs), filepath.ToSlash(f)),
-				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
@@ -1250,8 +1250,8 @@ func TestAccArchiveFile_SymlinkDirectoryWithSymlinkFile_Absolute_ExcludeSymlinkD
 	})
 }
 
-// TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative_ExcludeSymlinkDirectories verifies that an error is
-// generated when trying to a directory which contains a symlink to a directory.
+// TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative_ExcludeSymlinkDirectories verifies that an empty archive
+// is generated when trying to archive a directory which only contains a symlink to a directory.
 func TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
@@ -1266,18 +1266,17 @@ func TestAccArchiveFile_DirectoryWithSymlinkDirectory_Relative_ExcludeSymlinkDir
 			 type                        = "zip"
 			 source_dir                  = "%s"
 			 output_path                 = "%s"
-			 output_file_mode            = "0666"
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash("test-fixtures/test-dir-with-symlink-dir"), filepath.ToSlash(f)),
-				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
 }
 
-// TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute_ExcludeSymlinkDirectories verifies that an error is
-// generated when trying to a directory which contains a symlink to a directory.
+// TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute_ExcludeSymlinkDirectories verifies that an empty archive
+// is generated when trying to archive a directory which only contains a symlink to a directory.
 func TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
@@ -1297,22 +1296,23 @@ func TestAccArchiveFile_IncludeDirectoryWithSymlinkDirectory_Absolute_ExcludeSym
 			 type                        = "zip"
 			 source_dir                  = "%s"
 			 output_path                 = "%s"
-			 output_file_mode            = "0666"
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(symlinkDirInRegularDirAbs), filepath.ToSlash(f)),
-				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: archive has not been\ncreated as it would be empty`),
 			},
 		},
 	})
 }
 
-// TestAccArchiveFile_Multiple_Relative_ExcludeSymlinkDirectories verifies that an error is
-// generated when trying to a directory which contains a symlink to a directory.
+// TestAccArchiveFile_Multiple_Relative_ExcludeSymlinkDirectories verifies that
+// symlinked directories are excluded.
 func TestAccArchiveFile_Multiple_Relative_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
 	f := filepath.Join(td, "zip_file_acc_test.zip")
+
+	var fileSize string
 
 	r.ParallelTest(t, r.TestCase{
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
@@ -1327,14 +1327,32 @@ func TestAccArchiveFile_Multiple_Relative_ExcludeSymlinkDirectories(t *testing.T
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash("test-fixtures"), filepath.ToSlash(f)),
-				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-dir/test-dir1/file1.txt":                []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                []byte("This is file 3"),
+							"test-dir/test-file.txt":                      []byte("This is test content"),
+							"test-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
 			},
 		},
 	})
 }
 
-// TestAccArchiveFile_Multiple_Absolute_ExcludeSymlinkDirectories verifies that an error is
-// generated when trying to a directory which contains a symlink to a directory.
+// TestAccArchiveFile_Multiple_Relative_ExcludeSymlinkDirectories verifies that
+// symlinked directories are excluded.
 func TestAccArchiveFile_Multiple_Absolute_ExcludeSymlinkDirectories(t *testing.T) {
 	td := t.TempDir()
 
@@ -1344,6 +1362,8 @@ func TestAccArchiveFile_Multiple_Absolute_ExcludeSymlinkDirectories(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	var fileSize string
 
 	r.ParallelTest(t, r.TestCase{
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
@@ -1358,7 +1378,25 @@ func TestAccArchiveFile_Multiple_Absolute_ExcludeSymlinkDirectories(t *testing.T
 			 exclude_symlink_directories = true
 			}
 			`, filepath.ToSlash(multipleDirsAndFilesAbs), filepath.ToSlash(f)),
-				ExpectError: regexp.MustCompile(`.*error creating archive: error archiving directory: error reading file for`),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+					r.TestCheckResourceAttrWith("data.archive_file.foo", "output_path", func(value string) error {
+						ensureContents(t, value, map[string][]byte{
+							"test-dir/test-dir1/file1.txt":                []byte("This is file 1"),
+							"test-dir/test-dir1/file2.txt":                []byte("This is file 2"),
+							"test-dir/test-dir1/file3.txt":                []byte("This is file 3"),
+							"test-dir/test-dir2/file1.txt":                []byte("This is file 1"),
+							"test-dir/test-dir2/file2.txt":                []byte("This is file 2"),
+							"test-dir/test-dir2/file3.txt":                []byte("This is file 3"),
+							"test-dir/test-file.txt":                      []byte("This is test content"),
+							"test-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
+							"test-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
+						})
+						ensureFileMode(t, value, "0666")
+						return nil
+					}),
+				),
 			},
 		},
 	})
