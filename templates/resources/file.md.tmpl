@@ -1,0 +1,22 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+The following examples illustrate the usage of the archive_file resource, specifically for instances where replacement of the resource needs to be triggered.
+
+{{ tffile "examples/resources/file/resource.tf" }}
+
+{{ tffile "examples/resources/file/multiple-files.tf" }}
+
+{{ tffile "examples/resources/file/lambda.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
