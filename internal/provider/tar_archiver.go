@@ -163,7 +163,7 @@ func (a *TarArchiver) ArchiveMultiple(content map[string][]byte) error {
 		header := &tar.Header{
 			Name:    filepath.ToSlash(filename),
 			Size:    int64(len(content[filename])),
-			ModTime: time.Now().Round(time.Second),
+			ModTime: time.Time{},
 		}
 
 		if err := a.addContent(content[filename], header); err != nil {
