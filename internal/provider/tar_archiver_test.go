@@ -168,6 +168,42 @@ func TestTarArchiver_Multiple(t *testing.T) {
 	ensureTarContents(t, tarFilePath, content)
 }
 
+func TestTarArchiver_Multiple_NoChange(t *testing.T) {
+	tarFilePath := filepath.Join(t.TempDir(), "archive-content.tar.gz")
+
+	content := map[string][]byte{
+		"file1.txt": []byte("This is file 1"),
+		"file2.txt": []byte("This is file 2"),
+		"file3.txt": []byte("This is file 3"),
+	}
+
+	archiver := NewTarGzArchiver(tarFilePath)
+	if err := archiver.ArchiveMultiple(content); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	expectedContents, err := os.ReadFile(tarFilePath)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	time.Sleep(1 * time.Second)
+
+	archiver = NewTarGzArchiver(tarFilePath)
+	if err := archiver.ArchiveMultiple(content); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	actualContents, err := os.ReadFile(tarFilePath)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	if !bytes.Equal(expectedContents, actualContents) {
+		t.Fatalf("tar contents do not match, potentially a modified time issue")
+	}
+}
+
 func TestTarArchiver_Dir_With_Symlink_File(t *testing.T) {
 	tarFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-file.tar.gz")
 
