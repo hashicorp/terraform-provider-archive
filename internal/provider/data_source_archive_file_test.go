@@ -62,12 +62,12 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				"base64sha512": "uWrGuVVKBEc6czvjbxkEIr9xYrSv2yEaD1UXE+rfQJJFlCZ1BkbHA4PObIuJFxuIWCpgjlhBv6qvoXAEoqLKCg==",
 			},
 			"tar.gz": {
-				"md5":          "56d3b5da9e46596a7037008224a3535d",
-				"sha":          "d1934f7c5cd325b2c1b3128621e3041c931d5706",
-				"sha256":       "0496affbe2b4dcde9cd3e49665b351a1ef7633faa35bb908de617b155f74f123",
-				"base64sha256": "BJav++K03N6c0+SWZbNRoe92M/qjW7kI3mF7FV908SM=",
-				"sha512":       "5ddacbb55be1dc431cef74ab65ad8059a51990eb4cf108f679b79a59004a586cdd0b1bb0d869fa1fe679fa71a1d85391c19413a2d79050df68703aa3390eabee",
-				"base64sha512": "XdrLtVvh3EMc73SrZa2AWaUZkOtM8Qj2ebeaWQBKWGzdCxuw2Gn6H+Z5+nGh2FORwZQToteQUN9ocDqjOQ6r7g==",
+				"md5":          "6678fae1fe2077c767bac136861e3bdc",
+				"sha":          "3af6ef3c57aaa5ab3681cd25f916d6651b806cb6",
+				"sha256":       "1b10e0f355025819486fb688aa04217939ea976cd271089bc0092e2994dbaaba",
+				"base64sha256": "GxDg81UCWBlIb7aIqgQheTnql2zScQibwAkuKZTbqro=",
+				"sha512":       "adb56fca1e40420d4f994d031a08ca0d1ee51783f3c5d1631b6ed2b460ff2577f9154cb5f1c06edd0b0162899f7cfa7cc3d1f02ec9c9ae76f7ea64a31ba8cb81",
+				"base64sha512": "rbVvyh5AQg1PmU0DGgjKDR7lF4PzxdFjG27StGD/JXf5FUy18cBu3QsBYomffPp8w9HwLsnJrnb36mSjG6jLgQ==",
 			},
 		},
 	}
