@@ -255,11 +255,15 @@ func TestTarArchiver_Dir_ExcludeSymlinkDirectories(t *testing.T) {
 		ExcludeSymlinkDirectories: true,
 	})
 
-	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures(\/|\\)test-dir-with-symlink-dir(\/|\\)test-symlink-dir: `)
+	if err == nil {
+		t.Fatalf("expected error, but err is nil.")
+	}
+
+	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures[/\\]test-dir-with-symlink-dir[/\\]test-symlink-dir: `)
 	found := regex.Match([]byte(err.Error()))
 
 	if !found {
-		t.Fatalf("expedted error to match %q, got: %s", regex.String(), err.Error())
+		t.Fatalf("expected error to match %q, got: %s", regex.String(), err.Error())
 	}
 }
 
@@ -307,7 +311,11 @@ func TestTarArchiver_Dir_Exclude_ExcludeSymlinkDirectories(t *testing.T) {
 		ExcludeSymlinkDirectories: true,
 	})
 
-	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures(\/|\\)test-dir-with-symlink-dir(\/|\\)test-symlink-dir: `)
+	if err == nil {
+		t.Fatalf("expected error, but err is nil.")
+	}
+
+	regex := regexp.MustCompile(`error reading file for archival: read test-fixtures[/\\]test-dir-with-symlink-dir[/\\]test-symlink-dir: `)
 	found := regex.Match([]byte(err.Error()))
 
 	if !found {
