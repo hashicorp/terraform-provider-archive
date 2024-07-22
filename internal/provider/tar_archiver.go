@@ -74,7 +74,7 @@ func (a *TarArchiver) ArchiveFile(infilename string) error {
 }
 
 func (a *TarArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
-	_, err := assertValidDir(indirname)
+	err := assertValidDir(indirname)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (a *TarArchiver) addFile(filePath, fileName string, modTime time.Time) erro
 
 	stat, err := file.Stat()
 	if err != nil {
-		return errors.New(fmt.Sprintf("Could not get stat for file '%s', got error '%s'", filePath, err.Error()))
+		return fmt.Errorf("could not get stat for file '%s', got error '%w'", filePath, err)
 	}
 
 	header := &tar.Header{
@@ -261,12 +261,12 @@ func (a *TarArchiver) addContent(content []byte, header *tar.Header) error {
 	}
 
 	if err := a.tarWriter.WriteHeader(header); err != nil {
-		return errors.New(fmt.Sprintf("Could not write header, got error '%s'", err.Error()))
+		return fmt.Errorf("could not write header, got error '%w'", err)
 	}
 
 	_, err := a.tarWriter.Write(content)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Could not copy data to the tarball, got error '%s'", err.Error()))
+		return fmt.Errorf("could not copy data to the tarball, got error '%w'", err)
 	}
 
 	return nil

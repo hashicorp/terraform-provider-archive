@@ -43,16 +43,18 @@ func assertValidFile(infilename string) (os.FileInfo, error) {
 	return fi, err
 }
 
-func assertValidDir(indirname string) (os.FileInfo, error) {
+func assertValidDir(indirname string) error {
 	fi, err := os.Stat(indirname)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fi, fmt.Errorf("could not archive missing directory: %s", indirname)
+			return fmt.Errorf("could not archive missing directory: %s", indirname)
 		}
-		return fi, err
+		return err
 	}
+
 	if !fi.IsDir() {
-		return fi, fmt.Errorf("could not archive directory that is a file: %s", indirname)
+		return fmt.Errorf("could not archive directory that is a file: %s", indirname)
 	}
-	return fi, nil
+
+	return nil
 }

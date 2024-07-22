@@ -354,7 +354,10 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 			continue
 		case tar.TypeReg:
 			buf := bytes.Buffer{}
-			io.Copy(&buf, tarReader)
+			_, err = io.Copy(&buf, tarReader)
+			if err != nil {
+				t.Fatalf("could not read file %s in tar: %s", name, err)
+			}
 
 			wantFile, ok := wants[name]
 			if !ok {
