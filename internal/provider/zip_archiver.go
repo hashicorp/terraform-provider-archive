@@ -97,7 +97,7 @@ func checkMatch(fileName string, excludes []string) (value bool) {
 }
 
 func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
-	_, err := assertValidDir(indirname)
+	err := assertValidDir(indirname)
 	if err != nil {
 		return err
 	}
