@@ -321,6 +321,7 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 	if err != nil {
 		t.Fatalf("could not open tar.gz file: %s", err)
 	}
+	defer gzf.Close()
 
 	tarReader := tar.NewReader(gzf)
 
