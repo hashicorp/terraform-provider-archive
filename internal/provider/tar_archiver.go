@@ -66,7 +66,14 @@ func (a *TarArchiver) ArchiveFile(infilename string) error {
 	}
 	defer a.close()
 
-	if err := a.addFile(infilename, filepath.ToSlash(fi.Name()), time.Time{}); err != nil {
+	header := &tar.Header{
+		Name:    filepath.ToSlash(fi.Name()),
+		Size:    fi.Size(),
+		Mode:    int64(fi.Mode()),
+		ModTime: time.Time{},
+	}
+
+	if err := a.addFile(infilename, header); err != nil {
 		return err
 	}
 
@@ -163,7 +170,14 @@ func (a *TarArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 			return nil
 		}
 
-		return a.addFile(path, archivePath, time.Time{})
+		header := &tar.Header{
+			Name:    filepath.ToSlash(archivePath),
+			Size:    info.Size(),
+			Mode:    int64(info.Mode()),
+			ModTime: time.Time{},
+		}
+
+		return a.addFile(path, header)
 	}
 }
 
@@ -230,24 +244,16 @@ func (a *TarArchiver) close() {
 	}
 }
 
-func (a *TarArchiver) addFile(filePath, fileName string, modTime time.Time) error {
+func (a *TarArchiver) addFile(filePath string, header *tar.Header) error {
+	if header == nil {
+		return fmt.Errorf("tar.Header is nil")
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("could not open file '%s', got error '%w'", filePath, err)
 	}
 	defer file.Close()
-
-	stat, err := file.Stat()
-	if err != nil {
-		return fmt.Errorf("could not get stat for file '%s', got error '%w'", filePath, err)
-	}
-
-	header := &tar.Header{
-		Name:    fileName,
-		Size:    stat.Size(),
-		Mode:    int64(stat.Mode()),
-		ModTime: modTime,
-	}
 
 	if a.outputFileMode != "" {
 		filemode, err := strconv.ParseInt(a.outputFileMode, 0, 32)
