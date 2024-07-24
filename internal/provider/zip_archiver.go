@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 type ZipArchiver struct {
@@ -83,17 +85,22 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	return err
 }
 
-func checkMatch(fileName string, excludes []string) (value bool) {
+func checkMatch(fileName string, excludes []string) (value bool, err error) {
 	for _, exclude := range excludes {
 		if exclude == "" {
 			continue
 		}
 
-		if exclude == fileName {
-			return true
+		match, err := doublestar.Match(exclude, fileName)
+		if err != nil {
+			return false, err
+		}
+
+		if match {
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
@@ -141,7 +148,10 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 
 		archivePath := filepath.Join(basePath, relname)
 
-		isMatch := checkMatch(archivePath, opts.Excludes)
+		isMatch, err := checkMatch(archivePath, opts.Excludes)
+		if err != nil {
+			return fmt.Errorf("error checking excludes matches: %s", err)
+		}
 
 		if info.IsDir() {
 			if isMatch {
@@ -152,10 +162,6 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 
 		if isMatch {
 			return nil
-		}
-
-		if err != nil {
-			return err
 		}
 
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
