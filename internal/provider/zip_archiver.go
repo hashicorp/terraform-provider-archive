@@ -91,7 +91,7 @@ func checkMatch(fileName string, excludes []string) (value bool, err error) {
 			continue
 		}
 
-		match, err := doublestar.Match(exclude, fileName)
+		match, err := doublestar.PathMatch(exclude, fileName)
 		if err != nil {
 			return false, err
 		}
