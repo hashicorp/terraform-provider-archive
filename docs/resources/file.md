@@ -23,7 +23,7 @@ description: |-
 ### Optional
 
 - `exclude_symlink_directories` (Boolean) Boolean flag indicating whether symbolically linked directories should be excluded during the creation of the archive. Defaults to `false`.
-- `excludes` (Set of String) Specify files to ignore when reading the `source_dir`.
+- `excludes` (Set of String) Specify files/directories to ignore when reading the `source_dir`. Supports glob file matching patterns including doublestar/globstar (`**`) patterns
 - `output_file_mode` (String) String that specifies the octal file mode for all archived files. For example: `"0666"`. Setting this will ensure that cross platform usage of this module will not vary the modes of archived files (and ultimately checksums) resulting in more deterministic behavior.
 - `source` (Block Set) Specifies attributes of a single source file to include into the archive. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified. (see [below for nested schema](#nestedblock--source))
 - `source_content` (String) Add only this content to the archive with `source_content_filename` as the filename. One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, or `source_dir` must be specified.
