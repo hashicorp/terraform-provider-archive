@@ -125,7 +125,10 @@ func (a *TarArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 
 		archivePath := filepath.Join(basePath, relname)
 
-		isMatch := checkMatch(archivePath, opts.Excludes)
+		isMatch, err := checkMatch(archivePath, opts.Excludes)
+		if err != nil {
+			return fmt.Errorf("error checking excludes matches: %w", err)
+		}
 
 		if info.IsDir() {
 			if isMatch {
@@ -267,11 +270,11 @@ func (a *TarArchiver) addFile(filePath string, header *tar.Header) error {
 	defer file.Close()
 
 	if a.outputFileMode != "" {
-		filemode, err := strconv.ParseInt(a.outputFileMode, 0, 32)
+		fileMode, err := strconv.ParseInt(a.outputFileMode, 0, 32)
 		if err != nil {
 			return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
 		}
-		header.Mode = filemode
+		header.Mode = fileMode
 	}
 
 	err = a.tarWriter.WriteHeader(header)
