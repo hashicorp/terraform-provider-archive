@@ -154,7 +154,8 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"excludes": schema.SetAttribute{
-				Description: "Specify files to ignore when reading the `source_dir`.",
+				Description: "Specify files/directories to ignore when reading the `source_dir`. " +
+					"Supports glob file matching patterns including doublestar/globstar (`**`) patterns.",
 				ElementType: types.StringType,
 				Optional:    true,
 				Validators: []validator.Set{
