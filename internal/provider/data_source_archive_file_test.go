@@ -106,6 +106,13 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccArchiveFileDirExcludesGlobConfig(f),
+				Check: r.ComposeTestCheckFunc(
+					testAccArchiveFileSize(f, &fileSize),
+					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
+				),
+			},
+			{
 				Config: testAccArchiveFileMultiSourceConfig(f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
@@ -1384,6 +1391,17 @@ data "archive_file" "foo" {
   type        = "zip"
   source_dir  = "test-fixtures/test-dir/test-dir1"
   excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt"]
+  output_path = "%s"
+}
+`, filepath.ToSlash(outputPath))
+}
+
+func testAccArchiveFileDirExcludesGlobConfig(outputPath string) string {
+	return fmt.Sprintf(`
+data "archive_file" "foo" {
+  type        = "zip"
+  source_dir  = "test-fixtures/test-dir/test-dir1"
+  excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt", "**/file[2-3].txt"]
   output_path = "%s"
 }
 `, filepath.ToSlash(outputPath))
