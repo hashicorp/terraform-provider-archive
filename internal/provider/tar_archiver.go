@@ -26,7 +26,7 @@ type TarArchiver struct {
 	compression       TarCompressionType
 	filepath          string
 	outputFileMode    string // Default value "" means unset
-	filewriter        *os.File
+	fileWriter        *os.File
 	tarWriter         *tar.Writer
 	compressionWriter io.WriteCloser
 }
@@ -215,14 +215,16 @@ func (a *TarArchiver) SetOutputFileMode(outputFileMode string) {
 }
 
 func (a *TarArchiver) open() error {
-	file, err := os.Create(filepath.ToSlash(a.filepath))
+	var err error
+
+	a.fileWriter, err = os.Create(filepath.ToSlash(a.filepath))
 	if err != nil {
 		return err
 	}
 
 	switch a.compression {
 	case TarCompressionGz:
-		a.compressionWriter = gzip.NewWriter(file)
+		a.compressionWriter = gzip.NewWriter(a.fileWriter)
 	}
 
 	a.tarWriter = tar.NewWriter(a.compressionWriter)
@@ -230,17 +232,26 @@ func (a *TarArchiver) open() error {
 }
 
 func (a *TarArchiver) close() {
-	if a.filewriter != nil {
-		a.filewriter.Close()
-		a.filewriter = nil
-	}
 	if a.tarWriter != nil {
-		a.tarWriter.Close()
+		err := a.tarWriter.Close()
+		if err != nil {
+			fmt.Printf("error closing tarwriter : %s\n\n", err)
+		}
 		a.tarWriter = nil
 	}
 	if a.compressionWriter != nil {
-		a.compressionWriter.Close()
+		err := a.compressionWriter.Close()
+		if err != nil {
+			fmt.Printf("error closing compressionWriter : %s\n\n", err)
+		}
 		a.compressionWriter = nil
+	}
+	if a.fileWriter != nil {
+		err := a.fileWriter.Close()
+		if err != nil {
+			fmt.Printf("error closing fileWriter: %s\n\n", err)
+		}
+		a.fileWriter = nil
 	}
 }
 
