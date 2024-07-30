@@ -150,7 +150,7 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 
 		isMatch, err := checkMatch(archivePath, opts.Excludes)
 		if err != nil {
-			return fmt.Errorf("error checking excludes matches: %s", err)
+			return fmt.Errorf("error checking excludes matches: %w", err)
 		}
 
 		if info.IsDir() {
