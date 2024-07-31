@@ -1,5 +1,0 @@
-kind: ENHANCEMENTS
-body: 'resource/archive_file: Add glob pattern matching support to the `excludes` attribute.'
-time: 2024-07-24T16:08:30.211413-04:00
-custom:
-    Issue: "354"

@@ -1,3 +1,10 @@
+## 2.5.0 (July 31, 2024)
+
+ENHANCEMENTS:
+
+* data-source/archive_file: Add glob pattern matching support to the `excludes` attribute. ([#354](https://github.com/hashicorp/terraform-provider-archive/issues/354))
+* resource/archive_file: Add glob pattern matching support to the `excludes` attribute. ([#354](https://github.com/hashicorp/terraform-provider-archive/issues/354))
+
 ## 2.4.2 (January 24, 2024)
 
 BUG FIXES:
