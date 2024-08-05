@@ -337,10 +337,6 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 			t.Fatal(err)
 		}
 
-		if len(wants) < i+1 {
-			t.Fatalf("unexpect file count in tar. expect %d", len(wants))
-		}
-
 		name := header.Name
 
 		switch header.Typeflag {
@@ -372,6 +368,10 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 		}
 
 		i++
+	}
+
+	if len(wants) < i+1 {
+		t.Fatalf("unexpect file count in tar. expect %d", len(wants))
 	}
 }
 
