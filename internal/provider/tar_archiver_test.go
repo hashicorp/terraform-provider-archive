@@ -419,10 +419,8 @@ func ensureTarFileMode(t *testing.T, tarfilepath string, outputFileMode string) 
 				t.Fatalf("Expected filemode \"%s\" but was \"%s\"", osfilemode, header.FileInfo().Mode())
 			}
 		default:
-			t.Fatalf("%s : %c %s %s\n",
-				"Yikes! Unable to figure out type",
+			t.Fatalf("Unable to figure out type: %c in file: %s\n",
 				header.Typeflag,
-				"in file",
 				name,
 			)
 		}
