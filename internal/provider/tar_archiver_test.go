@@ -365,10 +365,8 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 			}
 
 		default:
-			t.Fatalf("%s : %c %s %s\n",
-				"Yikes! Unable to figure out type",
+			t.Fatalf("Unable to figure out type: %c in file: %s\n",
 				header.Typeflag,
-				"in file",
 				name,
 			)
 		}
