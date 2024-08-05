@@ -398,7 +398,6 @@ func ensureTarFileMode(t *testing.T, tarfilepath string, outputFileMode string) 
 
 	var osfilemode = os.FileMode(filemode)
 
-	i := 0
 	for {
 		header, err := tarReader.Next()
 
@@ -427,7 +426,5 @@ func ensureTarFileMode(t *testing.T, tarfilepath string, outputFileMode string) 
 				name,
 			)
 		}
-
-		i++
 	}
 }
