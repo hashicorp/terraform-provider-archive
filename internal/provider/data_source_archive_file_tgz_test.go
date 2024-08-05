@@ -122,35 +122,27 @@ func TestAccTarGzArchiveFile_Basic(t *testing.T) {
 }
 
 func TestAccTarGzArchiveFile_SourceConfigMissing(t *testing.T) {
-	for _, format := range []string{"tar.gz", "tar.gz"} {
-		t.Run(format, func(t *testing.T) {
-			r.ParallelTest(t, r.TestCase{
-				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Steps: []r.TestStep{
-					{
-						Config:      testAccArchiveSourceConfigMissing(format),
-						ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir\]`),
-					},
-				},
-			})
-		})
-	}
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config:      testAccArchiveSourceConfigMissing("tar.gz"),
+				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir\]`),
+			},
+		},
+	})
 }
 
 func TestAccTarGzArchiveFile_SourceConfigConflicting(t *testing.T) {
-	for _, format := range []string{"tar.gz", "tar.gz"} {
-		t.Run(format, func(t *testing.T) {
-			r.ParallelTest(t, r.TestCase{
-				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Steps: []r.TestStep{
-					{
-						Config:      testAccArchiveSourceConfigConflicting(format),
-						ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
-					},
-				},
-			})
-		})
-	}
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config:      testAccArchiveSourceConfigMissing("tar.gz"),
+				ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
+			},
+		},
+	})
 }
 
 // TestAccTarGzArchiveFile_SymlinkFile_Relative verifies that a symlink to a file using a relative path generates an

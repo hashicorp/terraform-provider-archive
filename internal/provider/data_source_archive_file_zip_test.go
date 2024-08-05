@@ -122,35 +122,27 @@ func TestAccZipArchiveFile_Basic(t *testing.T) {
 }
 
 func TestAccZipArchiveFile_SourceConfigMissing(t *testing.T) {
-	for _, format := range []string{"zip", "tar.gz"} {
-		t.Run(format, func(t *testing.T) {
-			r.ParallelTest(t, r.TestCase{
-				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Steps: []r.TestStep{
-					{
-						Config:      testAccArchiveSourceConfigMissing(format),
-						ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir]`),
-					},
-				},
-			})
-		})
-	}
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config:      testAccArchiveSourceConfigMissing("zip"),
+				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir]`),
+			},
+		},
+	})
 }
 
 func TestAccZipArchiveFile_SourceConfigConflicting(t *testing.T) {
-	for _, format := range []string{"zip", "tar.gz"} {
-		t.Run(format, func(t *testing.T) {
-			r.ParallelTest(t, r.TestCase{
-				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Steps: []r.TestStep{
-					{
-						Config:      testAccArchiveSourceConfigConflicting(format),
-						ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
-					},
-				},
-			})
-		})
-	}
+	r.ParallelTest(t, r.TestCase{
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
+		Steps: []r.TestStep{
+			{
+				Config:      testAccArchiveSourceConfigConflicting("zip"),
+				ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
+			},
+		},
+	})
 }
 
 // TestAccZipArchiveFile_SymlinkFile_Relative verifies that a symlink to a file using a relative path generates an
