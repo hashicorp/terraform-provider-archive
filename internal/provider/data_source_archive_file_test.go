@@ -24,7 +24,7 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []r.TestStep{
 			{
-				Config: testAccArchiveFileContentConfig(f),
+				Config: testAccArchiveFileContentConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -49,7 +49,7 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccArchiveFileFileConfig(f),
+				Config: testAccArchiveFileFileConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -74,7 +74,7 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccArchiveFileDirConfig(f),
+				Config: testAccArchiveFileDirConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -99,21 +99,21 @@ func TestAccArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccArchiveFileDirExcludesConfig(f),
+				Config: testAccArchiveFileDirExcludesConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
 			{
-				Config: testAccArchiveFileDirExcludesGlobConfig(f),
+				Config: testAccArchiveFileDirExcludesGlobConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
 			{
-				Config: testAccArchiveFileMultiSourceConfig(f),
+				Config: testAccArchiveFileMultiSourceConfig("zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -1404,15 +1404,15 @@ data "archive_file" "foo" {
 `, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileDirExcludesGlobConfig(outputPath string) string {
+func testAccArchiveFileDirExcludesGlobConfig(format, outputPath string) string {
 	return fmt.Sprintf(`
 data "archive_file" "foo" {
-  type        = "zip"
+  type        = "%s"
   source_dir  = "test-fixtures/test-dir/test-dir1"
   excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt", "**/file[2-3].txt"]
   output_path = "%s"
 }
-`, filepath.ToSlash(outputPath))
+`, format, filepath.ToSlash(outputPath))
 }
 
 func testAccArchiveFileMultiSourceConfig(format, outputPath string) string {

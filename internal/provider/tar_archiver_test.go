@@ -306,6 +306,32 @@ func TestTarArchiver_Dir_Exclude_DoNotExcludeSymlinkDirectories(t *testing.T) {
 	})
 }
 
+func TestTarArchiver_Dir_Exclude_Glob_DoNotExcludeSymlinkDirectories(t *testing.T) {
+	tarFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.tar")
+
+	archiver := NewTarGzArchiver(tarFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
+		Excludes: []string{
+			"**/file1.txt",
+			"**/file2.*",
+			"test-dir-with-symlink-dir/test-symlink-dir",
+			"test-symlink-dir-with-symlink-file/test-symlink.txt",
+		},
+	}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureTarContents(t, tarFilePath, map[string][]byte{
+		"test-dir/test-dir1/file3.txt":                     []byte("This is file 3"),
+		"test-dir/test-dir2/file3.txt":                     []byte("This is file 3"),
+		"test-dir/test-file.txt":                           []byte("This is test content"),
+		"test-dir-with-symlink-file/test-file.txt":         []byte("This is test content"),
+		"test-dir-with-symlink-file/test-symlink.txt":      []byte("This is test content"),
+		"test-symlink-dir/file3.txt":                       []byte("This is file 3"),
+		"test-symlink-dir-with-symlink-file/test-file.txt": []byte("This is test content"),
+	})
+}
+
 func TestTarArchiver_Dir_Exclude_ExcludeSymlinkDirectories(t *testing.T) {
 	tarFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.tar.gz")
 
@@ -331,6 +357,29 @@ func TestTarArchiver_Dir_Exclude_ExcludeSymlinkDirectories(t *testing.T) {
 		"test-dir/test-file.txt":                      []byte("This is test content"),
 		"test-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
 		"test-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
+	})
+}
+
+func TestTarArchiver_Dir_Exclude_Glob_ExcludeSymlinkDirectories(t *testing.T) {
+	tarFilePath := filepath.Join(t.TempDir(), "archive-dir-with-symlink-dir.zip")
+
+	archiver := NewTarGzArchiver(tarFilePath)
+	err := archiver.ArchiveDir("./test-fixtures", ArchiveDirOpts{
+		Excludes: []string{
+			"test-dir/test-dir1/file1.txt",
+			"**/file[2-3].txt",
+			"test-dir-with-symlink-file",
+		},
+		ExcludeSymlinkDirectories: true,
+	})
+
+	if err != nil {
+		t.Errorf("expected no error: %s", err)
+	}
+
+	ensureTarContents(t, tarFilePath, map[string][]byte{
+		"test-dir/test-dir2/file1.txt": []byte("This is file 1"),
+		"test-dir/test-file.txt":       []byte("This is test content"),
 	})
 }
 
