@@ -13,6 +13,9 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 func TestTarArchiver_Content(t *testing.T) {
@@ -257,6 +260,18 @@ func TestTarArchiver_Dir_ExcludeSymlinkDirectories(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected no error: %s", err)
 	}
+
+	ensureTarContents(t, tarFilePath, map[string][]byte{
+		"test-dir/test-dir1/file1.txt":                []byte("This is file 1"),
+		"test-dir/test-dir1/file2.txt":                []byte("This is file 2"),
+		"test-dir/test-dir1/file3.txt":                []byte("This is file 3"),
+		"test-dir/test-dir2/file1.txt":                []byte("This is file 1"),
+		"test-dir/test-dir2/file2.txt":                []byte("This is file 2"),
+		"test-dir/test-dir2/file3.txt":                []byte("This is file 3"),
+		"test-dir/test-file.txt":                      []byte("This is test content"),
+		"test-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
+		"test-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
+	})
 }
 
 func TestTarArchiver_Dir_Exclude_DoNotExcludeSymlinkDirectories(t *testing.T) {
@@ -306,12 +321,23 @@ func TestTarArchiver_Dir_Exclude_ExcludeSymlinkDirectories(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected no error: %s", err)
 	}
+
+	ensureTarContents(t, tarFilePath, map[string][]byte{
+		"test-dir/test-dir1/file2.txt":                []byte("This is file 2"),
+		"test-dir/test-dir1/file3.txt":                []byte("This is file 3"),
+		"test-dir/test-dir2/file1.txt":                []byte("This is file 1"),
+		"test-dir/test-dir2/file2.txt":                []byte("This is file 2"),
+		"test-dir/test-dir2/file3.txt":                []byte("This is file 3"),
+		"test-dir/test-file.txt":                      []byte("This is test content"),
+		"test-dir-with-symlink-file/test-file.txt":    []byte("This is test content"),
+		"test-dir-with-symlink-file/test-symlink.txt": []byte("This is test content"),
+	})
 }
 
-func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte) {
+func ensureTarContents(t *testing.T, tarFilePath string, wants map[string][]byte) {
 	t.Helper()
 
-	f, err := os.Open(tarfilepath)
+	f, err := os.Open(tarFilePath)
 	if err != nil {
 		t.Fatalf("could not open tar.gz file: %s", err)
 	}
@@ -325,7 +351,8 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 
 	tarReader := tar.NewReader(gzf)
 
-	i := 0
+	tarFileNames := make([]string, 0, len(wants))
+
 	for {
 		header, err := tarReader.Next()
 
@@ -338,6 +365,7 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 		}
 
 		name := header.Name
+		tarFileNames = append(tarFileNames, name)
 
 		switch header.Typeflag {
 		case tar.TypeDir:
@@ -359,19 +387,20 @@ func ensureTarContents(t *testing.T, tarfilepath string, wants map[string][]byte
 			if gotContent != wantContent {
 				t.Errorf("mismatched content\ngot\n%s\nwant\n%s", gotContent, wantContent)
 			}
-
 		default:
 			t.Fatalf("Unable to figure out type: %c in file: %s\n",
 				header.Typeflag,
 				name,
 			)
 		}
-
-		i++
 	}
 
-	if len(wants) < i+1 {
-		t.Fatalf("unexpect file count in tar. expect %d", len(wants))
+	wantFileNames := maps.Keys(wants)
+	slices.Sort(wantFileNames)
+	slices.Sort(tarFileNames)
+
+	if len(wants) != len(tarFileNames) {
+		t.Fatalf("unexpect file count in tar\ngot\n%s\nwant\n%s", tarFileNames, wantFileNames)
 	}
 }
 
