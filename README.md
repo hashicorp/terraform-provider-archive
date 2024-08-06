@@ -1,7 +1,7 @@
 # Terraform Provider: Archive
 
 The Archive provider interacts with files.
-It provides a data source that can create zip archives for individual files or
+It provides a data source that can create zip or tar.gz archives for individual files or
 collections of files.
 
 ## Documentation, questions and discussions

@@ -18,7 +18,7 @@ description: |-
 ### Required
 
 - `output_path` (String) The output of the archive file.
-- `type` (String) The type of archive to generate. NOTE: `zip` is supported.
+- `type` (String) The type of archive to generate. NOTE: `zip` and `tar.gz` is supported.
 
 ### Optional
 
