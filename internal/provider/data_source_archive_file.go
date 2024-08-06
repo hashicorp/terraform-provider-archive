@@ -80,7 +80,7 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of archive to generate. NOTE: `zip` is supported.",
+				Description: "The type of archive to generate. NOTE: `zip` and `tar.gz` is supported.",
 				Required:    true,
 			},
 			"source_content": schema.StringAttribute{
