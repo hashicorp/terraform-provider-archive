@@ -1,0 +1,5 @@
+kind: FEATURES
+body: 'data-source/archive_file: Add support for creating `tar.gz` archive files.'
+time: 2024-08-06T14:23:03.200664-04:00
+custom:
+    Issue: "277"

@@ -138,7 +138,7 @@ func TestAccTarGzArchiveFile_SourceConfigConflicting(t *testing.T) {
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []r.TestStep{
 			{
-				Config:      testAccArchiveSourceConfigMissing("tar.gz"),
+				Config:      testAccArchiveSourceConfigConflicting("tar.gz"),
 				ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
 			},
 		},
