@@ -20,7 +20,7 @@ description: |-
 ### Required
 
 - `output_path` (String) The output of the archive file.
-- `type` (String) The type of archive to generate. NOTE: `zip` is supported.
+- `type` (String) The type of archive to generate. NOTE: `zip` and `tar.gz` is supported.
 
 ### Optional
 
@@ -52,4 +52,4 @@ Required:
 - `content` (String) Add this content to the archive with `filename` as the filename.
 - `filename` (String) Set this as the filename when declaring a `source`.
 
-<!-- cache-key: cdktf-0.20.1 input-95a06e551b0d19b38f554034d2c8dfba633bdfbb9731c7b33c6a25291e795092 -->
+<!-- cache-key: cdktf-0.20.1 input-7fe48dc31101cb76c685aed0cf23657f6683fb390d9633ac73c1b06d4d3bedca -->
