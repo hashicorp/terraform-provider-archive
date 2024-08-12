@@ -85,7 +85,7 @@ class MyConvertedCode(TerraformStack):
 ### Required
 
 - `output_path` (String) The output of the archive file.
-- `type` (String) The type of archive to generate. NOTE: `zip` is supported.
+- `type` (String) The type of archive to generate. NOTE: `zip` and `tar.gz` is supported.
 
 ### Optional
 
@@ -117,4 +117,4 @@ Required:
 - `content` (String) Add this content to the archive with `filename` as the filename.
 - `filename` (String) Set this as the filename when declaring a `source`.
 
-<!-- cache-key: cdktf-0.20.1 input-364604600159f2ebda10b8cabbed08fd4644629441f0dcc16aa76d71af693838 -->
+<!-- cache-key: cdktf-0.20.1 input-e028531bc97a019f848b3e37c5dde395799324b83b8cd5ea78649ffc9177c542 -->
