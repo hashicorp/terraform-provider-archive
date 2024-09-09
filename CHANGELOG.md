@@ -1,3 +1,10 @@
+## 2.6.0 (September 09, 2024)
+
+FEATURES:
+
+* data-source/archive_file: Add support for creating `tar.gz` archive files. ([#277](https://github.com/hashicorp/terraform-provider-archive/issues/277))
+* resource/archive_file: Add support for creating `tar.gz` archive files. ([#277](https://github.com/hashicorp/terraform-provider-archive/issues/277))
+
 ## 2.5.0 (July 31, 2024)
 
 ENHANCEMENTS:
