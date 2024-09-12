@@ -46,7 +46,10 @@ func (d *archiveFileDataSource) ConfigValidators(context.Context) []datasource.C
 
 func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Generates an archive from content, a file, or directory of files.",
+		Description: "Generates an archive from content, a file, or directory of files. " +
+			"The archive is built during the terraform plan, so you must persist the archive through to the terraform apply. " +
+			"See the `archive_file` resource for an alternative if you cannot persist the file, " +
+			"such as in a multi-phase CI or build server context.",
 		Blocks: map[string]schema.Block{
 			"source": schema.SetNestedBlock{
 				Description: "Specifies attributes of a single source file to include into the archive. " +
