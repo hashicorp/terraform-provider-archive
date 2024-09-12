@@ -1,0 +1,5 @@
+kind: FEATURES
+body: '* resource/archive_file: Remove `deprecated` status'
+time: 2024-09-12T14:01:36.373922-04:00
+custom:
+    Issue: "218"
