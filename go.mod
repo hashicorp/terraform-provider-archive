@@ -4,8 +4,8 @@ go 1.22.7
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.7.1
-	github.com/hashicorp/terraform-plugin-framework v1.12.0
-	github.com/hashicorp/terraform-plugin-framework-validators v0.14.0
+	github.com/hashicorp/terraform-plugin-framework v1.13.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.15.0
 	github.com/hashicorp/terraform-plugin-go v0.25.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
