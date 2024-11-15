@@ -29,7 +29,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileContentConfig("zip", f),
+				Config: testAccArchiveFileContentConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -46,7 +46,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_ContentConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileContentConfig("zip", f),
+				Config:                   testAccArchiveFileContentConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
@@ -80,7 +80,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileFileConfig("zip", f),
+				Config: testAccArchiveFileFileConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -97,7 +97,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_FileConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileFileConfig("zip", f),
+				Config:                   testAccArchiveFileFileConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
@@ -131,7 +131,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileDirConfig("zip", f),
+				Config: testAccArchiveFileDirConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -148,7 +148,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileDirConfig("zip", f),
+				Config:                   testAccArchiveFileDirConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttr(
@@ -182,7 +182,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileDirExcludesConfig("zip", f),
+				Config: testAccArchiveFileDirExcludesConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					testExtractResourceAttr("data.archive_file.foo", "output_sha", &outputSha),
@@ -191,7 +191,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_DirExcludesConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileDirExcludesConfig("zip", f),
+				Config:                   testAccArchiveFileDirExcludesConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_sha", &outputSha),
@@ -217,7 +217,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 						Source:            "hashicorp/archive",
 					},
 				},
-				Config: testAccArchiveFileMultiSourceConfig("zip", f),
+				Config: testAccArchiveFileMultiSourceConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					testExtractResourceAttr("data.archive_file.foo", "output_sha", &outputSha),
@@ -226,7 +226,7 @@ func TestDataSource_UpgradeFromVersion2_2_0_SourceConfig(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: protoV5ProviderFactories(),
-				Config:                   testAccArchiveFileMultiSourceConfig("zip", f),
+				Config:                   testAccArchiveFileMultiSourceConfig("data", "zip", f),
 				Check: r.ComposeTestCheckFunc(
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_sha", &outputSha),
@@ -248,64 +248,64 @@ func testAccArchiveFileSize(filename string, fileSize *string) r.TestCheckFunc {
 	}
 }
 
-func testAccArchiveFileContentConfig(format, outputPath string) string {
+func testAccArchiveFileContentConfig(schemaType, format, outputPath string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type                    = "%s"
   source_content          = "This is some content"
   source_content_filename = "content.txt"
   output_path             = "%s"
 }
-`, format, filepath.ToSlash(outputPath))
+`, schemaType, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileFileConfig(format, outputPath string) string {
+func testAccArchiveFileFileConfig(schemaType, format, outputPath string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type             = "%s"
   source_file      = "test-fixtures/test-dir/test-file.txt"
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, format, filepath.ToSlash(outputPath))
+`, schemaType, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileDirConfig(format, outputPath string) string {
+func testAccArchiveFileDirConfig(schemaType, format, outputPath string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type             = "%s"
   source_dir       = "test-fixtures/test-dir/test-dir1"
   output_path      = "%s"
   output_file_mode = "0666"
 }
-`, format, filepath.ToSlash(outputPath))
+`, schemaType, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileDirExcludesConfig(format, outputPath string) string {
+func testAccArchiveFileDirExcludesConfig(schemaType, format, outputPath string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type        = "%s"
   source_dir  = "test-fixtures/test-dir/test-dir1"
   excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt"]
   output_path = "%s"
 }
-`, format, filepath.ToSlash(outputPath))
+`, schemaType, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileDirExcludesGlobConfig(format, outputPath string) string {
+func testAccArchiveFileDirExcludesGlobConfig(schemaType, format, outputPath string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type        = "%s"
   source_dir  = "test-fixtures/test-dir/test-dir1"
   excludes    = ["test-fixtures/test-dir/test-dir1/file2.txt", "**/file[2-3].txt"]
   output_path = "%s"
 }
-`, format, filepath.ToSlash(outputPath))
+`, schemaType, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveFileMultiSourceConfig(format, outputPath string) string {
+func testAccArchiveFileMultiSourceConfig(schemaType, format, outputPath string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type = "%s"
   source {
     filename = "content_1.txt"
@@ -317,21 +317,21 @@ data "archive_file" "foo" {
   }
   output_path = "%s"
 }
-`, format, filepath.ToSlash(outputPath))
+`, schemaType, format, filepath.ToSlash(outputPath))
 }
 
-func testAccArchiveSourceConfigMissing(format string) string {
+func testAccArchiveSourceConfigMissing(schemaType, format string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type                    = "%s"
   output_path             = "path"
 }
-`, format)
+`, schemaType, format)
 }
 
-func testAccArchiveSourceConfigConflicting(format string) string {
+func testAccArchiveSourceConfigConflicting(schemaType, format string) string {
 	return fmt.Sprintf(`
-data "archive_file" "foo" {
+%s "archive_file" "foo" {
   type                    = "%s"
   source {
     filename = "content_1.txt"
@@ -340,7 +340,7 @@ data "archive_file" "foo" {
   source_dir  = "test-fixtures/test-dir"
   output_path             = "path"
 }
-`, format)
+`, schemaType, format)
 }
 
 //nolint:unparam

@@ -22,7 +22,7 @@ func TestAccTarGzArchiveFile_Basic(t *testing.T) {
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []r.TestStep{
 			{
-				Config: testAccArchiveFileContentConfig("tar.gz", f),
+				Config: testAccArchiveFileContentConfig("data", "tar.gz", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -47,7 +47,7 @@ func TestAccTarGzArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccArchiveFileFileConfig("tar.gz", f),
+				Config: testAccArchiveFileFileConfig("data", "tar.gz", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -72,7 +72,7 @@ func TestAccTarGzArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccArchiveFileDirConfig("tar.gz", f),
+				Config: testAccArchiveFileDirConfig("data", "tar.gz", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -97,21 +97,21 @@ func TestAccTarGzArchiveFile_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccArchiveFileDirExcludesConfig("tar.gz", f),
+				Config: testAccArchiveFileDirExcludesConfig("data", "tar.gz", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
 			{
-				Config: testAccArchiveFileDirExcludesGlobConfig("tar.gz", f),
+				Config: testAccArchiveFileDirExcludesGlobConfig("data", "tar.gz", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
 				),
 			},
 			{
-				Config: testAccArchiveFileMultiSourceConfig("tar.gz", f),
+				Config: testAccArchiveFileMultiSourceConfig("data", "tar.gz", f),
 				Check: r.ComposeTestCheckFunc(
 					testAccArchiveFileSize(f, &fileSize),
 					r.TestCheckResourceAttrPtr("data.archive_file.foo", "output_size", &fileSize),
@@ -126,7 +126,7 @@ func TestAccTarGzArchiveFile_SourceConfigMissing(t *testing.T) {
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []r.TestStep{
 			{
-				Config:      testAccArchiveSourceConfigMissing("tar.gz"),
+				Config:      testAccArchiveSourceConfigMissing("data", "tar.gz"),
 				ExpectError: regexp.MustCompile(`.*At least one of these attributes must be configured:\n\[source,source_content_filename,source_file,source_dir\]`),
 			},
 		},
@@ -138,7 +138,7 @@ func TestAccTarGzArchiveFile_SourceConfigConflicting(t *testing.T) {
 		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []r.TestStep{
 			{
-				Config:      testAccArchiveSourceConfigConflicting("tar.gz"),
+				Config:      testAccArchiveSourceConfigConflicting("data", "tar.gz"),
 				ExpectError: regexp.MustCompile(`.*Attribute "source_dir" cannot be specified when "source" is specified`),
 			},
 		},

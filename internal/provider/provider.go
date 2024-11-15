@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
@@ -16,6 +17,7 @@ func New() provider.Provider {
 }
 
 var _ provider.Provider = (*archiveProvider)(nil)
+var _ provider.ProviderWithEphemeralResources = (*archiveProvider)(nil)
 
 type archiveProvider struct{}
 
@@ -28,6 +30,12 @@ func (p *archiveProvider) Configure(context.Context, provider.ConfigureRequest, 
 func (p *archiveProvider) Resources(context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewArchiveFileResource,
+	}
+}
+
+func (p *archiveProvider) EphemeralResources(context.Context) []func() ephemeral.EphemeralResource {
+	return []func() ephemeral.EphemeralResource{
+		NewArchiveFileEphemeralResource,
 	}
 }
 
