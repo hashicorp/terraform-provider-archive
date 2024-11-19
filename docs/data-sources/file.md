@@ -2,12 +2,12 @@
 page_title: "archive_file Data Source - terraform-provider-archive"
 subcategory: ""
 description: |-
-  Generates an archive from content, a file, or directory of files.
+  Generates an archive from content, a file, or directory of files. The archive is built during the terraform plan, so you must persist the archive through to the terraform apply. See the archive_file resource for an alternative if you cannot persist the file, such as in a multi-phase CI or build server context.
 ---
 
 # archive_file (Data Source)
 
-Generates an archive from content, a file, or directory of files.
+Generates an archive from content, a file, or directory of files. The archive is built during the terraform plan, so you must persist the archive through to the terraform apply. See the `archive_file` resource for an alternative if you cannot persist the file, such as in a multi-phase CI or build server context.
 
 ## Example Usage
 
