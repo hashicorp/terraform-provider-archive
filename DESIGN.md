@@ -1,7 +1,7 @@
 # Archive Provider Design
 
-The Archive Provider offers focussed functionality specifically geared towards archiving files. Specifically, 
-the provider data source generates zip archives of individual or multiple files. 
+The Archive Provider offers focussed functionality specifically geared towards archiving files. The provider generates
+zip archives of individual or multiple files.
 
 Below we have a collection of _Goals_ and _Patterns_: they represent the guiding principles applied during the
 development of this provider. Some are in place, others are ongoing processes, others are still just inspirational.
@@ -9,7 +9,7 @@ development of this provider. Some are in place, others are ongoing processes, o
 ## Goals
 
 * [_Stability over features_](.github/CONTRIBUTING.md)
-* Provide data source for generating zip archives.
+* Provide a mechanism for generating zip archives.
 
 General to development:
 
