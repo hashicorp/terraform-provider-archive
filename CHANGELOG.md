@@ -1,3 +1,9 @@
+## 2.7.0 (December 05, 2024)
+
+FEATURES:
+
+* resource/archive_file: Remove `deprecated` status ([#218](https://github.com/hashicorp/terraform-provider-archive/issues/218))
+
 ## 2.6.0 (September 09, 2024)
 
 FEATURES:
