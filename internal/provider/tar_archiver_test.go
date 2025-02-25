@@ -45,7 +45,7 @@ func TestTarArchiver_File(t *testing.T) {
 }
 
 func TestTarArchiver_FileMode(t *testing.T) {
-	file, err := os.CreateTemp("", "archive-file-mode-test.tar.gz")
+	file, err := os.CreateTemp(t.TempDir(), "archive-file-mode-test.tar.gz")
 	if err != nil {
 		t.Fatal(err)
 	}
