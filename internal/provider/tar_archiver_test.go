@@ -44,8 +44,9 @@ func TestTarArchiver_File(t *testing.T) {
 	})
 }
 
+//nolint:usetesting
 func TestTarArchiver_FileMode(t *testing.T) {
-	file, err := os.CreateTemp(t.TempDir(), "archive-file-mode-test.tar.gz")
+	file, err := os.CreateTemp("", "archive-file-mode-test.tar.gz")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +70,7 @@ func TestTarArchiver_FileMode(t *testing.T) {
 
 func TestTarArchiver_FileModified(t *testing.T) {
 	var (
-		tarFilePath = filepath.Join(t.TempDir(), "archive-file-modified.tar.gz")
+		tarFilePath = filepath.Join("", "archive-file-modified.tar.gz")
 		toTarPath   = filepath.FromSlash("./test-fixtures/test-dir/test-file.txt")
 	)
 

@@ -40,8 +40,9 @@ func TestZipArchiver_File(t *testing.T) {
 	})
 }
 
+//nolint:usetesting
 func TestZipArchiver_FileMode(t *testing.T) {
-	file, err := os.CreateTemp(t.TempDir(), "archive-file-mode-test.zip")
+	file, err := os.CreateTemp("", "archive-file-mode-test.zip")
 	if err != nil {
 		t.Fatal(err)
 	}
