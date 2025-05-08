@@ -1,3 +1,9 @@
+## 2.7.1 (May 08, 2025)
+
+NOTES:
+
+* all: This release is being used to test new build and release actions. ([#427](https://github.com/hashicorp/terraform-provider-archive/issues/427))
+
 ## 2.7.0 (December 05, 2024)
 
 FEATURES:
