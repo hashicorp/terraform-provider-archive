@@ -1,4 +1,10 @@
-## 2.7.1 (May 08, 2025)
+## 2.7.1 (May 12, 2025)
+
+NOTES:
+
+* Update dependencies: ([#425](https://github.com/hashicorp/terraform-provider-archive/pull/425))
+
+## 2.7.1-alpha1 (May 08, 2025)
 
 NOTES:
 
