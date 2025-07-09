@@ -44,8 +44,7 @@ func (d *archiveFileResource) ConfigValidators(context.Context) []resource.Confi
 
 func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:        `**NOTE**: This resource is deprecated, use data source instead.`,
-		DeprecationMessage: `**NOTE**: This resource is deprecated, use data source instead.`,
+		Description: "Generates an archive from content, a file, or directory of files.",
 		Blocks: map[string]schema.Block{
 			"source": schema.SetNestedBlock{
 				Description: "Specifies attributes of a single source file to include into the archive. " +

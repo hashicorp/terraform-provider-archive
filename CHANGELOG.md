@@ -1,3 +1,28 @@
+## 2.7.1 (May 12, 2025)
+
+NOTES:
+
+* Update dependencies: ([#425](https://github.com/hashicorp/terraform-provider-archive/pull/425))
+
+## 2.7.1-alpha1 (May 08, 2025)
+
+NOTES:
+
+* all: This release is being used to test new build and release actions. ([#427](https://github.com/hashicorp/terraform-provider-archive/issues/427))
+
+## 2.7.0 (December 05, 2024)
+
+FEATURES:
+
+* resource/archive_file: Remove `deprecated` status ([#218](https://github.com/hashicorp/terraform-provider-archive/issues/218))
+
+## 2.6.0 (September 09, 2024)
+
+FEATURES:
+
+* data-source/archive_file: Add support for creating `tar.gz` archive files. ([#277](https://github.com/hashicorp/terraform-provider-archive/issues/277))
+* resource/archive_file: Add support for creating `tar.gz` archive files. ([#277](https://github.com/hashicorp/terraform-provider-archive/issues/277))
+
 ## 2.5.0 (July 31, 2024)
 
 ENHANCEMENTS:
