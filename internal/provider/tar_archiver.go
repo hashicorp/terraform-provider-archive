@@ -141,10 +141,6 @@ func (a *TarArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 			return nil
 		}
 
-		if err != nil {
-			return err
-		}
-
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
 			realPath, err := filepath.EvalSymlinks(path)
 			if err != nil {
@@ -160,7 +156,10 @@ func (a *TarArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 				if !opts.ExcludeSymlinkDirectories {
 					return filepath.Walk(realPath, a.createWalkFunc(archivePath, realPath, opts, isArchiveEmpty, dryRun))
 				} else {
-					return filepath.SkipDir
+					// Don't return filepath.SkipDir here, as the item at the path being processed is a symlink
+					// and according to https://pkg.go.dev/path/filepath#WalkFunc, returning filepath.SkipDir from WalkFunc
+					// will skip the parent directory containing the symlink, which is not the desired behavior.
+					return nil
 				}
 			}
 
