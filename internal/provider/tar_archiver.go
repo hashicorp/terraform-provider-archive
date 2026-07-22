@@ -225,6 +225,16 @@ func (a *TarArchiver) open() error {
 		return err
 	}
 
+	if a.outputFileMode != "" {
+		fileMode, err := parseFileMode(a.outputFileMode)
+		if err != nil {
+			return fmt.Errorf("error parsing output_file_mode value: %s", err)
+		}
+		if err := a.fileWriter.Chmod(fileMode); err != nil {
+			return fmt.Errorf("error setting file mode on archive: %s", err)
+		}
+	}
+
 	switch a.compression {
 	case TarCompressionGz:
 		a.compressionWriter = gzip.NewWriter(a.fileWriter)
@@ -269,13 +279,13 @@ func (a *TarArchiver) addFile(filePath string, header *tar.Header) error {
 	}
 	defer file.Close()
 
-	if a.outputFileMode != "" {
-		fileMode, err := strconv.ParseInt(a.outputFileMode, 0, 32)
-		if err != nil {
-			return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
-		}
-		header.Mode = fileMode
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("could not get file info for '%s', got error '%w'", filePath, err)
 	}
+
+	header.Mode = int64(fileInfo.Mode())
+	header.ModTime = fileInfo.ModTime()
 
 	err = a.tarWriter.WriteHeader(header)
 	if err != nil {
@@ -295,12 +305,8 @@ func (a *TarArchiver) addContent(content []byte, header *tar.Header) error {
 		return errors.New("tar.Header is nil")
 	}
 
-	if a.outputFileMode != "" {
-		filemode, err := strconv.ParseInt(a.outputFileMode, 0, 32)
-		if err != nil {
-			return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
-		}
-		header.Mode = filemode
+	if header.Mode == 0 {
+		header.Mode = int64(0644)
 	}
 
 	if err := a.tarWriter.WriteHeader(header); err != nil {
@@ -313,4 +319,13 @@ func (a *TarArchiver) addContent(content []byte, header *tar.Header) error {
 	}
 
 	return nil
+}
+
+func parseFileMode(modeStr string) (os.FileMode, error) {
+	modeUint, err := strconv.ParseUint(modeStr, 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf("invalid file mode '%s': %w", modeStr, err)
+	}
+
+	return os.FileMode(modeUint), nil
 }
