@@ -18,7 +18,7 @@ func TestExtractFileFromZip(t *testing.T) {
 	zipPath := filepath.Join(t.TempDir(), "extract_test.zip")
 	archiver := NewZipArchiver(zipPath)
 	if err := archiver.ArchiveMultiple(map[string][]byte{
-		"hello.txt": []byte("hello world"),
+		"hello.txt":          []byte("hello world"),
 		"sub/dir/nested.txt": []byte("nested"),
 	}); err != nil {
 		t.Fatal(err)
