@@ -200,7 +200,8 @@ func archive(ctx context.Context, model fileModel) error {
 	archiveType := model.Type.ValueString()
 	outputPath := model.OutputPath.ValueString()
 
-	archiver := getArchiver(archiveType, outputPath)
+	tmpPath := outputPath + ".tmp"
+	archiver := getArchiver(archiveType, tmpPath)
 	if archiver == nil {
 		return fmt.Errorf("archive type not supported: %s", archiveType)
 	}
@@ -257,6 +258,10 @@ func archive(ctx context.Context, model fileModel) error {
 		if err := archiver.ArchiveMultiple(content); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
+	}
+
+	if err := os.Rename(tmpPath, outputPath); err != nil {
+		return fmt.Errorf("error moving temporary archive to output path: %s", err)
 	}
 
 	return nil
