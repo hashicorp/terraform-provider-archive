@@ -52,9 +52,8 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 			"such as in a multi-phase CI or build server context.",
 		Blocks: map[string]schema.Block{
 			"source": schema.SetNestedBlock{
-				Description: "Specifies attributes of a single source file to include into the archive. " +
-					"One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, " +
-					"or `source_dir` must be specified.",
+				Description: "Specifies additional source files to include into the archive alongside files " +
+					"from `source_file` or `source_dir`.",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"content": schema.StringAttribute{
@@ -66,14 +65,6 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 							Required:    true,
 						},
 					},
-				},
-				Validators: []validator.Set{
-					setvalidator.ConflictsWith(
-						fwpath.MatchRoot("source_file"),
-						fwpath.MatchRoot("source_dir"),
-						fwpath.MatchRoot("source_content"),
-						fwpath.MatchRoot("source_content_filename"),
-					),
 				},
 			},
 		},
@@ -210,8 +201,7 @@ func archive(ctx context.Context, model fileModel) error {
 		archiver.SetOutputFileMode(outputFileMode)
 	}
 
-	switch {
-	case !model.SourceDir.IsNull():
+	if !model.SourceDir.IsNull() {
 		excludeList := make([]string, len(model.Excludes.Elements()))
 
 		if !model.Excludes.IsNull() {
@@ -234,17 +224,23 @@ func archive(ctx context.Context, model fileModel) error {
 		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), opts); err != nil {
 			return fmt.Errorf("error archiving directory: %s", err)
 		}
-	case !model.SourceFile.IsNull():
+	}
+
+	if !model.SourceFile.IsNull() {
 		if err := archiver.ArchiveFile(model.SourceFile.ValueString()); err != nil {
 			return fmt.Errorf("error archiving file: %s", err)
 		}
-	case !model.SourceContentFilename.IsNull():
+	}
+
+	if !model.SourceContentFilename.IsNull() {
 		content := model.SourceContent.ValueString()
 
 		if err := archiver.ArchiveContent([]byte(content), model.SourceContentFilename.ValueString()); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
-	case !model.Source.IsNull():
+	}
+
+	if !model.Source.IsNull() {
 		content := make(map[string][]byte)
 
 		var elements []sourceModel
