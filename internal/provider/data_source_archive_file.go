@@ -201,6 +201,28 @@ func archive(ctx context.Context, model fileModel) error {
 		archiver.SetOutputFileMode(outputFileMode)
 	}
 
+	hasMultipleSources := 0
+	if !model.SourceDir.IsNull() {
+		hasMultipleSources++
+	}
+	if !model.SourceFile.IsNull() {
+		hasMultipleSources++
+	}
+	if !model.SourceContentFilename.IsNull() {
+		hasMultipleSources++
+	}
+	if !model.Source.IsNull() {
+		hasMultipleSources++
+	}
+
+	useExternalOpenClose := hasMultipleSources > 1
+	if useExternalOpenClose {
+		if err := archiver.Open(); err != nil {
+			return fmt.Errorf("error opening archive: %s", err)
+		}
+		defer archiver.Close()
+	}
+
 	if !model.SourceDir.IsNull() {
 		excludeList := make([]string, len(model.Excludes.Elements()))
 

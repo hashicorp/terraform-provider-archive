@@ -14,6 +14,8 @@ type ArchiveDirOpts struct {
 }
 
 type Archiver interface {
+	Open() error
+	Close()
 	ArchiveContent(content []byte, infilename string) error
 	ArchiveFile(infilename string) error
 	ArchiveDir(indirname string, opts ArchiveDirOpts) error
