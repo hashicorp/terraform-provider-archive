@@ -17,8 +17,8 @@ import (
 
 // minZipTime is the earliest timestamp supported by the ZIP format (January 1, 1980).
 // Using this instead of time.Time{} ensures compatibility with all ZIP readers,
-// including Python's zipfile module.
-var minZipTime = time.Date(1980, time.January, 1, 0, 0, 0, 0, time.UTC)
+// including Python's zipfile module. Use local time as SetModTime converts to local.
+var minZipTime = time.Date(1980, time.January, 1, 0, 0, 0, 0, time.Local)
 
 type ZipArchiver struct {
 	filepath       string
@@ -39,7 +39,14 @@ func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
 	}
 	defer a.close()
 
-	f, err := a.writer.Create(filepath.ToSlash(infilename))
+	fh := &zip.FileHeader{
+		Name:   filepath.ToSlash(infilename),
+		Method: zip.Deflate,
+	}
+	//nolint:staticcheck
+	fh.SetModTime(minZipTime)
+
+	f, err := a.writer.CreateHeader(fh)
 	if err != nil {
 		return err
 	}
@@ -244,7 +251,14 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	sort.Strings(keys)
 
 	for _, filename := range keys {
-		f, err := a.writer.Create(filepath.ToSlash(filename))
+		fh := &zip.FileHeader{
+			Name:   filepath.ToSlash(filename),
+			Method: zip.Deflate,
+		}
+		//nolint:staticcheck
+		fh.SetModTime(minZipTime)
+
+		f, err := a.writer.CreateHeader(fh)
 		if err != nil {
 			return err
 		}
