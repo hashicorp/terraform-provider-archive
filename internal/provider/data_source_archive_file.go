@@ -58,8 +58,14 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"content": schema.StringAttribute{
-							Description: "Add this content to the archive with `filename` as the filename.",
-							Required:    true,
+							Description: "Add this content to the archive with `filename` as the filename. " +
+								"One and only one of `content` or `content_base64` must be specified.",
+							Optional: true,
+						},
+						"content_base64": schema.StringAttribute{
+							Description: "Add this base64-encoded content to the archive with `filename` as the filename. " +
+								"One and only one of `content` or `content_base64` must be specified.",
+							Optional: true,
 						},
 						"filename": schema.StringAttribute{
 							Description: "Set this as the filename when declaring a `source`.",
@@ -251,7 +257,20 @@ func archive(ctx context.Context, model fileModel) error {
 		model.Source.ElementsAs(ctx, &elements, false)
 
 		for _, elem := range elements {
-			content[elem.Filename.ValueString()] = []byte(elem.Content.ValueString())
+			filename := elem.Filename.ValueString()
+
+			switch {
+			case !elem.Content.IsNull():
+				content[filename] = []byte(elem.Content.ValueString())
+			case !elem.ContentBase64.IsNull():
+				decoded, err := base64.StdEncoding.DecodeString(elem.ContentBase64.ValueString())
+				if err != nil {
+					return fmt.Errorf("error decoding base64 content for %s: %s", filename, err)
+				}
+				content[filename] = decoded
+			default:
+				return fmt.Errorf("one of `content` or `content_base64` must be specified for source entry %s", filename)
+			}
 		}
 
 		if err := archiver.ArchiveMultiple(content); err != nil {
@@ -350,8 +369,9 @@ type fileModel struct {
 }
 
 type sourceModel struct {
-	Content  types.String `tfsdk:"content"`
-	Filename types.String `tfsdk:"filename"`
+	Content       types.String `tfsdk:"content"`
+	ContentBase64 types.String `tfsdk:"content_base64"`
+	Filename      types.String `tfsdk:"filename"`
 }
 
 type fileChecksums struct {
