@@ -1,0 +1,5 @@
+kind: FEATURES
+body: 'data-source/archive_file: Add file_mode attribute to source block for per-file permission control'
+time: 2026-07-27T19:41:13.993645+02:00
+custom:
+    Issue: "59"

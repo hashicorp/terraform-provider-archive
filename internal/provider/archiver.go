@@ -13,11 +13,17 @@ type ArchiveDirOpts struct {
 	ExcludeSymlinkDirectories bool
 }
 
+type ArchiveFileEntry struct {
+	Content  []byte
+	FileMode string
+}
+
 type Archiver interface {
 	ArchiveContent(content []byte, infilename string) error
 	ArchiveFile(infilename string) error
 	ArchiveDir(indirname string, opts ArchiveDirOpts) error
 	ArchiveMultiple(content map[string][]byte) error
+	ArchiveMultipleEntries(entries map[string]ArchiveFileEntry) error
 	SetOutputFileMode(outputFileMode string)
 }
 
