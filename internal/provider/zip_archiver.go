@@ -15,6 +15,11 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
+// minZipTime is the earliest timestamp supported by the ZIP format (January 1, 1980).
+// Using this instead of time.Time{} ensures compatibility with all ZIP readers,
+// including Python's zipfile module.
+var minZipTime = time.Date(1980, time.January, 1, 0, 0, 0, 0, time.UTC)
+
 type ZipArchiver struct {
 	filepath       string
 	outputFileMode string // Default value "" means unset
@@ -66,7 +71,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	fh.Name = filepath.ToSlash(fi.Name())
 	fh.Method = zip.Deflate
 	//nolint:staticcheck // This is required as fh.SetModTime has been deprecated since Go 1.10 and using fh.Modified alone isn't enough when using a zero value
-	fh.SetModTime(time.Time{})
+	fh.SetModTime(minZipTime)
 
 	if a.outputFileMode != "" {
 		filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
@@ -200,7 +205,7 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 		fh.Method = zip.Deflate
 		// fh.Modified alone isn't enough when using a zero value
 		//nolint:staticcheck
-		fh.SetModTime(time.Time{})
+		fh.SetModTime(minZipTime)
 
 		if a.outputFileMode != "" {
 			filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
