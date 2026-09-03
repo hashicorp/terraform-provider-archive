@@ -6,6 +6,7 @@ package archive
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -48,11 +49,11 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 	if err != nil {
 		return err
 	}
-
-	content, err := os.ReadFile(infilename)
+	infile, err := os.Open(infilename)
 	if err != nil {
 		return err
 	}
+	defer infile.Close()
 
 	if err := a.open(); err != nil {
 		return err
@@ -81,7 +82,7 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 		return fmt.Errorf("error creating file inside archive: %s", err)
 	}
 
-	_, err = f.Write(content)
+	_, err = io.Copy(f, infile)
 	return err
 }
 
@@ -214,11 +215,13 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 		if err != nil {
 			return fmt.Errorf("error creating file inside archive: %s", err)
 		}
-		content, err := os.ReadFile(path)
+		infile, err := os.Open(path)
 		if err != nil {
 			return fmt.Errorf("error reading file for archival: %s", err)
 		}
-		_, err = f.Write(content)
+		defer infile.Close()
+
+		_, err = io.Copy(f, infile)
 		return err
 	}
 }
