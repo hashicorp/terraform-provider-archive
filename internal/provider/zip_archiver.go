@@ -109,6 +109,11 @@ func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 		return err
 	}
 
+	indirname, err = filepath.EvalSymlinks(indirname)
+	if err != nil {
+		return fmt.Errorf("error resolving directory path: %s", err)
+	}
+
 	// ensure exclusions are OS compatible paths
 	for i := range opts.Excludes {
 		opts.Excludes[i] = filepath.FromSlash(opts.Excludes[i])
