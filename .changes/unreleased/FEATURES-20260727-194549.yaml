@@ -1,0 +1,5 @@
+kind: FEATURES
+body: 'data-source/archive_file: Add include_parent_dir attribute to control whether parent directory is preserved as a prefix in the archive'
+time: 2026-07-27T19:45:49.519276+02:00
+custom:
+    Issue: "398"
