@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"time"
 )
 
 type TarCompressionType int
@@ -51,7 +50,7 @@ func (a *TarArchiver) ArchiveContent(content []byte, infilename string) error {
 	return a.addContent(content, &tar.Header{
 		Name:    infilename,
 		Size:    int64(len(content)),
-		ModTime: time.Time{},
+		ModTime: minZipTime,
 	})
 }
 
@@ -70,7 +69,7 @@ func (a *TarArchiver) ArchiveFile(infilename string) error {
 		Name:    filepath.ToSlash(fi.Name()),
 		Size:    fi.Size(),
 		Mode:    int64(fi.Mode()),
-		ModTime: time.Time{},
+		ModTime: minZipTime,
 	}
 
 	if err := a.addFile(infilename, header); err != nil {
@@ -177,7 +176,7 @@ func (a *TarArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 			Name:    filepath.ToSlash(archivePath),
 			Size:    info.Size(),
 			Mode:    int64(info.Mode()),
-			ModTime: time.Time{},
+			ModTime: minZipTime,
 		}
 
 		return a.addFile(path, header)
@@ -203,7 +202,7 @@ func (a *TarArchiver) ArchiveMultiple(content map[string][]byte) error {
 		header := &tar.Header{
 			Name:    filepath.ToSlash(filename),
 			Size:    int64(len(content[filename])),
-			ModTime: time.Time{},
+			ModTime: minZipTime,
 		}
 
 		if err := a.addContent(content[filename], header); err != nil {
