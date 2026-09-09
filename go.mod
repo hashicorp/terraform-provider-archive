@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-archive
 
-go 1.25.8
+go 1.26.8
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.10.0
