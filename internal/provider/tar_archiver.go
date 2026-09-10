@@ -301,6 +301,8 @@ func (a *TarArchiver) addContent(content []byte, header *tar.Header) error {
 			return fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
 		}
 		header.Mode = filemode
+	} else if header.Mode == 0 {
+		header.Mode = 0644
 	}
 
 	if err := a.tarWriter.WriteHeader(header); err != nil {
