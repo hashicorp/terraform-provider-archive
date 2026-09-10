@@ -6,13 +6,36 @@ package archive
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+func TestArchiveTempFileCleanup(t *testing.T) {
+	outputPath := filepath.Join(t.TempDir(), "test.zip")
+	model := fileModel{
+		Type:                  types.StringValue("zip"),
+		OutputPath:            types.StringValue(outputPath),
+		SourceContent:         types.StringValue("hello"),
+		SourceContentFilename: types.StringValue("test.txt"),
+	}
+	if err := archive(context.Background(), model); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	if _, err := os.Stat(outputPath + ".tmp"); !os.IsNotExist(err) {
+		t.Fatal("expected .tmp file to be removed after archive")
+	}
+	if _, err := os.Stat(outputPath); err != nil {
+		t.Fatalf("expected output file to exist: %s", err)
+	}
+}
 
 func TestZipArchiver_Content(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
