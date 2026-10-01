@@ -1,0 +1,5 @@
+kind: ENHANCEMENTS
+body: 'data/archive_file: Stream source files via os.Open + io.Copy in zip archiver to reduce memory usage'
+time: 2026-04-26T18:03:40.786955+02:00
+custom:
+    Issue: "500"
