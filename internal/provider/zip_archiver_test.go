@@ -150,6 +150,32 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	})
 }
 
+func TestZipArchiver_Dir_WithSymlinkedParent(t *testing.T) {
+	td := t.TempDir()
+	realDir := filepath.Join(td, "real", "src")
+	if err := os.MkdirAll(realDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(realDir, "file.txt"), []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	linkDir := filepath.Join(td, "link")
+	if err := os.Symlink(filepath.Join(td, "real"), linkDir); err != nil {
+		t.Fatal(err)
+	}
+
+	zipFilePath := filepath.Join(td, "out.zip")
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir(filepath.Join(linkDir, "../link/src"), ArchiveDirOpts{}); err != nil {
+		t.Fatalf("unexpected error with symlinked parent path: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"file.txt": []byte("content"),
+	})
+}
+
 func TestZipArchiver_Multiple(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 

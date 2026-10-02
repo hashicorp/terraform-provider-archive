@@ -1,0 +1,5 @@
+kind: BUG FIXES
+body: 'data-source/archive_file: Fix panic when source_dir contains symlinks or relative path traversals'
+time: 2026-07-27T19:34:01.048933+02:00
+custom:
+    Issue: "5"
