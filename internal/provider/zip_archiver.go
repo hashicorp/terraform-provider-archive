@@ -6,6 +6,7 @@ package archive
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -224,26 +225,57 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 }
 
 func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
+	entries := make(map[string]ArchiveFileEntry, len(content))
+	for k, v := range content {
+		entries[k] = ArchiveFileEntry{Content: v}
+	}
+	return a.ArchiveMultipleEntries(entries)
+}
+
+func (a *ZipArchiver) ArchiveMultipleEntries(entries map[string]ArchiveFileEntry) error {
 	if err := a.open(); err != nil {
 		return err
 	}
 	defer a.close()
 
 	// Ensure files are processed in the same order so hashes don't change
-	keys := make([]string, len(content))
+	keys := make([]string, len(entries))
 	i := 0
-	for k := range content {
+	for k := range entries {
 		keys[i] = k
 		i++
 	}
 	sort.Strings(keys)
 
 	for _, filename := range keys {
-		f, err := a.writer.Create(filepath.ToSlash(filename))
+		entry := entries[filename]
+		content := entry.Content
+		fileMode := entry.FileMode
+
+		var f io.Writer
+		var err error
+
+		if fileMode != "" {
+			filemode, parseErr := strconv.ParseUint(fileMode, 0, 32)
+			if parseErr != nil {
+				return fmt.Errorf("error parsing file_mode value: %s", fileMode)
+			}
+			fh := &zip.FileHeader{
+				Name:   filepath.ToSlash(filename),
+				Method: zip.Deflate,
+			}
+			fh.SetMode(os.FileMode(filemode))
+			//nolint:staticcheck
+			fh.SetModTime(time.Time{})
+			f, err = a.writer.CreateHeader(fh)
+		} else {
+			f, err = a.writer.Create(filepath.ToSlash(filename))
+		}
+
 		if err != nil {
 			return err
 		}
-		_, err = f.Write(content[filename])
+		_, err = f.Write(content)
 		if err != nil {
 			return err
 		}
