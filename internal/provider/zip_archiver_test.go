@@ -14,6 +14,28 @@ import (
 	"time"
 )
 
+func TestZipArchiver_ModTimeAfter1980(t *testing.T) {
+	zipPath := filepath.Join(t.TempDir(), "modtime.zip")
+
+	archiver := NewZipArchiver(zipPath)
+	if err := archiver.ArchiveContent([]byte("content"), "f.txt"); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		t.Fatalf("could not open zip: %s", err)
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		modTime := f.ModTime()
+		if modTime.Year() < 1980 {
+			t.Fatalf("file %s has modtime year %d, expected >= 1980", f.Name, modTime.Year())
+		}
+	}
+}
+
 func TestZipArchiver_Content(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 
