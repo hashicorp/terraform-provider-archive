@@ -1,0 +1,5 @@
+kind: NOTES
+body: 'data-source/archive_file: Document that data source does not detect source content changes; use resource variant'
+time: 2026-07-27T19:49:48.65988+02:00
+custom:
+    Issue: "161"
