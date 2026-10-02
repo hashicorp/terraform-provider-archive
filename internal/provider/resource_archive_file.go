@@ -5,6 +5,7 @@ package archive
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path"
@@ -217,6 +218,15 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Base64 Encoded SHA512 checksum of output file",
 				Computed:    true,
 			},
+			"output_content_filename": schema.StringAttribute{
+				Description: "Filename within the archive to extract. Requires `output_content` to be set.",
+				Optional:    true,
+			},
+			"output_content": schema.StringAttribute{
+				Description: "Base64-encoded contents of the file specified by `output_content_filename`. " +
+					"Use the Terraform `base64decode` function to decode.",
+				Computed: true,
+			},
 		},
 	}
 }
@@ -301,6 +311,19 @@ func updateModel(ctx context.Context, model *fileModel) diag.Diagnostics {
 	model.OutputBase64Sha512 = types.StringValue(checksums.sha512Base64)
 
 	model.ID = types.StringValue(checksums.sha1Hex)
+
+	if !model.OutputContentFilename.IsNull() {
+		filename := model.OutputContentFilename.ValueString()
+		content, err := extractFileFromZip(outputPath, filename)
+		if err != nil {
+			diags.AddError(
+				"Content extraction error",
+				fmt.Sprintf("error extracting '%s': %s", filename, err),
+			)
+			return diags
+		}
+		model.OutputContent = types.StringValue(base64.StdEncoding.EncodeToString(content))
+	}
 
 	return diags
 }

@@ -1,0 +1,5 @@
+kind: FEATURES
+body: 'data-source/archive_file: Add output_content_filename and output_content attributes for reading file contents from archives'
+time: 2026-07-27T19:47:21.215883+02:00
+custom:
+    Issue: "27"
