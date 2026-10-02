@@ -154,6 +154,12 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				Description: "Boolean flag indicating whether symbolically linked directories should be excluded during " +
 					"the creation of the archive. Defaults to `false`.",
 			},
+			"include_parent_dir": schema.BoolAttribute{
+				Optional: true,
+				Description: "Boolean flag indicating whether the parent directory should be included in the archive " +
+					"as a prefix. For example, `source_dir = \"./parent_folder\"` would produce entries like " +
+					"`parent_folder/file.txt` instead of `file.txt`. Defaults to `false`.",
+			},
 			"output_path": schema.StringAttribute{
 				Description: "The output of the archive file.",
 				Required:    true,
@@ -229,6 +235,10 @@ func archive(ctx context.Context, model fileModel) error {
 
 		if !model.ExcludeSymlinkDirectories.IsNull() {
 			opts.ExcludeSymlinkDirectories = model.ExcludeSymlinkDirectories.ValueBool()
+		}
+
+		if !model.IncludeParentDir.IsNull() {
+			opts.IncludeParentDir = model.IncludeParentDir.ValueBool()
 		}
 
 		if err := archiver.ArchiveDir(model.SourceDir.ValueString(), opts); err != nil {
@@ -338,6 +348,7 @@ type fileModel struct {
 	SourceDir                 types.String `tfsdk:"source_dir"`
 	Excludes                  types.Set    `tfsdk:"excludes"`
 	ExcludeSymlinkDirectories types.Bool   `tfsdk:"exclude_symlink_directories"`
+	IncludeParentDir          types.Bool   `tfsdk:"include_parent_dir"`
 	OutputPath                types.String `tfsdk:"output_path"`
 	OutputSize                types.Int64  `tfsdk:"output_size"`
 	OutputFileMode            types.String `tfsdk:"output_file_mode"`
