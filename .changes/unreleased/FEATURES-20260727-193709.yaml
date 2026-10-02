@@ -1,0 +1,5 @@
+kind: FEATURES
+body: 'data-source/archive_file: Add content_base64 attribute to source block for binary content archival'
+time: 2026-07-27T19:37:09.12931+02:00
+custom:
+    Issue: "149"
