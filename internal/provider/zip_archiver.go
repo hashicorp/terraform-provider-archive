@@ -29,10 +29,12 @@ func NewZipArchiver(filepath string) Archiver {
 }
 
 func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
-	if err := a.open(); err != nil {
-		return err
+	if a.writer == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	f, err := a.writer.Create(filepath.ToSlash(infilename))
 	if err != nil {
@@ -54,10 +56,12 @@ func (a *ZipArchiver) ArchiveFile(infilename string) error {
 		return err
 	}
 
-	if err := a.open(); err != nil {
-		return err
+	if a.writer == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	fh, err := zip.FileInfoHeader(fi)
 	if err != nil {
@@ -127,10 +131,12 @@ func (a *ZipArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 		return fmt.Errorf("archive has not been created as it would be empty")
 	}
 
-	if err := a.open(); err != nil {
-		return err
+	if a.writer == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	return filepath.Walk(indirname, a.createWalkFunc("", indirname, opts, &isArchiveEmpty, false))
 }
@@ -224,10 +230,12 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 }
 
 func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
-	if err := a.open(); err != nil {
-		return err
+	if a.writer == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	// Ensure files are processed in the same order so hashes don't change
 	keys := make([]string, len(content))
@@ -249,6 +257,17 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 		}
 	}
 	return nil
+}
+
+func (a *ZipArchiver) Open() error {
+	if a.writer != nil {
+		return nil
+	}
+	return a.open()
+}
+
+func (a *ZipArchiver) Close() {
+	a.close()
 }
 
 func (a *ZipArchiver) SetOutputFileMode(outputFileMode string) {

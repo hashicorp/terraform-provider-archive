@@ -47,9 +47,8 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 		Description: "Generates an archive from content, a file, or directory of files.",
 		Blocks: map[string]schema.Block{
 			"source": schema.SetNestedBlock{
-				Description: "Specifies attributes of a single source file to include into the archive. " +
-					"One and only one of `source`, `source_content_filename` (with `source_content`), `source_file`, " +
-					"or `source_dir` must be specified.",
+				Description: "Specifies additional source files to include into the archive alongside files " +
+					"from `source_file` or `source_dir`.",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"content": schema.StringAttribute{
@@ -67,14 +66,6 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 						},
 					},
-				},
-				Validators: []validator.Set{
-					setvalidator.ConflictsWith(
-						fwpath.MatchRoot("source_file"),
-						fwpath.MatchRoot("source_dir"),
-						fwpath.MatchRoot("source_content"),
-						fwpath.MatchRoot("source_content_filename"),
-					),
 				},
 			},
 		},

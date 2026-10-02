@@ -14,6 +14,38 @@ import (
 	"time"
 )
 
+func TestZipArchiver_DirAndMultipleSources(t *testing.T) {
+	td := t.TempDir()
+	srcDir := filepath.Join(td, "src")
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "dir_file.txt"), []byte("from dir"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	zipPath := filepath.Join(td, "combined.zip")
+
+	archiver := NewZipArchiver(zipPath)
+	if err := archiver.Open(); err != nil {
+		t.Fatalf("unexpected error opening archiver: %s", err)
+	}
+
+	if err := archiver.ArchiveDir(srcDir, ArchiveDirOpts{}); err != nil {
+		t.Fatalf("unexpected error archiving dir: %s", err)
+	}
+	if err := archiver.ArchiveMultiple(map[string][]byte{
+		"extra.txt": []byte("from source block"),
+	}); err != nil {
+		t.Fatalf("unexpected error archiving extra: %s", err)
+	}
+	archiver.Close()
+
+	ensureContents(t, zipPath, map[string][]byte{
+		"dir_file.txt": []byte("from dir"),
+		"extra.txt":    []byte("from source block"),
+	})
+}
+
 func TestZipArchiver_Content(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 
