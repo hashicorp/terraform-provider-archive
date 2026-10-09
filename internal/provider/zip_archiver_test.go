@@ -14,6 +14,18 @@ import (
 	"time"
 )
 
+func TestZipArchiver_Content_WithOutputFileMode(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-content-filemode.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	archiver.SetOutputFileMode("0700")
+	if err := archiver.ArchiveContent([]byte("content"), "file.txt"); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureFileMode(t, zipFilePath, "0700")
+}
+
 func TestZipArchiver_Content(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 

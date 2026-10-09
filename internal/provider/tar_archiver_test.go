@@ -44,6 +44,17 @@ func TestTarArchiver_File(t *testing.T) {
 	})
 }
 
+func TestTarArchiver_Content_DefaultMode(t *testing.T) {
+	tarFilePath := filepath.Join(t.TempDir(), "archive-content-default-mode.tar.gz")
+
+	archiver := NewTarGzArchiver(tarFilePath)
+	if err := archiver.ArchiveContent([]byte("content"), "file.txt"); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureTarFileMode(t, tarFilePath, "0644")
+}
+
 //nolint:usetesting
 func TestTarArchiver_FileMode(t *testing.T) {
 	file, err := os.CreateTemp("", "archive-file-mode-test.tar.gz")
