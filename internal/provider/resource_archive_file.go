@@ -266,12 +266,14 @@ func updateModel(ctx context.Context, model *fileModel) diag.Diagnostics {
 		}
 	}
 
-	if err := archive(ctx, *model); err != nil {
-		diags.AddError(
-			"Archive creation error",
-			fmt.Sprintf("error creating archive: %s", err),
-		)
-		return diags
+	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+		if err := archive(ctx, *model); err != nil {
+			diags.AddError(
+				"Archive creation error",
+				fmt.Sprintf("error creating archive: %s", err),
+			)
+			return diags
+		}
 	}
 
 	// Generate archived file stats
