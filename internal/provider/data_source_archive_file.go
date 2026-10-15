@@ -4,6 +4,7 @@
 package archive
 
 import (
+	"archive/zip"
 	"context"
 	"crypto/md5"
 	"crypto/sha1"
@@ -12,6 +13,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"path"
 
@@ -192,6 +194,15 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 				Description: "Base64 Encoded SHA512 checksum of output file",
 				Computed:    true,
 			},
+			"output_content_filename": schema.StringAttribute{
+				Description: "Filename within the archive to extract. Requires `output_content` to be set.",
+				Optional:    true,
+			},
+			"output_content": schema.StringAttribute{
+				Description: "Base64-encoded contents of the file specified by `output_content_filename`. " +
+					"Use the Terraform `base64decode` function to decode.",
+				Computed: true,
+			},
 		},
 	}
 }
@@ -320,6 +331,19 @@ func (d *archiveFileDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	model.ID = types.StringValue(checksums.sha1Hex)
 
+	if !model.OutputContentFilename.IsNull() {
+		filename := model.OutputContentFilename.ValueString()
+		content, err := extractFileFromZip(outputPath, filename)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Content extraction error",
+				fmt.Sprintf("error extracting '%s': %s", filename, err),
+			)
+			return
+		}
+		model.OutputContent = types.StringValue(base64.StdEncoding.EncodeToString(content))
+	}
+
 	diags = resp.State.Set(ctx, model)
 	resp.Diagnostics.Append(diags...)
 }
@@ -347,6 +371,8 @@ type fileModel struct {
 	OutputBase64Sha256        types.String `tfsdk:"output_base64sha256"`
 	OutputSha512              types.String `tfsdk:"output_sha512"`
 	OutputBase64Sha512        types.String `tfsdk:"output_base64sha512"`
+	OutputContentFilename     types.String `tfsdk:"output_content_filename"`
+	OutputContent             types.String `tfsdk:"output_content"`
 }
 
 type sourceModel struct {
@@ -386,4 +412,31 @@ func genFileChecksums(filename string) (fileChecksums, error) {
 	checksums.sha512Base64 = base64.StdEncoding.EncodeToString(sha512Sum[:])
 
 	return checksums, nil
+}
+
+func extractFileFromZip(zipPath, filename string) ([]byte, error) {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return nil, fmt.Errorf("could not open archive for content extraction: %s", err)
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		if f.Name == filename && !f.FileInfo().IsDir() {
+			rc, err := f.Open()
+			if err != nil {
+				return nil, fmt.Errorf("could not open file '%s' in archive: %s", filename, err)
+			}
+			defer rc.Close()
+
+			content, err := io.ReadAll(rc)
+			if err != nil {
+				return nil, fmt.Errorf("could not read file '%s' from archive: %s", filename, err)
+			}
+
+			return content, nil
+		}
+	}
+
+	return nil, fmt.Errorf("file '%s' not found in archive", filename)
 }
