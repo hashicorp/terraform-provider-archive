@@ -150,6 +150,22 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	})
 }
 
+func TestZipArchiver_Multiple_WithFileMode(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-multiple-filemode.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveMultipleEntries(map[string]ArchiveFileEntry{
+		"script.sh": {Content: []byte("#!/bin/sh\necho hi"), FileMode: "0755"},
+	}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"script.sh": []byte("#!/bin/sh\necho hi"),
+	})
+	ensureFileMode(t, zipFilePath, "0755")
+}
+
 func TestZipArchiver_Multiple(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 
