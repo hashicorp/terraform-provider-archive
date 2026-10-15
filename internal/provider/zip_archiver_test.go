@@ -6,13 +6,33 @@ package archive
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+func TestArchiveSkipsWhenOutputExists(t *testing.T) {
+	outputPath := filepath.Join(t.TempDir(), "test.zip")
+
+	model := fileModel{
+		Type:                  types.StringValue("zip"),
+		OutputPath:            types.StringValue(outputPath),
+		SourceContent:         types.StringValue("hello"),
+		SourceContentFilename: types.StringValue("f.txt"),
+	}
+	if err := archive(context.Background(), model); err != nil {
+		t.Fatalf("first archive failed: %s", err)
+	}
+	if err := archive(context.Background(), model); err != nil {
+		t.Fatalf("second archive (should skip) failed: %s", err)
+	}
+}
 
 func TestZipArchiver_Content(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")

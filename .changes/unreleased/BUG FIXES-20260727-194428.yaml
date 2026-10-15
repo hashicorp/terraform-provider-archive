@@ -1,0 +1,5 @@
+kind: BUG FIXES
+body: 'data-source/archive_file: Prevent archive recreation during plan phase when output file already exists'
+time: 2026-07-27T19:44:28.686111+02:00
+custom:
+    Issue: "451"
