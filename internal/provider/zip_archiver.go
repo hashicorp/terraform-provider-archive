@@ -6,6 +6,7 @@ package archive
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -34,7 +35,7 @@ func (a *ZipArchiver) ArchiveContent(content []byte, infilename string) error {
 	}
 	defer a.close()
 
-	f, err := a.writer.Create(filepath.ToSlash(infilename))
+	f, err := a.createEntry(filepath.ToSlash(infilename))
 	if err != nil {
 		return err
 	}
@@ -223,6 +224,27 @@ func (a *ZipArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 	}
 }
 
+func (a *ZipArchiver) createEntry(name string) (io.Writer, error) {
+	if a.outputFileMode == "" {
+		return a.writer.Create(name)
+	}
+
+	filemode, err := strconv.ParseUint(a.outputFileMode, 0, 32)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing output_file_mode value: %s", a.outputFileMode)
+	}
+
+	fh := &zip.FileHeader{
+		Name:   name,
+		Method: zip.Deflate,
+	}
+	fh.SetMode(os.FileMode(filemode))
+	//nolint:staticcheck // This is required as fh.SetModTime has been deprecated since Go 1.10 and using fh.Modified alone isn't enough when using a zero value
+	fh.SetModTime(time.Time{})
+
+	return a.writer.CreateHeader(fh)
+}
+
 func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	if err := a.open(); err != nil {
 		return err
@@ -239,7 +261,7 @@ func (a *ZipArchiver) ArchiveMultiple(content map[string][]byte) error {
 	sort.Strings(keys)
 
 	for _, filename := range keys {
-		f, err := a.writer.Create(filepath.ToSlash(filename))
+		f, err := a.createEntry(filepath.ToSlash(filename))
 		if err != nil {
 			return err
 		}
