@@ -53,8 +53,17 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"content": schema.StringAttribute{
-							Description: "Add this content to the archive with `filename` as the filename.",
-							Required:    true,
+							Description: "Add this content to the archive with `filename` as the filename. " +
+								"One and only one of `content` or `content_base64` must be specified.",
+							Optional: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"content_base64": schema.StringAttribute{
+							Description: "Add this base64-encoded content to the archive with `filename` as the filename. " +
+								"One and only one of `content` or `content_base64` must be specified.",
+							Optional: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},

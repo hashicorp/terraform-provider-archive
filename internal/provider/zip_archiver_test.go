@@ -150,6 +150,21 @@ func TestZipArchiver_Dir_Exclude_With_Directory(t *testing.T) {
 	})
 }
 
+func TestZipArchiver_ArchiveMultiple_Base64Decoded(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-content-base64.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveMultiple(map[string][]byte{
+		"binary.bin": {0x00, 0x01, 0x02, 0xFF, 0xFE},
+	}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"binary.bin": {0x00, 0x01, 0x02, 0xFF, 0xFE},
+	})
+}
+
 func TestZipArchiver_Multiple(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 
