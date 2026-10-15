@@ -1,0 +1,5 @@
+kind: ENHANCEMENTS
+body: 'data-source/archive_file: Allow source blocks to be used alongside source_dir and source_file'
+time: 2026-07-27T19:39:08.08665+02:00
+custom:
+    Issue: "162"

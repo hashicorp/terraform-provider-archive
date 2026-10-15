@@ -43,10 +43,12 @@ func NewTarArchiver(filepath string, compression TarCompressionType) Archiver {
 }
 
 func (a *TarArchiver) ArchiveContent(content []byte, infilename string) error {
-	if err := a.open(); err != nil {
-		return err
+	if a.tarWriter == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	return a.addContent(content, &tar.Header{
 		Name:    infilename,
@@ -61,10 +63,12 @@ func (a *TarArchiver) ArchiveFile(infilename string) error {
 		return err
 	}
 
-	if err := a.open(); err != nil {
-		return err
+	if a.tarWriter == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	header := &tar.Header{
 		Name:    filepath.ToSlash(fi.Name()),
@@ -104,10 +108,12 @@ func (a *TarArchiver) ArchiveDir(indirname string, opts ArchiveDirOpts) error {
 		return fmt.Errorf("archive has not been created as it would be empty")
 	}
 
-	if err := a.open(); err != nil {
-		return err
+	if a.tarWriter == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	return filepath.Walk(indirname, a.createWalkFunc("", indirname, opts, &isArchiveEmpty, false))
 }
@@ -185,10 +191,12 @@ func (a *TarArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 }
 
 func (a *TarArchiver) ArchiveMultiple(content map[string][]byte) error {
-	if err := a.open(); err != nil {
-		return err
+	if a.tarWriter == nil {
+		if err := a.open(); err != nil {
+			return err
+		}
+		defer a.close()
 	}
-	defer a.close()
 
 	// Ensure files are processed in the same order so hashes don't change
 	keys := make([]string, len(content))
@@ -215,6 +223,17 @@ func (a *TarArchiver) ArchiveMultiple(content map[string][]byte) error {
 
 func (a *TarArchiver) SetOutputFileMode(outputFileMode string) {
 	a.outputFileMode = outputFileMode
+}
+
+func (a *TarArchiver) Open() error {
+	if a.tarWriter != nil {
+		return nil
+	}
+	return a.open()
+}
+
+func (a *TarArchiver) Close() {
+	a.close()
 }
 
 func (a *TarArchiver) open() error {
