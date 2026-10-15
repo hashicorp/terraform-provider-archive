@@ -102,6 +102,23 @@ func TestZipArchiver_FileModified(t *testing.T) {
 	}
 }
 
+func TestZipArchiver_Dir_IncludeParent(t *testing.T) {
+	zipFilePath := filepath.Join(t.TempDir(), "archive-dir-parent.zip")
+
+	archiver := NewZipArchiver(zipFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", ArchiveDirOpts{
+		IncludeParentDir: true,
+	}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureContents(t, zipFilePath, map[string][]byte{
+		"test-dir1/file1.txt": []byte("This is file 1"),
+		"test-dir1/file2.txt": []byte("This is file 2"),
+		"test-dir1/file3.txt": []byte("This is file 3"),
+	})
+}
+
 func TestZipArchiver_Dir(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-dir.zip")
 

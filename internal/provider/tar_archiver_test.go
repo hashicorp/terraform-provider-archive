@@ -106,6 +106,23 @@ func TestTarArchiver_FileModified(t *testing.T) {
 	}
 }
 
+func TestTarArchiver_Dir_IncludeParent(t *testing.T) {
+	tarFilePath := filepath.Join(t.TempDir(), "archive-dir-parent.tar.gz")
+
+	archiver := NewTarGzArchiver(tarFilePath)
+	if err := archiver.ArchiveDir("./test-fixtures/test-dir/test-dir1", ArchiveDirOpts{
+		IncludeParentDir: true,
+	}); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	ensureTarContents(t, tarFilePath, map[string][]byte{
+		"test-dir1/file1.txt": []byte("This is file 1"),
+		"test-dir1/file2.txt": []byte("This is file 2"),
+		"test-dir1/file3.txt": []byte("This is file 3"),
+	})
+}
+
 func TestTarArchiver_Dir(t *testing.T) {
 	tarFilePath := filepath.Join(t.TempDir(), "archive-dir.tar.gz")
 

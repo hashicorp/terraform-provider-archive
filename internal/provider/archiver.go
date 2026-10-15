@@ -11,6 +11,7 @@ import (
 type ArchiveDirOpts struct {
 	Excludes                  []string
 	ExcludeSymlinkDirectories bool
+	IncludeParentDir          bool
 }
 
 type Archiver interface {
