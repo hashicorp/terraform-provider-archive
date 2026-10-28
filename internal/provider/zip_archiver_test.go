@@ -14,6 +14,37 @@ import (
 	"time"
 )
 
+func TestExtractFileFromZip(t *testing.T) {
+	zipPath := filepath.Join(t.TempDir(), "extract_test.zip")
+	archiver := NewZipArchiver(zipPath)
+	if err := archiver.ArchiveMultiple(map[string][]byte{
+		"hello.txt":          []byte("hello world"),
+		"sub/dir/nested.txt": []byte("nested"),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	content, err := extractFileFromZip(zipPath, "hello.txt")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if string(content) != "hello world" {
+		t.Fatalf("expected 'hello world', got '%s'", string(content))
+	}
+
+	content, err = extractFileFromZip(zipPath, "sub/dir/nested.txt")
+	if err != nil {
+		t.Fatalf("unexpected error for nested file: %s", err)
+	}
+	if string(content) != "nested" {
+		t.Fatalf("expected 'nested', got '%s'", string(content))
+	}
+
+	if _, err := extractFileFromZip(zipPath, "nonexistent.txt"); err == nil {
+		t.Fatal("expected error for nonexistent file")
+	}
+}
+
 func TestZipArchiver_Content(t *testing.T) {
 	zipFilePath := filepath.Join(t.TempDir(), "archive-content.zip")
 
