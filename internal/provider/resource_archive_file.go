@@ -66,6 +66,14 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
+						"file_mode": schema.StringAttribute{
+							Description: "String that specifies the octal file mode for this source file. " +
+								"For example: `\"0755\"`. This overrides the `output_file_mode` for this file.",
+							Optional: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
 					},
 				},
 				Validators: []validator.Set{

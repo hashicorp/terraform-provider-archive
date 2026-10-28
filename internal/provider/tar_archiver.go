@@ -185,28 +185,45 @@ func (a *TarArchiver) createWalkFunc(basePath, indirname string, opts ArchiveDir
 }
 
 func (a *TarArchiver) ArchiveMultiple(content map[string][]byte) error {
+	entries := make(map[string]ArchiveFileEntry, len(content))
+	for k, v := range content {
+		entries[k] = ArchiveFileEntry{Content: v}
+	}
+	return a.ArchiveMultipleEntries(entries)
+}
+
+func (a *TarArchiver) ArchiveMultipleEntries(entries map[string]ArchiveFileEntry) error {
 	if err := a.open(); err != nil {
 		return err
 	}
 	defer a.close()
 
 	// Ensure files are processed in the same order so hashes don't change
-	keys := make([]string, len(content))
+	keys := make([]string, len(entries))
 	i := 0
-	for k := range content {
+	for k := range entries {
 		keys[i] = k
 		i++
 	}
 	sort.Strings(keys)
 
 	for _, filename := range keys {
+		entry := entries[filename]
 		header := &tar.Header{
 			Name:    filepath.ToSlash(filename),
-			Size:    int64(len(content[filename])),
+			Size:    int64(len(entry.Content)),
 			ModTime: time.Time{},
 		}
 
-		if err := a.addContent(content[filename], header); err != nil {
+		if entry.FileMode != "" {
+			filemode, parseErr := strconv.ParseInt(entry.FileMode, 0, 32)
+			if parseErr != nil {
+				return fmt.Errorf("error parsing file_mode value: %s", entry.FileMode)
+			}
+			header.Mode = filemode
+		}
+
+		if err := a.addContent(entry.Content, header); err != nil {
 			return err
 		}
 	}

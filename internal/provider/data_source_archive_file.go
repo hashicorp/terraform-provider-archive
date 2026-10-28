@@ -65,6 +65,11 @@ func (d *archiveFileDataSource) Schema(ctx context.Context, req datasource.Schem
 							Description: "Set this as the filename when declaring a `source`.",
 							Required:    true,
 						},
+						"file_mode": schema.StringAttribute{
+							Description: "String that specifies the octal file mode for this source file. " +
+								"For example: `\"0755\"`. This overrides the `output_file_mode` for this file.",
+							Optional: true,
+						},
 					},
 				},
 				Validators: []validator.Set{
@@ -245,16 +250,23 @@ func archive(ctx context.Context, model fileModel) error {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
 	case !model.Source.IsNull():
-		content := make(map[string][]byte)
+		entries := make(map[string]ArchiveFileEntry)
 
 		var elements []sourceModel
 		model.Source.ElementsAs(ctx, &elements, false)
 
 		for _, elem := range elements {
-			content[elem.Filename.ValueString()] = []byte(elem.Content.ValueString())
+			filename := elem.Filename.ValueString()
+			entry := ArchiveFileEntry{
+				Content: []byte(elem.Content.ValueString()),
+			}
+			if !elem.FileMode.IsNull() {
+				entry.FileMode = elem.FileMode.ValueString()
+			}
+			entries[filename] = entry
 		}
 
-		if err := archiver.ArchiveMultiple(content); err != nil {
+		if err := archiver.ArchiveMultipleEntries(entries); err != nil {
 			return fmt.Errorf("error archiving content: %s", err)
 		}
 	}
@@ -352,6 +364,7 @@ type fileModel struct {
 type sourceModel struct {
 	Content  types.String `tfsdk:"content"`
 	Filename types.String `tfsdk:"filename"`
+	FileMode types.String `tfsdk:"file_mode"`
 }
 
 type fileChecksums struct {
