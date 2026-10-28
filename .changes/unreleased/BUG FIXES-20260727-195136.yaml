@@ -1,0 +1,5 @@
+kind: BUG FIXES
+body: 'data-source/archive_file: Set zip archive entry timestamps to a minimum valid date (1980-01-01) for compatibility with Python zipfile and other readers'
+time: 2026-07-27T19:51:36.498982+02:00
+custom:
+    Issue: "172"
