@@ -173,6 +173,12 @@ func (d *archiveFileResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Boolean flag indicating whether symbolically linked directories should be excluded during " +
 					"the creation of the archive. Defaults to `false`.",
 			},
+			"include_parent_dir": schema.BoolAttribute{
+				Optional: true,
+				Description: "Boolean flag indicating whether the parent directory should be included in the archive " +
+					"as a prefix. For example, `source_dir = \"./parent_folder\"` would produce entries like " +
+					"`parent_folder/file.txt` instead of `file.txt`. Defaults to `false`.",
+			},
 			"output_path": schema.StringAttribute{
 				Description: "The output of the archive file.",
 				Required:    true,
